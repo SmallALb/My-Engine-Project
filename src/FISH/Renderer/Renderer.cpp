@@ -1,0 +1,219 @@
+#include "fspcs.h"
+
+#include "API.h"
+#include "Shader.h"
+#include "RenderElement.h"
+#include "Buffer.h"
+#include "VertexArray.h"
+#include "Texture.h"
+#include "BaseShape.h"
+#include "../Object/Object.h"
+#include "../Object/SpotLight.h"
+#include "../Object/PointLight.h"
+#include "../Object/DirectionLight.h"
+#include "../Object/Camera.h"
+#include "../Object/Mesh.h"
+#include "../Object/SkyBox.h"
+#include "../Log.h"
+#include "RenderState.h"
+#include "Renderer.h"
+
+namespace FISH {
+
+    std::shared_ptr<Camera> Renderer::UseCamera = nullptr;
+    std::shared_ptr<DirectionLight> Renderer::UseambientLight = nullptr;
+    std::map<string, std::shared_ptr<Shader>> Renderer::ShaderLib {};
+    std::unique_ptr<Shape> Renderer::ball = nullptr;
+    std::unique_ptr<RenderState> Renderer::mStates = nullptr;
+    bool Renderer::renderLight = 1;
+
+    void Renderer::render(
+        const std::vector<std::shared_ptr<Object3D>> &objs,
+        const std::vector<std::shared_ptr<SpotLight>> &spotlights, 
+        const std::vector<std::shared_ptr<PointLight>> &pointlights) {
+
+        //上面不能有任何的依赖关系
+        for (auto& obj : objs) if (obj->getParent() == nullptr) RenderObj(obj, spotlights, pointlights);
+        
+    }
+    //3D渲染
+    void Renderer::render(const std::vector<std::shared_ptr<Object3D>> &objs) {
+        std::vector<std::shared_ptr<SpotLight>> spotlights;
+        std::vector<std::shared_ptr<PointLight>> pointlights;
+        for (auto obj : objs) {
+            if (obj->GetObjType() == ObjType::Light) {
+                auto lightobj = dynamic_pointer_cast<Light>(obj);
+                if (lightobj->getLightType() == LightType::Point) {
+                    pointlights.push_back(dynamic_pointer_cast<PointLight>(lightobj));
+                }
+                else {
+                    spotlights.push_back(dynamic_pointer_cast<SpotLight>(lightobj));
+                }
+            }
+        }
+        for (auto& obj : objs) if (obj->getParent() == nullptr || obj->getParent()->GetObjType() == ObjType::Camera) 
+            RenderObj(obj, spotlights, pointlights);
+    }
+
+    void Renderer::render(const std::vector<std::shared_ptr<Object2D>>& objs) {
+        for (auto& obj : objs) if (obj->getParent() == nullptr)
+            RenderObj(obj);
+    }
+
+    void Renderer::initDefaultShader() {
+        ball.reset(Shape::CreateSphere(0.5f));
+        mStates.reset(RenderState::CreateRenderState());
+        //冯氏光照处理着色器
+        ShaderLib.emplace("Phong", std::shared_ptr<Shader>(Shader::CreateShader()));
+        ShaderLib["Phong"]->readVertexShader("sharders/EnginRenderShader/3Dvertex.glsl");
+        ShaderLib["Phong"]->readFragmentShader("sharders/EnginRenderShader/NormalFragment.glsl");
+        ShaderLib["Phong"]->CompileLink();
+
+
+        //纯颜色着色器
+        ShaderLib.emplace("OnlyColor", std::shared_ptr<Shader>(Shader::CreateShader()));
+        ShaderLib["OnlyColor"]->readVertexShader("sharders/EnginRenderShader/3Dvertex.glsl");
+        ShaderLib["OnlyColor"]->readFragmentShader("sharders/EnginRenderShader/OnlyColor.glsl");
+        ShaderLib["OnlyColor"]->CompileLink();
+        
+        //纯材质着色器
+        ShaderLib.emplace("OnlyTexture", std::shared_ptr<Shader>(Shader::CreateShader()));
+        ShaderLib["OnlyTexture"]->readVertexShader("sharders/EnginRenderShader/3Dvertex.glsl");
+        ShaderLib["OnlyTexture"]->readFragmentShader("sharders/EnginRenderShader/Texture.glsl");
+        ShaderLib["OnlyTexture"]->CompileLink();
+
+        //2d纯色渲染
+        ShaderLib.emplace("OnlyColor(2D)", std::shared_ptr<Shader>(Shader::CreateShader()));
+        ShaderLib["OnlyColor(2D)"]->readVertexShader("sharders/EnginRenderShader/2Dvertex.glsl");
+        ShaderLib["OnlyColor(2D)"]->readFragmentShader("sharders/EnginRenderShader/OnlyColor.glsl");
+        ShaderLib["OnlyColor(2D)"]->CompileLink();
+        
+        //2d纯材质
+        ShaderLib.emplace("OnlyTexture(2D)", std::shared_ptr<Shader>(Shader::CreateShader()));
+        ShaderLib["OnlyTexture(2D)"]->readVertexShader("sharders/EnginRenderShader/2Dvertex.glsl");
+        ShaderLib["OnlyTexture(2D)"]->readFragmentShader("sharders/EnginRenderShader/Texture.glsl");
+        ShaderLib["OnlyTexture(2D)"]->CompileLink();
+    }
+
+    //分离渲染
+    void Renderer::RenderObj(const std::shared_ptr<Object3D> &obj,
+        const std::vector<std::shared_ptr<SpotLight>> &spotlights, 
+        const std::vector<std::shared_ptr<PointLight>> &pointlights)
+    {
+        if (obj == nullptr) return;
+        switch (obj->GetObjType()) {
+            //当obj为模型时
+            case ObjType::Mesh: {
+                mStates->enableCutFace();
+                mStates->setCutBackFace();
+                mStates->setFrontFaceToCW();
+                ShaderLib["Phong"]->Begin();
+                ShaderLib["Phong"]->setMat4("projection", UseCamera->getProjectMatrix());
+                ShaderLib["Phong"]->setMat4("view", UseCamera->getViewMatrix());
+                caculateLight(spotlights, pointlights);
+                auto shape = (dynamic_cast<Mesh*>(obj.get()))->getShape();   
+                shape->useShape();
+                ShaderLib["Phong"]->setInt("sampler", 0);
+                shape->useTexture();           
+                ShaderLib["Phong"]->setMat4("model", obj->getModelMatrix());
+                ShaderLib["Phong"]->setMat4("normat", obj->getNormalMatrix());
+                shape->render(TRIANGLES); 
+                shape->unuseShape();
+                ShaderLib["Phong"]->End();  
+                mStates->disableCutFace();
+                break;
+            }
+            //当obj为灯光时
+            case ObjType::Light: {
+                if (!renderLight) break;
+                ShaderLib["OnlyColor"]->Begin();
+                ShaderLib["OnlyColor"]->setMat4("projection", UseCamera->getProjectMatrix());
+                ShaderLib["OnlyColor"]->setMat4("view", UseCamera->getViewMatrix());
+                ball->useShape();
+                auto color = (dynamic_cast<Light*>(obj.get()))->getColor();
+                ShaderLib["OnlyColor"]->setMat4("model", obj->getModelMatrix());
+                ShaderLib["OnlyColor"]->setMat4("normat", obj->getNormalMatrix());  
+                ShaderLib["OnlyColor"]->setVector3("InColor", color);
+                ball->render(TRIANGLES);
+                ball->unuseShape();
+                ShaderLib["OnlyColor"]->End();
+                //FS_INFO("RenderLight Done!");
+                break;
+            }
+            //当obj为天空盒时
+            case ObjType::SkyBox: {
+                mStates->enableCutFace();
+                mStates->setCutFrontFace();
+                ShaderLib["OnlyTexture"]->Begin();
+                ShaderLib["OnlyTexture"]->setMat4("projection", UseCamera->getProjectMatrix());
+                ShaderLib["OnlyTexture"]->setMat4("view", UseCamera->getViewMatrix());
+                ShaderLib["OnlyTexture"]->setMat4("model", obj->getModelMatrix());
+                ShaderLib["OnlyTexture"]->setMat4("normat", obj->getNormalMatrix());  
+                dynamic_pointer_cast<SkyBox>(obj)->renderSkyBox();
+                ShaderLib["OnlyTexture"]->setInt("sampler", 0);
+                ShaderLib["OnlyTexture"]->End();
+                mStates->disableCutFace();
+                break;
+            }
+        
+        }
+        //渲染子节点
+        for (auto &child : obj->getChilds()) {
+            RenderObj(child, spotlights, pointlights);
+        }
+    }
+
+    void Renderer::RenderObj(const std::shared_ptr<Object2D> &obj) {
+        if (obj == nullptr) return;
+        
+
+        for (auto &child : obj->getChilds())
+            RenderObj(child);
+    }
+
+    //计算灯光
+    void Renderer::caculateLight(
+        const std::vector<std::shared_ptr<SpotLight>> &spotlights,
+         const std::vector<std::shared_ptr<PointLight>> &pointlights) {
+                    ShaderLib["Phong"]->setVector3("cameraPosition", UseCamera->getPosition());
+        //设置聚光灯参数
+        ShaderLib["Phong"]->setInt("numSpotLights", spotlights.size());
+        for (unsigned int i = 0; i < spotlights.size(); ++i) {
+            auto& light = spotlights[i];
+            ShaderLib["Phong"]->setVector3("spotLights[" + std::to_string(i) + "].position", light->getPosition());
+            ShaderLib["Phong"]->setVector3("spotLights[" + std::to_string(i) + "].direction", light->getLightDir());
+            ShaderLib["Phong"]->setVector3("spotLights[" + std::to_string(i) + "].color", light->getColor());
+            ShaderLib["Phong"]->setFloat("spotLights[" + std::to_string(i) + "].intensity", light->getIntensity());
+            ShaderLib["Phong"]->setFloat("spotLights[" + std::to_string(i) + "].kc", light->getkc());
+            ShaderLib["Phong"]->setFloat("spotLights[" + std::to_string(i) + "].k1", light->getk1());
+            ShaderLib["Phong"]->setFloat("spotLights[" + std::to_string(i) + "].k2", light->getk2());
+            ShaderLib["Phong"]->setFloat("spotLights[" + std::to_string(i) + "].cutOff", glm::cos(glm::cos(glm::radians(light->getVisibleAngle()))));
+            ShaderLib["Phong"]->setFloat("spotLights[" + std::to_string(i) + "].outerCutOff", glm::cos(glm::cos(glm::radians(light->getOuterAngle()))));
+            ShaderLib["Phong"]->setFloat("spotLights[" + std::to_string(i) + "].specularIntensity", light->getSpecularIntensity());
+            ShaderLib["Phong"]->setInt("spotLights[" + std::to_string(i) + "].flag", light->getIsLightOn());
+        }
+
+        //设置点光源参数
+        ShaderLib["Phong"]->setInt("numPointLights", pointlights.size());
+        for (unsigned int i = 0; i < pointlights.size(); ++i) {
+            auto& light = pointlights[i];
+            ShaderLib["Phong"]->setVector3("pointLights[" + std::to_string(i) + "].position", light->getPosition());
+            ShaderLib["Phong"]->setVector3("pointLights[" + std::to_string(i) + "].color", light->getColor());
+            ShaderLib["Phong"]->setFloat("pointLights[" + std::to_string(i) + "].kc", light->getkc());
+            ShaderLib["Phong"]->setFloat("pointLights[" + std::to_string(i) + "].k1", light->getk1());
+            ShaderLib["Phong"]->setFloat("pointLights[" + std::to_string(i) + "].k2", light->getk2());
+            ShaderLib["Phong"]->setFloat("pointLights[" + std::to_string(i) + "].specularIntensity", light->getSpecularIntensity());
+            ShaderLib["Phong"]->setInt("pointLights[" + std::to_string(i) + "].flag", light->getIsLightOn());
+        }
+        ShaderLib["Phong"]->setInt("dirLightOn", UseambientLight->getIsLightOn());
+        ShaderLib["Phong"]->setVector3("ambientcolor", UseambientLight->getColor());
+        ShaderLib["Phong"]->setVector3("dirLight.direction", UseambientLight->getLightDir());
+        ShaderLib["Phong"]->setVector3("dirLight.color", UseambientLight->getColor());
+        ShaderLib["Phong"]->setFloat("dirLight.intensity", UseambientLight->getIntensity());
+        ShaderLib["Phong"]->setFloat("dirLight.specularIntensity", UseambientLight->getSpecularIntensity());
+        ShaderLib["Phong"]->setFloat("shiness", 64.0f);
+
+
+
+    }
+}
