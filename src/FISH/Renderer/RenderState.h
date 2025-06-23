@@ -17,6 +17,8 @@ namespace FISH {
         virtual void enableCleanColor() = 0;
         //启用面剔除
         virtual void enableCutFace() = 0;
+        //启用颜色混合
+        virtual void enableBlend() = 0;
         ///////////////////////////////////////
 
             //////////////////
@@ -30,6 +32,8 @@ namespace FISH {
         virtual void disableCleanColor() = 0;
         //禁用面剔除
         virtual void disableCutFace() = 0;
+        //禁用颜色混合
+        virtual void disableBlend() = 0;
         ///////////////////////////////////////////
 
             //////////////////
@@ -39,15 +43,18 @@ namespace FISH {
         virtual void setCutFrontFace() = 0;
         //设置剔除背面
         virtual void setCutBackFace() = 0;
-        //
+        //设置前面为顺时针
         virtual void setFrontFaceToCW() = 0;
-        //
+        //设置前面为逆时针
         virtual void setFrontFaceToCCW() = 0;
-        //
+        //设置深度检测为最小优先
         virtual void setDepthTestFuncLess() = 0;
-        //
+        //设置深度检测为最大优先
         virtual void setDepthTestFuncGreater() = 0;
-
+        //设置颜色混合源模式为与Alpha通道相乘
+        virtual void setBlendSrcFuncMulAlpha() = 0;
+        //设置颜色混合目标模式减去Alpha
+        virtual void setBlendFactorFuncSubAlpha() = 0;
         ////////////////////////////////////////
             //////////////////
             ////取得渲染状态///

@@ -43,8 +43,7 @@
 #include "FISH/Renderer/RenderState.h"
 #include "FISH/Renderer/Renderer.h"
 //???
-#include "FISH/Events/Application.h"
-
 //????
+#include "FISH/Events/Application.h"
 #include "FISH/EntryPoint.h"
 

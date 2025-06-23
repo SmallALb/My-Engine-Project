@@ -126,6 +126,9 @@ namespace FISH {
             //当obj为灯光时
             case ObjType::Light: {
                 if (!renderLight) break;
+                mStates->enableCutFace();
+                mStates->setCutBackFace();
+                mStates->setFrontFaceToCW();
                 ShaderLib["OnlyColor"]->Begin();
                 ShaderLib["OnlyColor"]->setMat4("projection", UseCamera->getProjectMatrix());
                 ShaderLib["OnlyColor"]->setMat4("view", UseCamera->getViewMatrix());
@@ -137,6 +140,7 @@ namespace FISH {
                 ball->render(TRIANGLES);
                 ball->unuseShape();
                 ShaderLib["OnlyColor"]->End();
+                mStates->disableCutFace();
                 //FS_INFO("RenderLight Done!");
                 break;
             }

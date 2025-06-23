@@ -19,6 +19,8 @@ namespace FISH {
         virtual void enableCleanColor() override;
         //启用面剔除
         virtual void enableCutFace() override;
+        //启用颜色混合
+        virtual void enableBlend() override;
         ///////////////////////////////////////
             //////////////////
             ////取消渲染状态///
@@ -31,6 +33,8 @@ namespace FISH {
         virtual void disableCleanDepth() override;
         //禁用颜色清除
         virtual void disableCleanColor() override;
+        //禁用颜色混合
+        virtual void disableBlend() override;
         ///////////////////////////////////////////
             //////////////////
             ////设置渲染状态///
@@ -48,6 +52,10 @@ namespace FISH {
         virtual void setDepthTestFuncLess() override;
         //设置深度测试为优先最大
         virtual void setDepthTestFuncGreater() override;
+        //设置颜色混合源模式为与Alpha通道相乘
+        virtual void setBlendSrcFuncMulAlpha() override;
+        //设置颜色混合目标模式减去Alpha
+        virtual void setBlendFactorFuncSubAlpha() override;
         ////////////////////////////////////////
             //////////////////
             ////取得渲染状态///

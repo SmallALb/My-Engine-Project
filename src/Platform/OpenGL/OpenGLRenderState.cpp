@@ -26,6 +26,10 @@ namespace FISH {
         glEnable(GL_CULL_FACE);
     }
 
+    void GLState::enableBlend() {
+        glEnable(GL_BLEND);
+    }
+
     void GLState::disableDepthTest() {
         glDisable(GL_DEPTH_TEST);
     }
@@ -36,6 +40,10 @@ namespace FISH {
 
     void GLState::disableCleanColor() {
         CleanState &= ~(uint16_t(GL_COLOR_BUFFER_BIT));
+    }
+
+    void GLState::disableBlend() {
+        glDisable(GL_BLEND);
     }
 
     void GLState::setCutFrontFace() {
@@ -60,6 +68,14 @@ namespace FISH {
 
     void GLState::setDepthTestFuncGreater() {
         glDepthFunc(GL_GREATER);
+    }
+
+    void GLState::setBlendSrcFuncMulAlpha() {
+        
+    }
+
+    void GLState::setBlendFactorFuncSubAlpha() {
+
     }
 
     int GLState::getCleanStates() const{

@@ -8,8 +8,23 @@
 #define TRIANGLE_STRIP 0x0005
 #define TRIANGLE_FAN 0x0006
 
+enum class ElementType {
+    points,
+    lines,
+    line_loop,
+    line_strip,
+    triangles,
+    triangles_strip,
+    triangles_fan
+}; 
 
-//state
-//取最小
-#define LESS 0x0201
+//通道
+enum class ChannelType {
+    Red,
+    RedA,
+    RGB,
+    RGBA
+};
+
+int choiceStbChannel(ChannelType typ);
 

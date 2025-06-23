@@ -7,10 +7,11 @@
 #include "MouseButtonCodes.h"
 #include "input.h"
 #include "Timer.h"
-#include "FISH/ImGui/ImGuiLayer.h"
+#include "ImGui/ImGuiLayer.h"
 #include "Events/Application.h"
 #include "Log.h"
-#include "FISH/Renderer/Texture.h"
+#include "Renderer/RenderElement.h"
+#include "Renderer/Texture.h"
 #include "Application.h"
 
 
@@ -31,6 +32,7 @@ namespace FISH{
         mImGuiLayer = new ImGuiLayer();
         PushLayer(mImGuiLayer);
         mTimer.reset(new Timer());
+        
     }
 
     Application::~Application() {
@@ -54,8 +56,6 @@ namespace FISH{
             mImGuiLayer->End();
 
             mWindow->Onupdate();
-
-
         }
     }
 

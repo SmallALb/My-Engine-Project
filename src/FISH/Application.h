@@ -1,6 +1,7 @@
 #ifndef APP
 #define APP FISH::Application::GetInstance()
 #include "Core.h"
+#include "Renderer/RenderState.h"
 #include "Window.h"
 #include "LayerStack.h"
 #include "Keycodes.h"
