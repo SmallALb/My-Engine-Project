@@ -1,5 +1,6 @@
 #include "fspcs.h"
 #include "glad/glad.h"
+#include "OpenGLErrorCheck.h"
 #include "OpenGLBuffer.h"
 
 namespace FISH {
@@ -8,9 +9,9 @@ namespace FISH {
     /////////////////////////////////////
 
     GLVertexBuffer::GLVertexBuffer(float *vertices, uint32_t size) {
-        glCreateBuffers(1, &mVbo);
-        glBindBuffer(GL_ARRAY_BUFFER, mVbo);
-        glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
+        GL_ERRORCALL(glCreateBuffers(1, &mVbo));
+        GL_ERRORCALL(glBindBuffer(GL_ARRAY_BUFFER, mVbo));
+        GL_ERRORCALL(glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW));
     }
 
     GLVertexBuffer::~GLVertexBuffer() {

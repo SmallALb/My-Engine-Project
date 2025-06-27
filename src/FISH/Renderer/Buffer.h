@@ -112,8 +112,8 @@ namespace FISH {
             for (auto& e : mElements) {
                 e.Offset = offset;
                 offset += e.Size;
-                mStride += e.Size;
             }
+            mStride = offset;
         }
     private:
         std::vector<BufferElement> mElements;

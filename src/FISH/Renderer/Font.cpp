@@ -1,173 +1,200 @@
 #include "fspcs.h"
-#include <fstream>
-#define STB_TRUETYPE_IMPLEMENTATION
-#include "stb_truetype.h"
+#include <locale>
+#include <codecvt>
+#include "Renderstatus.h"
 #include "RenderElement.h"
 #include "Texture.h"
-#include "RenderState.h"
-#include "Buffer.h"
+#include "Shader.h"
 #include "VertexArray.h"
+#include "Buffer.h"
 #include "FISH/Log.h"
+#include <ft2build.h>
+#include <freetype/freetype.h>
 #include "Font.h"
 
-namespace FISH{
-    static const int ATLAS_WIDTH = 1024;
-    static const int ATLAS_HEIGHT = 1024;
-    static const int FIRST_CHAR = 32;  // ASCII起始字符 (空格)
-    static const int CHAR_COUNT = 96;  // 渲染字符数量 (32-126)
+namespace FISH {
+    //计数类型
+    static int Fontcounts = 0;
+    //字体着色器
+    static std::unique_ptr<Shader>  FontShader = nullptr;
 
-    Font::Font(const string &fontPath, float fontSize) {
-        mFontSize = fontSize;
-        LoadFont(fontPath, fontSize);
+    static std::unique_ptr<Renderstatus>  Fontstatus = nullptr;
+
+
+    const int ATLAS_WIDTH = 1024*2;
+    const int ATLAS_HEIGHT = 1024*2;
+    //常用字符
+    static const wchar_t* commonChars = L"的一是在不了有和人这中大为上个国我以要他时来用们生到作地于出就分对成会可主发年动同工也能下过子说产种面而方后多定行学法所民得经十三之进着等部度家电力里如水化高自二理起小物现实加量都两体制机当使点从业本去把性好应开它合还因由其些然前外天政四日那社义事平形相全表间样与关各重新线内数正心反你明看原又么利比或但质气第向道命此变条只没结解问意建月公无系军很情者最立代想已通并提直题党程展五果料象员革位入常文总次品式活设及管特件长求老头基资边流路级少图山统接知较将组见计别她手角期根论运农指几九区强放决西被干做必战先回则任取据处队南给色光门即保治北造百规热领七海口东导器压志世金增争济阶油思术极交受联什认六共权收证改清己美再采转更单风切打白教速花带安场身车例真务具万每目至达走积示议声报斗完类八离华名确才科张信马节话米整空元况今集温传土许步群广石记需段研界拉林律叫且究观越织装影算低持音众书布复容儿须际商非验连断深难近矿千周委素技备半办青省列习响约支般史感劳便团往酸历市克何除消构府称太准精值号率族维划选标写存候毛亲快效斯院查江型眼王按格养易置派层片始却专状育厂京识适属圆包火住调满县局照参红细引听该铁价严龙飞";
+    //主要字体库
+    static FT_Library ft = nullptr;
+    
+    static int currentX = 0;
+    static int currentY = 0;
+    static int maxRowHeight = 0;
+    
+    Font::Font(const string &fontpath) {
+        InitFTlibrary();
+        InitFontShader();
+        InitFontStatus();
+        if (FT_New_Face(ft, fontpath.c_str(), 0, &mFace)) {
+            FS_ERROR("Falied to load font!");
+        }
+
+        FT_Set_Pixel_Sizes(mFace, 0, mFontSize);
+        FT_Select_Charmap(mFace, ft_encoding_unicode);
+
+        mFontTexture.reset(Texture::CreateNullTexture(fontpath, ATLAS_WIDTH, ATLAS_WIDTH, ChannelType::Red, 1));
+
+        for (int i = 0; i < wcslen(commonChars); ++i) {
+            loadCharacter(commonChars[i]);
+        }
+
+        Fontcounts++;
     }
 
-    void Font::RenderText(const std::string &text, float x, float y, const glm::vec3 &color, float scale) {
-        mAtlasTexture->bind();
+    Font::~Font() {
+        Fontcounts--;
+        if (mFace) {
+            FT_Done_Face(mFace);
+        }
+        if (!Fontcounts && ft) {
+            FT_Done_FreeType(ft);
+            ft = nullptr;
+        }
+    }
+
+    void Font::RenderText(const string& text, float x, float y, float scale, const glm::vec3 &color) {
+        std::unique_ptr<VertexArray> Vao(VertexArray::Create());
         
-
-    }
-
-    std::shared_ptr<Texture> Font::getAtlasTexture() const {return mAtlasTexture;}
-
-    const CharacterInfo &Font::getCharacterInfo(char32_t codepoint) {
-        if (mCharacters.contains(codepoint)) {
-            mCharacters[codepoint].lastUsedFrame = mCurrentFrame;
-            return mCharacters[codepoint];
-        } 
-
-        AddCharacterToAtlas(codepoint);
-
-        if (!mCharacters.contains(codepoint) || !mCharacters[codepoint].isLoaded) {
-            static CharacterInfo spaceInfo;
-            spaceInfo.advance = mFontSize * 0.5;
-            return spaceInfo;
-        }
-
-        return mCharacters[codepoint];
-    }
-
-    void Font::LoadFont(const string &fontPath, float fontSize)
-    {
-        std::ifstream file(fontPath, std::ios::binary | std::ios::ate);
-        if (!file.is_open()) {
-            FS_ERROR("Falied to open font file: {0}", fontPath);  
-            return;
-        }
-
-        long long siz = file.tellg();
-        file.seekg(0, std::ios::beg);
+        std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+        std::wstring wideStr = converter.from_bytes(text);
         
-        mFontBuffer.resize(siz);
-        if (!file.read((char*)mFontBuffer.data(), siz)) {
-            FS_ERROR("Falied to read font file: {0}", fontPath);
-            return;
-        }
+        std::vector<float> vertices;
+        std::vector<unsigned int> indices;
+        vertices.reserve(text.size() * 4 * 4); 
+        indices.reserve(text.size() * 6);
 
-        if (!stbtt_InitFont(&mStbInfo, mFontBuffer.data(), 0)) {
-            FS_ERROR("Falied to read initalize font: {0}", fontPath);
-            return;
-        }
-        //计算缩放
-        mScale = stbtt_ScaleForPixelHeight(&mStbInfo, fontSize);
-        //重载数据
-        mAtlasData.resize(ATLAS_WIDTH * ATLAS_HEIGHT, 0);
+        float startX = x;
+        unsigned int indexOffset = 0;
 
-           // 初始化打包上下文
-        if (!stbtt_PackBegin(&mPackContext, mAtlasData.data(), ATLAS_WIDTH, ATLAS_HEIGHT, 0, 1, nullptr)) {
-            FS_CORE_ERROR("Failed to initialize font packing context");
-            return;
-        }
+        for (auto c : wideStr) {
+            if (!Characters.contains(c)) {
+                loadCharacter(c);
+                if (!Characters.contains(c)) continue;
+            }
 
-        mPackContextInitialized = true;
+            const auto& ch = Characters[c];
 
-        stbtt_PackSetOversampling(&mPackContext, 1, 1);
-        //默认32-128的字符
-        for (int c = 32; c < 128; c++) {
-            AddCharacterToAtlas(c);
-        }
-        //中文标点符号
-        const char32_t commonPunctuation[] = {0x3000, 0x3001, 0x3002, 0xFF0C, 0xFF0E, 0xFF1F, 0xFF01, 0};
-        for (int i = 0; commonPunctuation[i]; i++) {
-            AddCharacterToAtlas(commonPunctuation[i]);
-        }
-    }
+            float xpos = startX + ch.Bearing.x * scale;
+            float ypos = y - (ch.typeSize.y - ch.Bearing.y) * scale;
+            
+            float w = ch.typeSize.x * scale;
+            float h = ch.typeSize.y * scale;
+            
+            // 当前字符的4个纹理坐标
 
-    void Font::CreateAtLasTexture() {
-        mAtlasTexture.reset(Texture::CreateTextureFromMemory("FontAtlas", mAtlasData.data(), ATLAS_WIDTH, ATLAS_HEIGHT, ChannelType::Red));
-    }
-
-    void Font::AddCharacterToAtlas(char32_t codepoint) {
-        //查看此字体是否加载
-        if (mCharacters.contains(codepoint) && mCharacters[codepoint].isLoaded) {
-            return;
-        }
-        //初始化字符信息
-        auto& charInfo = mCharacters[codepoint];
-        //获取字的度量
-        int advance, lsb;
-        float scale = stbtt_ScaleForMappingEmToPixels(&mStbInfo, mFontSize);
-        stbtt_GetCodepointHMetrics(&mStbInfo, codepoint, &advance, &lsb);
-        charInfo.advance = advance * scale;
-        //字边界
-        int x0, y0, x1, y1;
-        stbtt_GetCodepointBitmapBox(&mStbInfo, codepoint, scale, scale, &x0, &y0, &x1, &y1);
-        charInfo.size = glm::vec2(x1 - x0, y1 - y0);
-        charInfo.bearing = glm::vec2(x0, -y0);
-
-        //打包到位图中
-        stbtt_packedchar packedChar;
-        if (stbtt_PackFontRange(&mPackContext, mFontBuffer.data(), 0, mFontSize, codepoint, 1, &packedChar)){
-            charInfo.texCoordsMin = glm::vec2(
-                static_cast<float>(packedChar.x0) / ATLAS_WIDTH,
-                static_cast<float>(packedChar.y0) / ATLAS_HEIGHT
-            );
-
-            charInfo.texCoordsMax = glm::vec2(
-                static_cast<float>(packedChar.x1) / ATLAS_WIDTH,
-                static_cast<float>(packedChar.y1) / ATLAS_HEIGHT
-            );
-
-            charInfo.isLoaded = true;
-            charInfo.lastUsedFrame = mCurrentFrame;
-            //更新纹理
-            mAtlasTexture->updateSubTex(packedChar.x0, packedChar.y0, 
-                packedChar.x1-packedChar.x0, packedChar.y1 - packedChar.y0, mAtlasData.data() + packedChar.y0 * ATLAS_WIDTH + packedChar.x0);
-        }else {
-            FS_CORE_WARN("Failed to pack character: U+{0:x}", (uint32_t)codepoint);
-            charInfo.isLoaded = false;
-        }
-
-        
-        
-    }
-
-    void Font::RenderQuad(float x, float y, float w, float h, float u1, float v1, float u2, float v2) {
-        float vertices[] = {
+            
+            // 添加6个顶点构成2个三角形
+            vertices.insert(vertices.end(), {
             // 位置          // 纹理坐标
-            x,     y + h,    u1, v2, // 左下 - 0
-            x + w, y + h,    u2, v2, // 右下 - 1
-            x + w, y,        u2, v1, // 右上 - 2
-            x,     y,        u1, v1  // 左上 - 3
-        };
+            xpos,     ypos,     ch.texCoordsMin.x, ch.texCoordsMax.y, // 左下
+            xpos + w, ypos,     ch.texCoordsMax.x, ch.texCoordsMax.y, // 右下
+            xpos,     ypos + h, ch.texCoordsMin.x, ch.texCoordsMin.y, // 左上
+            xpos + w, ypos + h, ch.texCoordsMax.x, ch.texCoordsMin.y  // 右上
+            });
+            
+            indices.insert(indices.end(), {
+                indexOffset, indexOffset + 1, indexOffset + 2,  // 第一个三角形
+                indexOffset + 1, indexOffset + 3, indexOffset + 2   // 第二个三角形
+            });
 
-        // 索引数据 (两个三角形组成四边形)
-        unsigned int indices[] = {
-            0, 1, 2, // 第一个三角形
-            0, 2, 3  // 第二个三角形
-        };
+            indexOffset += 4;
+            startX += (ch.Advance >> 6) * scale;
+        }
 
-        std::shared_ptr<VertexBuffer> buffer(VertexBuffer::Create(vertices, sizeof(vertices)));
-        buffer->SetLayout({
-            {ShaderDataType::Float2, VertexType::Position},
-            {ShaderDataType::Float2, VertexType::UV}
-        });
-
-        std::shared_ptr<IndexBuffer> indexbuffer(IndexBuffer::Create(indices, 6));
-        std::shared_ptr<VertexArray> Vao(VertexArray::Create());
-
-        Vao->AddVertexBuffer(buffer);
-        Vao->SetIndexBuffer(indexbuffer); 
+        std::shared_ptr<VertexBuffer> Vbo(VertexBuffer::Create(vertices.data(), 4*vertices.size()));
+        std::shared_ptr<IndexBuffer>  Index(IndexBuffer::Create(indices.data(), indices.size()));
         
+        Vbo->SetLayout(
+            {
+                {ShaderDataType::Float2, VertexType::Position},
+                {ShaderDataType::Float2, VertexType::UV}
+            }
+        );
+
+        Vao->AddVertexBuffer(Vbo);
+        Vao->SetIndexBuffer(Index);
+        
+        Fontstatus->enablestatus(StatusType::Blend);
+        Fontstatus->setstatusFunc(SetType::BlendFunc, FuncType::SrcAlpha, FuncType::MinusSrcAlpha);
+        Fontstatus->disablestatus(StatusType::DepthTest);
+        FontShader->Begin();
+        FontShader->setTextureHandle("FontTex", mFontTexture->getHandle());
+        FontShader->setVector3("color", color);
         Vao->renderIndex(0, TRIANGLES);
+        FontShader->End(); 
+        Fontstatus->enablestatus(StatusType::DepthTest);
+        Fontstatus->disablestatus(StatusType::Blend);
+    }
+
+    void Font::InitFTlibrary() {
+        if (ft != nullptr) return;
+        
+        if (FT_Init_FreeType(&ft)) {
+            FS_CORE_ERROR("Could not init FreeType Library");
+        }
+    }
+    void Font::loadCharacter(wchar_t c) {
+        if (Characters.contains(c)) return;
+
+        if (FT_Load_Char(mFace, c, FT_LOAD_RENDER)) {
+            FS_CORE_ERROR("Failed to load Character: {0:x}", (int)c);
+            return;
+        }
+
+        auto& glyph = mFace->glyph;
+        auto& bitmap = glyph->bitmap;
+        //更新插入位置
+        if (currentX + bitmap.width > ATLAS_WIDTH) {
+            currentX = 0;
+            currentY += maxRowHeight;
+            maxRowHeight = 0;
+
+            if (currentY + bitmap.rows > ATLAS_HEIGHT) {
+                FS_CORE_WARN("Texture atlas is full!");
+                return;
+            }
+        }
+        //更新图集
+        mFontTexture->
+            updateSubTex(currentX, currentY, bitmap.width, bitmap.rows, bitmap.buffer);
+        
+
+        //插入字体
+        Characters[c] = 
+            CharacterInfo(
+            glm::vec2(currentX/(float)ATLAS_WIDTH, currentY/(float)ATLAS_HEIGHT),
+            glm::vec2((currentX + bitmap.width)/(float)ATLAS_WIDTH, (currentY + bitmap.rows)/(float)ATLAS_HEIGHT),
+            glm::ivec2(bitmap.width, bitmap.rows),
+            glm::ivec2(glyph->bitmap_left, glyph->bitmap_top),
+            static_cast<int>(glyph->advance.x));
+
+        // 更新位置
+        currentX += bitmap.width;
+        maxRowHeight = max(maxRowHeight, bitmap.rows);
+    }
+    void Font::InitFontShader() {
+        if (FontShader != nullptr) return;
+        
+        FontShader.reset(Shader::CreateShader());
+
+        FontShader->readVertexShader("sharders/EnginRenderShader/FontVertex.glsl");
+        FontShader->readFragmentShader("sharders/EnginRenderShader/FontFragment.glsl");
+        FontShader->CompileLink();
+    }
+    void Font::InitFontStatus() {
+        if (Fontstatus != nullptr) return;
+
+        Fontstatus.reset(Renderstatus::CreateRenderstatus());
     }
 }

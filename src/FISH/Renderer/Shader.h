@@ -31,7 +31,7 @@ namespace FISH {
             virtual void setInt(const std::string& name, int value) = 0;
             virtual void setBool(const std::string& name, bool value) = 0;
             virtual void setMat4(const std::string& name, glm::mat4 mat) = 0;
-
+            virtual  void setTextureHandle(const std::string& name, uint64_t handle) = 0; 
             static Shader* CreateShader();
         private:
             //´íÎó¼ì²éÆ÷

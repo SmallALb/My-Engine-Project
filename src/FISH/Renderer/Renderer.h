@@ -62,6 +62,6 @@ namespace FISH {
 
         static bool                                         renderLight;
 
-        static std::unique_ptr<RenderState>                 mStates;
+        static std::unique_ptr<Renderstatus>                 mstatuss;
     };
 }

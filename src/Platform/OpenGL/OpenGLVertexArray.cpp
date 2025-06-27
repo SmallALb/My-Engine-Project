@@ -1,5 +1,6 @@
 #include "fspcs.h"
 #include "Platform/OpenGL/glad/glad.h"
+#include "OpenGLErrorCheck.h"
 #include "OpenGLVertexArray.h"
 #include "FISH/Log.h"
 
@@ -24,7 +25,7 @@ namespace FISH {
     }
 
     GLVertexArray::GLVertexArray() {
-        glCreateVertexArrays(1, &mVao);
+        GL_ERRORCALL(glCreateVertexArrays(1, &mVao));
     }
 
     GLVertexArray::~GLVertexArray() {
@@ -45,13 +46,14 @@ namespace FISH {
         vertexBuffer->bind();
         
         for (const auto& e : vertexBuffer->GetLayout()) {
-            glEnableVertexAttribArray(idx);
-            glVertexAttribPointer(idx++, 
+
+             GL_ERRORCALL(glEnableVertexAttribArray(idx));
+             GL_ERRORCALL(glVertexAttribPointer(idx++, 
                 e.GetComponentCount(), 
                 ShaderDataTypeToOpenGLBaseType(e.Type),
                 e.Normalized ?  GL_TRUE : GL_FALSE,
                 vertexBuffer->GetLayout().GetStride(),
-                (const void*)e.Offset);
+                (const void*)e.Offset));
         }
 
         mVertexBuffers.push_back(vertexBuffer);
@@ -67,7 +69,8 @@ namespace FISH {
         unbind();
     }
     void GLVertexArray::renderIndex(int beginId, int ElementType) {
-            glDrawElements(ElementType, (mIndexBuffer->GetCount()), GL_UNSIGNED_INT, (const void*)beginId);
-
+        bind();
+        glDrawElements(ElementType, (mIndexBuffer->GetCount()), GL_UNSIGNED_INT, (const void*)beginId);
+        unbind();
     };
 }

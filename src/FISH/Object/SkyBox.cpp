@@ -1,4 +1,5 @@
 #include "fspcs.h"
+#include "FISH/Renderer/Shader.h"
 #include "FISH/Renderer/Buffer.h"
 #include "FISH/Renderer/VertexArray.h"
 #include "FISH/Renderer/RenderElement.h"
@@ -24,8 +25,10 @@ namespace FISH{
     }
 
     void SkyBox::renderSkyBox() {
-        mBall->useShape();
         mBall->useTexture();
         mBall->render(TRIANGLES);
+    }
+    uint64_t SkyBox::useTexture() const {
+        return mBall->useTexture();
     }
 }

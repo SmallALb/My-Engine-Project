@@ -39,11 +39,10 @@ namespace FISH
         }
 
         //使用此模型的纹理贴图
-        inline void useTexture() {
-            mTexture->bind();
+        inline uint64_t useTexture() {
+            return mTexture->getHandle();
         }
 
-        //取消使用此模型
         inline void unuseShape() {
             mVao->unbind();
         }

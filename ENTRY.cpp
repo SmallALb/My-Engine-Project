@@ -4,17 +4,15 @@
 
 class MainLayer : public FISH::Layer {
     void OnAttach() override {
+
         shader.reset(FISH::Shader::CreateShader());
-
-        // shader->readFragmentShader("sharders/NormalFragment.glsl");
-        // shader->readVertexShader("sharders/3Dvertex.glsl");
-        // shader->CompileLink();
-
+        
         shader->readVertexShader("sharders/EnginRenderShader/2Dvertex.glsl");
         shader->readFragmentShader("sharders/EnginRenderShader/OnlyColor.glsl");
         shader->CompileLink();
 
-        cameras.emplace_back(FISH::Camera::CreateCamera());
+
+        cameras.emplace_back(FISH::Camera::CreateCamera()); 
         dynamic_cast<FISH::perspectiveCamera*>(cameras[0].get())->
             init(
                 60.f, 
@@ -32,7 +30,7 @@ class MainLayer : public FISH::Layer {
 
         //std::shared_ptr<FISH::Shape> AShape(FISH::Shape::CreateSphere(2.0f));
         
-        mRenderStates.reset(FISH::RenderState::CreateRenderState());
+        mRenderstatuss.reset(FISH::Renderstatus::CreateRenderstatus());
         std::shared_ptr<FISH::Mesh> mMesh(new FISH::Mesh());
         std::shared_ptr<FISH::SkyBox> mBox(new FISH::SkyBox());
         std::shared_ptr<FISH::PointLight> point(new FISH::PointLight());
@@ -59,18 +57,6 @@ class MainLayer : public FISH::Layer {
         point2->setPosition({5.0, 0.0, 0.0f});
         point2->setColor({0.0, 1.0, 0.0});
 
-
-        // spot->setLightOn(1);
-        // spot->setSpecularIntensity(1.0f);
-
-        // spot->setIntensity(1.0f);
-        // spot->setk2(0.1);
-        // spot->setkc(0.01);
-        // spot->setPosition({0.0, 0.5, 4.0f});
-        // spot->setColor({0.0, 0.0, 1.0});
-
-        //cameras[0]->addChild(spot);
-
         mMesh->getShape() = std::shared_ptr<FISH::Shape>(FISH::Shape::CreateBox(1.0f));
         
         
@@ -88,23 +74,25 @@ class MainLayer : public FISH::Layer {
         //cameras[0]->setAllowedControl(1);
         cameras[0]->setLookAt({0.0, 0.0, -5.0f});
         cameras[0]->addChild(mBox);
-        mRenderStates->enableDepthTest();
-        mRenderStates->enableCleanDepth();
-        mRenderStates->enableCleanColor();
-        mRenderStates->setDepthTestFuncLess();
+        mRenderstatuss->enablestatus(FISH::StatusType::DepthTest);
+        mRenderstatuss->enablestatus(FISH::StatusType::CleanDepth);
+        mRenderstatuss->enablestatus(FISH::StatusType::CleanColor);
+        mRenderstatuss->setstatusFunc(FISH::SetType::DepthFunc, FISH::FuncType::DepthLess);
 
         APP.setClean([&]() {
-            APP.GetWindow().CleanBuffer(mRenderStates->getCleanStates());
+            APP.GetWindow().CleanBuffer(mRenderstatuss->getCleanstatuss());
         });
 
-    }
+        mFont.reset(new FISH::Font("Fonts/testfont.ttf"));
+    }   
 
     void OnImGuiRender() override {
         //FISH::UI::Text("绘制！");
-       
+        FISH::UI::InputText("输入", inputbuffer, sizeof(inputbuffer));       
     }
 
     void OnUpdate() override {
+
         cameras[0]->update();
         dynamic_cast<FISH::perspectiveCamera*>(cameras[0].get())->setAspect((float)(APP.GetWindow().GetWidth()/APP.GetWindow().GetHeight()));
         //dynamic_pointer_cast<FISH::SpotLight>(objs[3])->setLightDir(cameras[0]->getFront());
@@ -114,7 +102,12 @@ class MainLayer : public FISH::Layer {
         Shape2D->render(TRIANGLES);
         Shape2D->unuseShape();
         shader->End();
+        
+
         FISH::Renderer::render(objs);
+
+        mFont->RenderText(inputbuffer, -0.2, 0, 0.004f, {1.0, 1.0, 1.0});
+
         for (auto& obj : objs) if (FISH::Input::IsMouseButtonPressed(FS_MOUSE_BUTTON_LEFT)) {
             if (obj->GetObjType() != FISH::ObjType::SkyBox && FISH::RayTest::IsRayCastObj(cameras[0]->getPosition(), cameras[0]->getFront(), obj, 0.05)) {
                 FS_WARN("CAST");
@@ -138,8 +131,10 @@ class MainLayer : public FISH::Layer {
     std::shared_ptr<FISH::DirectionLight> light;
     std::shared_ptr<FISH::Shader> shader;
     std::shared_ptr<FISH::Shape> Shape2D;
-    std::unique_ptr<FISH::RenderState> mRenderStates;
+    std::unique_ptr<FISH::Renderstatus> mRenderstatuss;
+    std::shared_ptr<FISH::Font>         mFont;
     bool lstpress{0}, islock{0};
+    char inputbuffer[256] = "";
 };
 
 

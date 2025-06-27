@@ -79,7 +79,6 @@ namespace FISH {
         }
         //OpenGL的窗口创建
         mWindow = glfwCreateWindow((int)mData.Width, (int)mData.Height, mData.Title.c_str(), nullptr, nullptr);
-        
         mContext = new OpenGLContext(mWindow);
         mContext->init();
         

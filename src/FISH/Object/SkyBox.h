@@ -16,6 +16,8 @@ namespace FISH {
 
         void renderSkyBox();
 
+        uint64_t useTexture() const;
+
         OBJ_CLASS_TYPE(SkyBox)
     private:
         std::shared_ptr<Shape> mBall;

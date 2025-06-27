@@ -14,8 +14,9 @@ add_cxflags("/wd4244")
 add_cxflags("/wd4312")
 add_cxflags("/wd4305")
 add_cxflags("/wd4267")
+add_cxflags("/wd4996")
 add_cxflags("/utf-8")
-
+add_cxflags("/wd4018")
 
 
 --添加opengl依赖
@@ -25,6 +26,10 @@ add_requires("glm", {configs = {git = true}})
 add_requires("imgui", {version = "v1.91.8-docking"})
 --日志库依赖
 add_requires("spdlog", {version = "v1.15.2"})
+--FreeType
+add_requires("freetype")
+
+
 --opengl接入函数
 function add_opengl()
     add_packages("glfw")
@@ -50,13 +55,18 @@ target("FISH")
     set_kind("shared")
     add_includedirs("src")
     add_includedirs("src/Platform/OpenGL/glad")
+    --宏定义
     add_defines("GLFW_INCLUDE_NONE")
+    add_defines("FT2_BUILD_LIBRARY")  -- 确保 FreeType 使用内部实现
+    add_defines("FT_CONFIG_OPTION_SYSTEM_ZLIB=0")  -- 禁用系统 ZLIB
+    add_defines("FISH_DLL") --编译为动态库的宏标志
+    --指定编译文件
     add_headerfiles("src/**.h")
     add_files("src/**.cpp")
     add_files("src/**.c")
-    --编译为动态库的宏标志
-    add_defines("FISH_DLL")
+    --链接包（库）
     add_packages("spdlog")
+    add_packages("freetype")
     add_opengl()
     if  is_plat("windows") then 
         add_rules("utils.symbols.export_all", {
@@ -64,6 +74,8 @@ target("FISH")
             export_auto_implib = true})
         add_ldflags("-Wl,--export-all-symbols")
         add_ldflags("--out-implib=libFISH.dll.a")
+        add_ldflags("/NODEFAULTLIB:LIBCMT", {force = true})  -- 忽略冲突的库
+        add_ldflags("/NODEFAULTLIB:MSVCRT", {force = true})
     end
     if  is_mode("release") then
         add_linkdirs("$(buildir)/windows/x64/release")
@@ -77,6 +89,7 @@ target("ENTRY")
     add_links("FISH")
     add_opengl()
     add_packages("spdlog")
+    add_packages("freetype")
     add_includedirs("src")
     if is_mode("release") then
         add_linkdirs("$(buildir)/windows/x64/release")
@@ -91,8 +104,10 @@ after_build(function (target)
     if is_mode("debug") then
         os.cp("sharders", "build/windows/x64/debug")
         os.cp("picture", "build/windows/x64/debug")
+        os.cp("Fonts", "build/windows/x64/debug")
     else
         os.cp("sharders", "build/windows/x64/release")
         os.cp("picture", "build/windows/x64/release")
+        os.cp("Fonts", "build/windows/x64/release")
     end
 end)

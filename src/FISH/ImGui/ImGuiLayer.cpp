@@ -1,6 +1,8 @@
 #include "fspcs.h"
 #include "Platform/OpenGL/glad/glad.h"
 #include <glfw/glfw3.h>
+#include <imgui.h>
+#include <imgui_internal.h>
 #include "FISH/Application.h" 
 #include "Platform/OpenGL/imgui_impl_glfw.h"
 #include "Platform/OpenGL/imgui_impl_opengl3.h"
@@ -122,5 +124,9 @@ namespace FISH {
         va_start(args, fmt);
         ImGui::TextV(fmt, args);  // 调用 ImGui 的实际实现
         va_end(args);
+    }
+
+    bool UI::InputText(const char* label, char* buf, size_t buf_size, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, void* user_data) {
+        return ImGui::InputText(label, buf, buf_size, flags, callback, user_data);
     }
 }

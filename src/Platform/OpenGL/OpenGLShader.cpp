@@ -5,12 +5,16 @@
 #include "FISH/Log.h"
 #include "OpenGLShader.h"
 
+
+extern PFNGLUNIFORMHANDLEUI64ARBPROC glUniformHandleui64ARB;
+
 namespace FISH {
     GLShader::~GLShader() {
         glDeleteProgram(mProgram);
     }
     
     bool GLShader::CompileLink() {
+
         uint32_t vertex, fragment;
         vertex = glCreateShader(GL_VERTEX_SHADER);
         fragment = glCreateShader(GL_FRAGMENT_SHADER);
@@ -155,5 +159,20 @@ namespace FISH {
         (glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(mat)));
     }
 
-
+    void GLShader::setTextureHandle(const std::string &name, uint64_t handle) {
+        if (!GLAD_GL_ARB_bindless_texture) {
+            static bool warned = false;
+            if (!warned) {
+                FS_CORE_ERROR("GL_ARB_bindless_texture not supported!");
+                warned = true;
+            }
+            return;
+        }
+        unsigned int location = glGetUniformLocation(mProgram, name.c_str());
+        glUniformHandleui64ARB(location, handle);
+        
+    }
+    unsigned int GLShader::getUniformLocation(const std::string &name) {
+        return 0;
+    }
 }

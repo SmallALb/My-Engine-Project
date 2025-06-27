@@ -59,7 +59,7 @@ namespace FISH {
         float           mFovy = 0.0f;
         float           mAspect = 0.0f;
         float           mPitch = 0.0f;
-        float           mSpeed = 0.03f;
+        float           mSpeed = 0.01f;
         double          mCurrentX = 0.0, mCurrentY = 0.0;
         float           mSensitivity = 0.03f;
     };

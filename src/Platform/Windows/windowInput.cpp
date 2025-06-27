@@ -1,4 +1,5 @@
 #include "fspcs.h"
+#include <imgui.h>
 #include "FISH/Application.h"
 #include "FISH/input.h"
 #include "windowInput.h"

@@ -21,10 +21,12 @@ namespace FISH {
         void setInt(const std::string& name, int value) override;
         void setBool(const std::string& name, bool value) override;
         void setMat4(const std::string& name, glm::mat4 mat) override;
+        void setTextureHandle(const std::string& name, uint64_t handle) override;
         private:
             //GL的着色器错误检查器
             void checkShaderErrors(unsigned int target, std::string type);
-    
+
+            unsigned int getUniformLocation(const std::string& name);
         private:
             //编译好的着色器程序
             uint32_t                    mProgram{0};

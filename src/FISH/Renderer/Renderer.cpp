@@ -15,7 +15,7 @@
 #include "../Object/Mesh.h"
 #include "../Object/SkyBox.h"
 #include "../Log.h"
-#include "RenderState.h"
+#include "Renderstatus.h"
 #include "Renderer.h"
 
 namespace FISH {
@@ -24,7 +24,7 @@ namespace FISH {
     std::shared_ptr<DirectionLight> Renderer::UseambientLight = nullptr;
     std::map<string, std::shared_ptr<Shader>> Renderer::ShaderLib {};
     std::unique_ptr<Shape> Renderer::ball = nullptr;
-    std::unique_ptr<RenderState> Renderer::mStates = nullptr;
+    std::unique_ptr<Renderstatus> Renderer::mstatuss = nullptr;
     bool Renderer::renderLight = 1;
 
     void Renderer::render(
@@ -62,7 +62,7 @@ namespace FISH {
 
     void Renderer::initDefaultShader() {
         ball.reset(Shape::CreateSphere(0.5f));
-        mStates.reset(RenderState::CreateRenderState());
+        mstatuss.reset(Renderstatus::CreateRenderstatus());
         //冯氏光照处理着色器
         ShaderLib.emplace("Phong", std::shared_ptr<Shader>(Shader::CreateShader()));
         ShaderLib["Phong"]->readVertexShader("sharders/EnginRenderShader/3Dvertex.glsl");
@@ -104,59 +104,56 @@ namespace FISH {
         switch (obj->GetObjType()) {
             //当obj为模型时
             case ObjType::Mesh: {
-                mStates->enableCutFace();
-                mStates->setCutBackFace();
-                mStates->setFrontFaceToCW();
+                mstatuss->enablestatus(StatusType::CullFace);
+                mstatuss->setstatusFunc(SetType::CullFaceFunc, FuncType::Back);
+                mstatuss->setstatusFunc(SetType::FrontFaceDIR, FuncType::FaceCW);
                 ShaderLib["Phong"]->Begin();
                 ShaderLib["Phong"]->setMat4("projection", UseCamera->getProjectMatrix());
                 ShaderLib["Phong"]->setMat4("view", UseCamera->getViewMatrix());
                 caculateLight(spotlights, pointlights);
                 auto shape = (dynamic_cast<Mesh*>(obj.get()))->getShape();   
-                shape->useShape();
-                ShaderLib["Phong"]->setInt("sampler", 0);
+                ShaderLib["Phong"]->setTextureHandle("sampler", shape->useTexture());
                 shape->useTexture();           
                 ShaderLib["Phong"]->setMat4("model", obj->getModelMatrix());
                 ShaderLib["Phong"]->setMat4("normat", obj->getNormalMatrix());
                 shape->render(TRIANGLES); 
-                shape->unuseShape();
                 ShaderLib["Phong"]->End();  
-                mStates->disableCutFace();
+                mstatuss->disablestatus(StatusType::CullFace);
                 break;
             }
             //当obj为灯光时
             case ObjType::Light: {
                 if (!renderLight) break;
-                mStates->enableCutFace();
-                mStates->setCutBackFace();
-                mStates->setFrontFaceToCW();
+                mstatuss->enablestatus(StatusType::CullFace);
+                mstatuss->setstatusFunc(SetType::CullFaceFunc, FuncType::Back);
+                mstatuss->setstatusFunc(SetType::FrontFaceDIR, FuncType::FaceCW);
                 ShaderLib["OnlyColor"]->Begin();
                 ShaderLib["OnlyColor"]->setMat4("projection", UseCamera->getProjectMatrix());
                 ShaderLib["OnlyColor"]->setMat4("view", UseCamera->getViewMatrix());
-                ball->useShape();
+                //ShaderLib["OnlyColor"]->setTextureHandle("sampler", ball->useTexture());
                 auto color = (dynamic_cast<Light*>(obj.get()))->getColor();
                 ShaderLib["OnlyColor"]->setMat4("model", obj->getModelMatrix());
                 ShaderLib["OnlyColor"]->setMat4("normat", obj->getNormalMatrix());  
                 ShaderLib["OnlyColor"]->setVector3("InColor", color);
                 ball->render(TRIANGLES);
-                ball->unuseShape();
                 ShaderLib["OnlyColor"]->End();
-                mStates->disableCutFace();
+                mstatuss->disablestatus(StatusType::CullFace);
                 //FS_INFO("RenderLight Done!");
                 break;
             }
             //当obj为天空盒时
             case ObjType::SkyBox: {
-                mStates->enableCutFace();
-                mStates->setCutFrontFace();
+                mstatuss->enablestatus(StatusType::CullFace);
+                mstatuss->setstatusFunc(SetType::CullFaceFunc, FuncType::Front);
                 ShaderLib["OnlyTexture"]->Begin();
                 ShaderLib["OnlyTexture"]->setMat4("projection", UseCamera->getProjectMatrix());
                 ShaderLib["OnlyTexture"]->setMat4("view", UseCamera->getViewMatrix());
                 ShaderLib["OnlyTexture"]->setMat4("model", obj->getModelMatrix());
                 ShaderLib["OnlyTexture"]->setMat4("normat", obj->getNormalMatrix());  
                 dynamic_pointer_cast<SkyBox>(obj)->renderSkyBox();
-                ShaderLib["OnlyTexture"]->setInt("sampler", 0);
+                ShaderLib["OnlyTexture"]->setTextureHandle("uTexture", dynamic_pointer_cast<SkyBox>(obj)->useTexture());
                 ShaderLib["OnlyTexture"]->End();
-                mStates->disableCutFace();
+                mstatuss->disablestatus(StatusType::CullFace);
                 break;
             }
         

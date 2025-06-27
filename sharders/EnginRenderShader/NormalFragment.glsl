@@ -1,4 +1,5 @@
 #version 460 core
+#extension GL_ARB_bindless_texture : require
 
 out vec4 FragColor;
 
@@ -117,6 +118,14 @@ void main() {
     vec3 viewDir = normalize(cameraPosition - worldPosition);
     vec3 normalN = normalize(normal);
     vec3 objectColor = texture(sampler, uv).xyz;
+
+    // if (objectColor.a < 0.01) {
+    //     objectColor = vec4(1.0, 0.0, 1.0, 1.0); // 紫色标记无效采样
+    // }
+
+    // if (objectColor.a == 0.0) {
+    //     objectColor = vec3(1.0, 0.0, 1.0);
+    // }
 
     if (dirLightOn) {
         result += calculateDirectionLight(normalN, dirLight, viewDir);
