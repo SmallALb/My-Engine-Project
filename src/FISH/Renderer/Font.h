@@ -51,7 +51,7 @@ namespace FISH{
         //字体纹理
         std::shared_ptr<Texture> mFontTexture;
         //字体大小
-        int mFontSize{32};
+        int mFontSize{64};
     };
 
 

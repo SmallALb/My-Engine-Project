@@ -147,7 +147,7 @@ namespace FISH {
     void Font::loadCharacter(wchar_t c) {
         if (Characters.contains(c)) return;
 
-        if (FT_Load_Char(mFace, c, FT_LOAD_RENDER)) {
+        if (FT_Load_Char(mFace, c, FT_LOAD_RENDER | FT_LOAD_TARGET_LIGHT)) {
             FS_CORE_ERROR("Failed to load Character: {0:x}", (int)c);
             return;
         }

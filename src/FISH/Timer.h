@@ -42,7 +42,7 @@ namespace FISH {
     //计时器
     class API_ Timer {
     public:
-        Timer() {}
+        Timer(): timersLock(), conditionV(), runTag(false) {}
         ~Timer();
         //创建事件计时器
         int createTimer(int interval, TimerFUN fun, TimerMode mode = TimerMode::SINGLE);
@@ -58,9 +58,9 @@ namespace FISH {
         //定时器列表
         std::multiset<TimerProps>       timers;
         //互斥锁
-        std::mutex                      timersLock;
+        std::recursive_mutex            timersLock;
         //线程条件变量
-        std::condition_variable         conditionV;
+        std::condition_variable_any          conditionV;
         //运行标志
         std::atomic<bool>               runTag{false};
         //主线程，用于控制所有计时器的线程

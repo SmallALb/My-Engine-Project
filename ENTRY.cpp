@@ -14,7 +14,7 @@ class MainLayer : public FISH::Layer {
 
         cameras.emplace_back(FISH::Camera::CreateCamera()); 
         dynamic_cast<FISH::perspectiveCamera*>(cameras[0].get())->
-            init(
+            init(   
                 60.f, 
                 (float)(APP.GetWindow().GetWidth()/APP.GetWindow().GetHeight()),
                  0.1f,
@@ -74,6 +74,8 @@ class MainLayer : public FISH::Layer {
         //cameras[0]->setAllowedControl(1);
         cameras[0]->setLookAt({0.0, 0.0, -5.0f});
         cameras[0]->addChild(mBox);
+        dynamic_cast<FISH::perspectiveCamera*>(cameras[0].get())->setSpeed(0.03);
+        dynamic_cast<FISH::perspectiveCamera*>(cameras[0].get())->setSensitivity(0.01);
         mRenderstatuss->enablestatus(FISH::StatusType::DepthTest);
         mRenderstatuss->enablestatus(FISH::StatusType::CleanDepth);
         mRenderstatuss->enablestatus(FISH::StatusType::CleanColor);
@@ -82,6 +84,8 @@ class MainLayer : public FISH::Layer {
         APP.setClean([&]() {
             APP.GetWindow().CleanBuffer(mRenderstatuss->getCleanstatuss());
         });
+
+        //APP.GetWindow().SetVSync(1);
 
         mFont.reset(new FISH::Font("Fonts/testfont.ttf"));
     }   
@@ -106,7 +110,7 @@ class MainLayer : public FISH::Layer {
 
         FISH::Renderer::render(objs);
 
-        mFont->RenderText(inputbuffer, -0.2, 0, 0.004f, {1.0, 1.0, 1.0});
+        mFont->RenderText(std::to_string(co), -0.2, 0, 0.004f, {1.0, 1.0, 1.0});
 
         for (auto& obj : objs) if (FISH::Input::IsMouseButtonPressed(FS_MOUSE_BUTTON_LEFT)) {
             if (obj->GetObjType() != FISH::ObjType::SkyBox && FISH::RayTest::IsRayCastObj(cameras[0]->getPosition(), cameras[0]->getFront(), obj, 0.05)) {
@@ -118,10 +122,10 @@ class MainLayer : public FISH::Layer {
         if (!lstpress && currntpress) {
             if (!islock) APP.LockCursor(), islock = 1,cameras[0]->setAllowedControl(1);
             else APP.UnLockCursor(), islock = 0,cameras[0]->setAllowedControl(0);
-                     
+
         }
 
-
+        //FS_INFO("{0}", FISH::DeltaTime);
         lstpress = currntpress;
         //FS_INFO("get camera lookat, {0}", glm::to_string(cameras[0]->getLookAtPoint()));
     }
@@ -135,6 +139,8 @@ class MainLayer : public FISH::Layer {
     std::shared_ptr<FISH::Font>         mFont;
     bool lstpress{0}, islock{0};
     char inputbuffer[256] = "";
+    int id{0};
+    std::atomic_int co{0};
 };
 
 

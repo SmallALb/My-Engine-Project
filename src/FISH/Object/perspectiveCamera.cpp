@@ -4,6 +4,7 @@
 #include "FISH/Keycodes.h"
 #include "FISH/Log.h"
 #include "Camera.h"
+#include "FISH/Time.h"
 
 namespace FISH {
     perspectiveCamera::perspectiveCamera(const string& name) {
@@ -29,28 +30,34 @@ namespace FISH {
 
     void perspectiveCamera::update() {
         if (!IsControl) return;
-        //鼠标位置
-        auto [xpos, ypos] = Input::GetMousePos();
-        float dY = (ypos - mCurrentY) * mSensitivity ;
-        float dX = (xpos - mCurrentX) * mSensitivity ;
-        //FS_INFO("{0}", dt);
-        yaw(-dX);
-        pitch(dY);
-        mCurrentX = xpos;
-        mCurrentY = ypos;
-        //键盘响应
-        auto front = glm::cross(mRight, mUp);
-        glm::vec3 dir(0.0);
-        if (Input::IsKeyPressed(FS_KEY_W) || Input::IsKeyPressed(FS_KEY_UP))
-            dir += front;
-        if (Input::IsKeyPressed(FS_KEY_S) || Input::IsKeyPressed(FS_KEY_DOWN))
-            dir -= front;
-        if (Input::IsKeyPressed(FS_KEY_D) || Input::IsKeyPressed(FS_KEY_RIGHT))
-            dir -= mRight;
-        if (Input::IsKeyPressed(FS_KEY_A) || Input::IsKeyPressed(FS_KEY_LEFT))
-            dir += mRight;
-        
-        if (glm::length(dir) != 0) mPosition += glm::normalize(dir) * mSpeed ;
+
+        mAccumulatedTime += Time::DeltaTime; 
+        while(mAccumulatedTime >= Time::Step) {
+            //鼠标位置
+            auto [xpos, ypos] = Input::GetMousePos();
+            float dY = (ypos - mCurrentY) * mSensitivity;
+            float dX = (xpos - mCurrentX) * mSensitivity;
+            //FS_INFO("{0}", dt);
+            yaw(-dX);
+            pitch(dY);
+            mCurrentX = xpos;
+            mCurrentY = ypos;
+            //键盘响应
+            auto front = glm::cross(mRight, mUp);
+            glm::vec3 dir(0.0);
+            if (Input::IsKeyPressed(FS_KEY_W) || Input::IsKeyPressed(FS_KEY_UP))
+                dir += front;
+            if (Input::IsKeyPressed(FS_KEY_S) || Input::IsKeyPressed(FS_KEY_DOWN))
+                dir -= front;
+            if (Input::IsKeyPressed(FS_KEY_D) || Input::IsKeyPressed(FS_KEY_RIGHT))
+                dir -= mRight;
+            if (Input::IsKeyPressed(FS_KEY_A) || Input::IsKeyPressed(FS_KEY_LEFT))
+                dir += mRight;
+            
+            if (glm::length(dir) != 0) mPosition += glm::normalize(dir) * mSpeed;
+
+            mAccumulatedTime -= Time::Step;
+        }
         //FS_INFO("pos :({0}, {1}, {2})", mPosition[0], mPosition[1], mPosition[2]);
         
     }

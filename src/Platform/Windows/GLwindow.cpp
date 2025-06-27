@@ -36,6 +36,7 @@ namespace FISH {
         
         glfwPollEvents();
         mContext->SwapBuffers();
+
     }
 
     void GLwindow::ViewPortResize(int width, int height) {

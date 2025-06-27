@@ -25,20 +25,20 @@ namespace FISH {
         return state == GLFW_PRESS || state == GLFW_REPEAT;
     }
 
-    float WindowsInput::GetMouseXImpl() {
+    double WindowsInput::GetMouseXImpl() {
         auto window = static_cast<GLFWwindow*>(Application::GetInstance().GetWindow().GetNativeWindow()); 
         double xpos, ypos;
         glfwGetCursorPos(window, &xpos, &ypos);
         return xpos;
     }
 
-    float WindowsInput::GetMouseYImpl() {
+    double WindowsInput::GetMouseYImpl() {
         auto window = static_cast<GLFWwindow*>(Application::GetInstance().GetWindow().GetNativeWindow()); 
         double xpos, ypos;
         glfwGetCursorPos(window, &xpos, &ypos);
         return ypos;
     }
-    std::pair<float, float> WindowsInput::GetMousePosImpl(){
+    std::pair<double, double> WindowsInput::GetMousePosImpl(){
         auto window = static_cast<GLFWwindow*>(Application::GetInstance().GetWindow().GetNativeWindow()); 
         double xpos, ypos;
         glfwGetCursorPos(window, &xpos, &ypos);

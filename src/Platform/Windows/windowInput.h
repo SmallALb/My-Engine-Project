@@ -9,11 +9,11 @@ namespace FISH {
         //查询鼠标
         virtual bool IsButtonPressedImpl(int button) override;
         //获取位置
-        virtual float GetMouseXImpl() override;
+        virtual double GetMouseXImpl() override;
         
-        virtual float GetMouseYImpl() override;
+        virtual double GetMouseYImpl() override;
 
-        virtual std::pair<float, float> GetMousePosImpl() override;
+        virtual std::pair<double, double> GetMousePosImpl() override;
         
     
 

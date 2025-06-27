@@ -11,20 +11,20 @@ namespace FISH {
         //鼠标是否被按下
         inline static bool IsMouseButtonPressed(int button) {return GetInstance().IsButtonPressedImpl(button);}
         //鼠标的x
-        inline static float GetMouseX() {return GetInstance().GetMouseXImpl();}
+        inline static double GetMouseX() {return GetInstance().GetMouseXImpl();}
         //鼠标的y
-        inline static float GetMouseY() {return GetInstance().GetMouseYImpl();}
+        inline static double GetMouseY() {return GetInstance().GetMouseYImpl();}
         //鼠标的x,y
-        inline static std::pair<float, float> GetMousePos() {return GetInstance().GetMousePosImpl(); }
+        inline static std::pair<double, double> GetMousePos() {return GetInstance().GetMousePosImpl(); }
 
         //获取单例，一般在派生类中实现
         static Input& GetInstance();
     protected:
         virtual bool IsKeyPressedImpl(int keycode) = 0;
         virtual bool IsButtonPressedImpl(int button) = 0;
-        virtual float GetMouseXImpl() = 0;
-        virtual float GetMouseYImpl() = 0;
-        virtual std::pair<float, float> GetMousePosImpl() = 0;
+        virtual double GetMouseXImpl() = 0;
+        virtual double GetMouseYImpl() = 0;
+        virtual std::pair<double, double> GetMousePosImpl() = 0;
     private:
         
         

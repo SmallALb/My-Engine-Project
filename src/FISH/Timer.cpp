@@ -11,7 +11,7 @@ namespace FISH {
 
     int Timer::createTimer(int interval, TimerFUN fun, TimerMode mode) {
         //上锁
-        std::lock_guard<std::mutex> lock(timersLock);
+        std::lock_guard<std::recursive_mutex> lock(timersLock);
         static int idCounter = 0;
         int id = ++idCounter;
         FS_INFO("add TimerEvent: {0}", id);
@@ -30,17 +30,23 @@ namespace FISH {
     }
 
     void Timer::stopTimer(int id) {
-        std::lock_guard<std::mutex> lock(timersLock);
+        std::lock_guard<std::recursive_mutex> lock(timersLock);
         auto it = std::find_if(timers.begin(), timers.end(), [id](const auto& timer) {
             return timer.id == id;
         });
-        if (it != timers.end()) it->active = 0;
-        conditionV.notify_one();
+        if (it != timers.end()) {
+            TimerProps modifiedTimer = *it;  // 复制元素
+            modifiedTimer.active = false;    // 修改副本
+            timers.erase(it);               // 移除原元素
+            timers.emplace(std::move(modifiedTimer));   // 插入修改后的元素
+        }
+        FS_INFO("Done!, stopped the thread:{0}", id);
+        conditionV.notify_one();        // 通知工作线程
     }
 
     void Timer::stopAll() {
         {
-            std::lock_guard<std::mutex> lock(timersLock);
+            std::lock_guard<std::recursive_mutex> lock(timersLock);
             for (auto& timer : timers) timer.active = 0;
             runTag = 0;
         }
@@ -52,7 +58,7 @@ namespace FISH {
     void Timer::timerWorker() {
         FS_INFO("Timer thread had been started");
         while(runTag) {
-            std::unique_lock<std::mutex> lock(timersLock);
+            std::unique_lock<std::recursive_mutex> lock(timersLock);
 
             //定时器队列为空时，等待传入定时器
             if (timers.empty()) {
@@ -76,7 +82,7 @@ namespace FISH {
 
                 if (now >= it->startTime) {
                     needRun.push_back(*it);
-                    if (it->mode == TimerMode::REPEATING){
+                    if (it->mode == TimerMode::REPEATING && it->active){
                         TimerProps newTimer = *it;
                         newTimer.startTime = now + std::chrono::milliseconds(it->interval);
                         repTimer.emplace_back(std::move(newTimer));
@@ -100,7 +106,7 @@ namespace FISH {
             lock.unlock();
         }
         FS_INFO("Timer thread had been closed");
-        std::lock_guard<std::mutex> lock(timersLock);
+        std::lock_guard<std::recursive_mutex> lock(timersLock);
         timers.clear();
     
     }

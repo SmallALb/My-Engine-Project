@@ -13,7 +13,7 @@
 #include "Renderer/RenderElement.h"
 #include "Renderer/Texture.h"
 #include "Application.h"
-
+#include "Time.h"
 
 
 namespace FISH{
@@ -40,8 +40,9 @@ namespace FISH{
     }
 
     void Application::run() {
+        Time::SetFPS(1000.0f);
         while(mRunning) {
-
+            Time::updateDt();
 
             if (!IsLocked) mWindow->CursorUnLockInWindow(), HadBeenLocked = 0;
             else if (!HadBeenLocked && IsLocked) mWindow->CursorLockInWindow(), HadBeenLocked = 1;

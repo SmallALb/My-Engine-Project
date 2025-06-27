@@ -12,6 +12,8 @@
 
 
 namespace FISH{
+
+
     using CleanFUN = std::function<void()>;
 
     //Appliacation
@@ -39,7 +41,6 @@ namespace FISH{
         inline static Application& GetInstance() {return *Instance; }
 
         inline Timer& GetTimer() {return *mTimer;}
-
     private:
         bool OnWindowClose(WindowCloseEvent& e);
         bool OnWindowResize(WindowResizeEvent& e);
@@ -53,6 +54,7 @@ namespace FISH{
         LayerStack                                          mLayerStack;
         std::unique_ptr<Timer>                              mTimer{nullptr};
         CleanFUN                                            mCleanfun;
+        
     };
 
 
