@@ -31,6 +31,8 @@
 #include "FISH/Object/Object.h"
 #include "FISH/Object/Mesh.h"
 #include "FISH/Object/SkyBox.h"
+
+#include "FISH/Object/Botton.h"
 //??
 #include "FISH/Object/Light.h"
 #include "FISH/Object/AmbientLight.h"

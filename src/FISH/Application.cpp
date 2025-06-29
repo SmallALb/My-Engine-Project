@@ -32,7 +32,9 @@ namespace FISH{
         mImGuiLayer = new ImGuiLayer();
         PushLayer(mImGuiLayer);
         mTimer.reset(new Timer());
-        
+        mCleanfun = [this]() {
+            mWindow->CleanBuffer(0);
+        }; 
     }
 
     Application::~Application() {

@@ -31,3 +31,7 @@ using string = std::string;
 #ifdef _WIN32
     #include <windows.h>
 #endif
+//屏幕2d坐标转为比例坐标
+glm::vec2 ToProportCoord(const glm::vec2& src, float width, float height);
+
+glm::vec2 ToNDC(const glm::vec2& src, float width, float height);

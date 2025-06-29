@@ -34,6 +34,10 @@ namespace FISH{
         ~Font();
 
         void RenderText(const string& text, float x, float y, float scale, const glm::vec3& color);
+    
+        std::shared_ptr<VertexArray> GetTextBoxVao(const string& text, float x, float y, float scale);
+
+        static void RenderTextFromVaoTextstd(const std::shared_ptr<VertexArray>& Vao, const std::shared_ptr<Texture>& tex, const glm::vec3 &color);
     private:
         //初始化字体库
         void InitFTlibrary();

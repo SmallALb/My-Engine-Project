@@ -12,15 +12,15 @@ namespace FISH {
     //渲染物体类型
     enum class ObjType {
         //3D
+        None,
         Camera,
         Light,
         Mesh,
         Scene,
         SkyBox,
         //2D
-        Picture,
-        Color,
-        None
+        Botton,
+
     };
 
     //渲染物体类(3D)
@@ -105,14 +105,15 @@ namespace FISH {
         virtual std::vector<std::shared_ptr<Object2D>>& getChilds() { return mChilds; };
         //获取父节点
         virtual std::shared_ptr<Object2D> getParent() {return mParent.lock(); }
-
+        //获取类型
+        virtual ObjType GetObjType() const = 0;
     protected :
         glm::vec2 mPosition {0.0f};
         float mAngle{0.0f};
         glm::vec2 mScale {1.0f};
         std::weak_ptr<Object2D> mParent;
         std::vector<std::shared_ptr<Object2D>> mChilds{};
-        
+        ObjType mType{ObjType::None};
         std::string mName{};
     };
 

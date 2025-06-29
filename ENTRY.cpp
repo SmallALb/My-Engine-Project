@@ -88,11 +88,30 @@ class MainLayer : public FISH::Layer {
         //APP.GetWindow().SetVSync(1);
 
         mFont.reset(new FISH::Font("Fonts/testfont.ttf"));
+
+        mBotton.reset(new FISH::Botton());
+        auto& window = APP.GetWindow();
+        mBotton->setPosition(ToProportCoord({100, 30}, window.GetWidth(), window.GetHeight()));
+        mBotton->setBoxSize(ToProportCoord({50, 50}, window.GetWidth(), window.GetHeight()));
+        FS_INFO("{0}, {1}", mBotton->getPosition().x, mBotton->getPosition().y);
+        mBotton->setHoverFunc([&](){
+            float x = mBotton->getPosition().x;
+            float y = mBotton->getPosition().y;
+            //mFont->RenderText("我在这！", x, y, 0.001, {1.0, 1.0, 1.0});
+            mFont->RenderText("我在这！", x, y, 0.001, {1.0, 1.0, 1.0});
+        });
+        mBotton->setClickFunc([&](){
+            float x = mBotton->getPosition().x;
+            float y = mBotton->getPosition().y;
+            mFont->RenderText("草！", x, y, 0.001, {1.0, 0.0, 0.0});
+        });
+        
     }   
 
     void OnImGuiRender() override {
         //FISH::UI::Text("绘制！");
-        FISH::UI::InputText("输入", inputbuffer, sizeof(inputbuffer));       
+        FISH::UI::InputText("输入", inputbuffer, sizeof(inputbuffer));    
+
     }
 
     void OnUpdate() override {
@@ -112,12 +131,12 @@ class MainLayer : public FISH::Layer {
 
         mFont->RenderText(std::to_string(co), -0.2, 0, 0.004f, {1.0, 1.0, 1.0});
 
-        for (auto& obj : objs) if (FISH::Input::IsMouseButtonPressed(FS_MOUSE_BUTTON_LEFT)) {
-            if (obj->GetObjType() != FISH::ObjType::SkyBox && FISH::RayTest::IsRayCastObj(cameras[0]->getPosition(), cameras[0]->getFront(), obj, 0.05)) {
-                FS_WARN("CAST");
-                break;
-            }
-        }
+        // for (auto& obj : objs) if (FISH::Input::IsMouseButtonPressed(FS_MOUSE_BUTTON_LEFT)) {
+        //     if (obj->GetObjType() != FISH::ObjType::SkyBox && FISH::RayTest::IsRayCastObj(cameras[0]->getPosition(), cameras[0]->getFront(), obj, 0.05)) {
+        //         //FS_WARN("CAST");
+        //         break;
+        //     }
+        // }
         bool currntpress = FISH::Input::IsKeyPressed(FS_KEY_C);
         if (!lstpress && currntpress) {
             if (!islock) APP.LockCursor(), islock = 1,cameras[0]->setAllowedControl(1);
@@ -125,6 +144,11 @@ class MainLayer : public FISH::Layer {
 
         }
 
+        mBotton->setClick(FISH::Input::IsMouseButtonPressed(FS_MOUSE_BUTTON_LEFT));
+        auto [mx, my] = FISH::Input::GetMousePos();
+        auto ndc = ToNDC({mx, my}, APP.GetWindow().GetWidth(), APP.GetWindow().GetHeight());
+        mBotton->update(ndc.x, ndc.y);
+        //FS_INFO("{0}, {1}", mx, my);
         //FS_INFO("{0}", FISH::DeltaTime);
         lstpress = currntpress;
         //FS_INFO("get camera lookat, {0}", glm::to_string(cameras[0]->getLookAtPoint()));
@@ -137,10 +161,13 @@ class MainLayer : public FISH::Layer {
     std::shared_ptr<FISH::Shape> Shape2D;
     std::unique_ptr<FISH::Renderstatus> mRenderstatuss;
     std::shared_ptr<FISH::Font>         mFont;
+    std::shared_ptr<FISH::Botton>       mBotton;
     bool lstpress{0}, islock{0};
     char inputbuffer[256] = "";
     int id{0};
     std::atomic_int co{0};
+
+
 };
 
 

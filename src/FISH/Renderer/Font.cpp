@@ -64,11 +64,23 @@ namespace FISH {
     }
 
     void Font::RenderText(const string& text, float x, float y, float scale, const glm::vec3 &color) {
-        std::unique_ptr<VertexArray> Vao(VertexArray::Create());
+        Fontstatus->enablestatus(StatusType::Blend);
+        Fontstatus->setstatusFunc(SetType::BlendFunc, FuncType::SrcAlpha, FuncType::MinusSrcAlpha);
+        Fontstatus->disablestatus(StatusType::DepthTest);
+        FontShader->Begin();
+        FontShader->setTextureHandle("FontTex", mFontTexture->getHandle());
+        FontShader->setVector3("color", color);
+        GetTextBoxVao(text, x, y, scale)->renderIndex(0, TRIANGLES);
+        FontShader->End(); 
+        Fontstatus->enablestatus(StatusType::DepthTest);
+        Fontstatus->disablestatus(StatusType::Blend);
+    }
+
+    std::shared_ptr<VertexArray> Font::GetTextBoxVao(const string &text, float x, float y, float scale){
+        std::shared_ptr<VertexArray> Vao(VertexArray::Create());
         
         std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
         std::wstring wideStr = converter.from_bytes(text);
-        
         std::vector<float> vertices;
         std::vector<unsigned int> indices;
         vertices.reserve(text.size() * 4 * 4); 
@@ -124,12 +136,16 @@ namespace FISH {
 
         Vao->AddVertexBuffer(Vbo);
         Vao->SetIndexBuffer(Index);
-        
+
+        return Vao;
+    }
+
+    void Font::RenderTextFromVaoTextstd(const std::shared_ptr<VertexArray> &Vao, const std::shared_ptr<Texture> &tex, const glm::vec3 &color) {
         Fontstatus->enablestatus(StatusType::Blend);
         Fontstatus->setstatusFunc(SetType::BlendFunc, FuncType::SrcAlpha, FuncType::MinusSrcAlpha);
         Fontstatus->disablestatus(StatusType::DepthTest);
         FontShader->Begin();
-        FontShader->setTextureHandle("FontTex", mFontTexture->getHandle());
+        FontShader->setTextureHandle("FontTex", tex->getHandle());
         FontShader->setVector3("color", color);
         Vao->renderIndex(0, TRIANGLES);
         FontShader->End(); 
@@ -137,7 +153,8 @@ namespace FISH {
         Fontstatus->disablestatus(StatusType::Blend);
     }
 
-    void Font::InitFTlibrary() {
+    void Font::InitFTlibrary()
+    {
         if (ft != nullptr) return;
         
         if (FT_Init_FreeType(&ft)) {
