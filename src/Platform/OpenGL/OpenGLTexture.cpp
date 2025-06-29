@@ -15,6 +15,11 @@ namespace FISH {
 
         mUnit = unit;
         unsigned char* data = stbi_load(path.c_str(), &mWidth, &mHeight,  &channels, choiceStbChannel(channel));
+        if (!data) {
+            FS_CORE_ERROR("Error Texture Path: {0}", path.c_str());
+            return;
+        }
+
         mEnumChannel = channel;
         mTextureChannel = ChoiceChannel(channel);
         GLint internalFormat = ChoiceInternal(channel);
@@ -61,8 +66,6 @@ namespace FISH {
             mWidth = widthIn, mHeight = heightIn;
             data = dataIn;
         }
-
-
 
         GL_ERRORCALL(glCreateTextures(GL_TEXTURE_2D, 1, &mTexture));
         

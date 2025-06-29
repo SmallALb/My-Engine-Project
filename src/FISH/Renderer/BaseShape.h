@@ -21,6 +21,9 @@ namespace FISH
         
         //创建平面
         static Shape* CreatePlan(float width, float height);
+        //创建矩形
+        static Shape* CreateRectangle(float width, float height);
+
         //2d三角形
         static Shape* CreateTriangle2D(float size);
         //2d长方形

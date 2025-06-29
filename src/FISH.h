@@ -27,6 +27,7 @@
 
 
 #include "FISH/Renderer/Font.h"
+#include "FISH/Renderer/Animation.h"
 //???
 #include "FISH/Object/Object.h"
 #include "FISH/Object/Mesh.h"

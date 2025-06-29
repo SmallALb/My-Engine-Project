@@ -150,8 +150,8 @@ namespace FISH {
                 ShaderLib["OnlyTexture"]->setMat4("view", UseCamera->getViewMatrix());
                 ShaderLib["OnlyTexture"]->setMat4("model", obj->getModelMatrix());
                 ShaderLib["OnlyTexture"]->setMat4("normat", obj->getNormalMatrix());  
-                dynamic_pointer_cast<SkyBox>(obj)->renderSkyBox();
                 ShaderLib["OnlyTexture"]->setTextureHandle("uTexture", dynamic_pointer_cast<SkyBox>(obj)->useTexture());
+                dynamic_pointer_cast<SkyBox>(obj)->renderSkyBox();
                 ShaderLib["OnlyTexture"]->End();
                 mstatuss->disablestatus(StatusType::CullFace);
                 break;

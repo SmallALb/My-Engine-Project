@@ -50,6 +50,8 @@ namespace FISH {
         void stopTimer(int id);
         //停止所有
         void stopAll();
+        //修改计时器
+        void modifyTimer(int id, int interval, TimerFUN fun, TimerMode mode);
     private:
         //运行函数
         void timerWorker();
@@ -60,7 +62,7 @@ namespace FISH {
         //互斥锁
         std::recursive_mutex            timersLock;
         //线程条件变量
-        std::condition_variable_any          conditionV;
+        std::condition_variable_any     conditionV;
         //运行标志
         std::atomic<bool>               runTag{false};
         //主线程，用于控制所有计时器的线程

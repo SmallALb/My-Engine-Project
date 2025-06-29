@@ -6,11 +6,12 @@ class MainLayer : public FISH::Layer {
     void OnAttach() override {
 
         shader.reset(FISH::Shader::CreateShader());
-        
+        mAni.reset(new FISH::SpriteAnimation("picture/sprite", "cat ", 17, 1, 100));
         shader->readVertexShader("sharders/EnginRenderShader/2Dvertex.glsl");
         shader->readFragmentShader("sharders/EnginRenderShader/OnlyColor.glsl");
         shader->CompileLink();
 
+        Pan.reset(FISH::Shape::CreateRectangle(8.0f, 8.0));
 
         cameras.emplace_back(FISH::Camera::CreateCamera()); 
         dynamic_cast<FISH::perspectiveCamera*>(cameras[0].get())->
@@ -32,6 +33,7 @@ class MainLayer : public FISH::Layer {
         
         mRenderstatuss.reset(FISH::Renderstatus::CreateRenderstatus());
         std::shared_ptr<FISH::Mesh> mMesh(new FISH::Mesh());
+        mesh2.reset(new FISH::Mesh());
         std::shared_ptr<FISH::SkyBox> mBox(new FISH::SkyBox());
         std::shared_ptr<FISH::PointLight> point(new FISH::PointLight());
         std::shared_ptr<FISH::PointLight> point2(new FISH::PointLight());
@@ -57,9 +59,10 @@ class MainLayer : public FISH::Layer {
         point2->setPosition({5.0, 0.0, 0.0f});
         point2->setColor({0.0, 1.0, 0.0});
 
-        mMesh->getShape() = std::shared_ptr<FISH::Shape>(FISH::Shape::CreateBox(1.0f));
+        mMesh->getShape() = std::shared_ptr<FISH::Shape>(FISH::Shape::CreateRectangle(3.0f, 8.0));
         
-        
+        mesh2->getShape() = Pan;
+        mesh2->setPosition({0.0, 4.0, 1.0});
 
         objs.push_back(mMesh);
         objs.push_back(point);
@@ -106,6 +109,7 @@ class MainLayer : public FISH::Layer {
             mFont->RenderText("草！", x, y, 0.001, {1.0, 0.0, 0.0});
         });
         
+        mAni->play(FISH::AnimationMode::Loop);
     }   
 
     void OnImGuiRender() override {
@@ -119,24 +123,35 @@ class MainLayer : public FISH::Layer {
         cameras[0]->update();
         dynamic_cast<FISH::perspectiveCamera*>(cameras[0].get())->setAspect((float)(APP.GetWindow().GetWidth()/APP.GetWindow().GetHeight()));
         //dynamic_pointer_cast<FISH::SpotLight>(objs[3])->setLightDir(cameras[0]->getFront());
+
+
+        FISH::Renderer::render(objs);
+
+        mRenderstatuss->enablestatus(FISH::StatusType::Blend);
+        mRenderstatuss->setstatusFunc(FISH::SetType::BlendFunc,  FISH::FuncType::SrcAlpha,  FISH::FuncType::MinusSrcAlpha);
+        FISH::Renderer::ShaderLib["OnlyTexture"]->Begin();
+        FISH::Renderer::ShaderLib["OnlyTexture"]->setMat4("projection", cameras[0]->getProjectMatrix());
+        FISH::Renderer::ShaderLib["OnlyTexture"]->setMat4("view", cameras[0]->getViewMatrix());
+        FISH::Renderer::ShaderLib["OnlyTexture"]->setMat4("model", mesh2->getModelMatrix());
+        FISH::Renderer::ShaderLib["OnlyTexture"]->setMat4("normat", mesh2->getNormalMatrix());  
+        FISH::Renderer::ShaderLib["OnlyTexture"]->setTextureHandle("uTexture", mAni->getCurrentHandle());
+        mesh2->getShape()->render(TRIANGLES);
+        FISH::Renderer::ShaderLib["OnlyTexture"]->End();
+        mRenderstatuss->disablestatus(FISH::StatusType::Blend);
+
+        mRenderstatuss->disablestatus(FISH::StatusType::DepthTest);
+
         shader->Begin();
         Shape2D->useShape();
         shader->setVector3("InColor", {1.0, 1.0, 1.0});
         Shape2D->render(TRIANGLES);
         Shape2D->unuseShape();
         shader->End();
+        mRenderstatuss->enablestatus(FISH::StatusType::DepthTest);
         
-
-        FISH::Renderer::render(objs);
 
         mFont->RenderText(std::to_string(co), -0.2, 0, 0.004f, {1.0, 1.0, 1.0});
 
-        // for (auto& obj : objs) if (FISH::Input::IsMouseButtonPressed(FS_MOUSE_BUTTON_LEFT)) {
-        //     if (obj->GetObjType() != FISH::ObjType::SkyBox && FISH::RayTest::IsRayCastObj(cameras[0]->getPosition(), cameras[0]->getFront(), obj, 0.05)) {
-        //         //FS_WARN("CAST");
-        //         break;
-        //     }
-        // }
         bool currntpress = FISH::Input::IsKeyPressed(FS_KEY_C);
         if (!lstpress && currntpress) {
             if (!islock) APP.LockCursor(), islock = 1,cameras[0]->setAllowedControl(1);
@@ -144,14 +159,14 @@ class MainLayer : public FISH::Layer {
 
         }
 
+        
+
+
         mBotton->setClick(FISH::Input::IsMouseButtonPressed(FS_MOUSE_BUTTON_LEFT));
         auto [mx, my] = FISH::Input::GetMousePos();
         auto ndc = ToNDC({mx, my}, APP.GetWindow().GetWidth(), APP.GetWindow().GetHeight());
         mBotton->update(ndc.x, ndc.y);
-        //FS_INFO("{0}, {1}", mx, my);
-        //FS_INFO("{0}", FISH::DeltaTime);
         lstpress = currntpress;
-        //FS_INFO("get camera lookat, {0}", glm::to_string(cameras[0]->getLookAtPoint()));
     }
 
     std::vector<std::shared_ptr<FISH::Object3D>> objs;
@@ -162,6 +177,9 @@ class MainLayer : public FISH::Layer {
     std::unique_ptr<FISH::Renderstatus> mRenderstatuss;
     std::shared_ptr<FISH::Font>         mFont;
     std::shared_ptr<FISH::Botton>       mBotton;
+    std::shared_ptr<FISH::SpriteAnimation>  mAni;
+    std::shared_ptr<FISH::Shape>            Pan;
+    std::shared_ptr<FISH::Mesh>             mesh2;
     bool lstpress{0}, islock{0};
     char inputbuffer[256] = "";
     int id{0};

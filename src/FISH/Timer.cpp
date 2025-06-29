@@ -3,7 +3,8 @@
 #include "Timer.h"
 
 namespace FISH {
-
+    static int idCounter = 0;
+    static std::queue<int> FreeIds;
     Timer::~Timer() {
         stopAll();
         FS_INFO("Timer destruct!");
@@ -12,9 +13,13 @@ namespace FISH {
     int Timer::createTimer(int interval, TimerFUN fun, TimerMode mode) {
         //上锁
         std::lock_guard<std::recursive_mutex> lock(timersLock);
-        static int idCounter = 0;
-        int id = ++idCounter;
-        FS_INFO("add TimerEvent: {0}", id);
+        int id = 0;
+        if (FreeIds.empty()) 
+            id = ++idCounter;
+        else {
+            id = FreeIds.front();
+            FreeIds.pop();
+        }
 
         timers.emplace(id, interval, 
             std::chrono::steady_clock::now() + std::chrono::milliseconds(interval), 
@@ -31,6 +36,7 @@ namespace FISH {
 
     void Timer::stopTimer(int id) {
         std::lock_guard<std::recursive_mutex> lock(timersLock);
+        FreeIds.push(id);
         auto it = std::find_if(timers.begin(), timers.end(), [id](const auto& timer) {
             return timer.id == id;
         });
@@ -40,7 +46,7 @@ namespace FISH {
             timers.erase(it);               // 移除原元素
             timers.emplace(std::move(modifiedTimer));   // 插入修改后的元素
         }
-        FS_INFO("Done!, stopped the thread:{0}", id);
+        //FS_INFO("Done!, stopped the thread:{0}", id);
         conditionV.notify_one();        // 通知工作线程
     }
 
@@ -53,6 +59,22 @@ namespace FISH {
         conditionV.notify_one();
 
         if (mainThread.joinable()) mainThread.join();
+    }
+
+    void Timer::modifyTimer(int id, int interval, TimerFUN fun, TimerMode mode) {
+        std::lock_guard<std::recursive_mutex> lock(timersLock);
+        auto it = std::find_if(timers.begin(), timers.end(), [id](const auto& timer) {
+            return timer.id == id;
+        });
+        if (it != timers.end()) {
+            TimerProps modifiedTimer = *it;  // 复制元素
+            modifiedTimer.interval  = interval;
+            modifiedTimer.usingFun = fun;
+            modifiedTimer.mode = mode;
+            timers.erase(it);               // 移除原元素
+            timers.emplace(std::move(modifiedTimer));   // 插入修改后的元素
+        }
+        conditionV.notify_one();
     }
 
     void Timer::timerWorker() {

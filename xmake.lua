@@ -110,4 +110,5 @@ after_build(function (target)
         os.cp("picture", "build/windows/x64/release")
         os.cp("Fonts", "build/windows/x64/release")
     end
+    os.vcp("src/**.h", "build", {rootdir = srcdir}) 
 end)

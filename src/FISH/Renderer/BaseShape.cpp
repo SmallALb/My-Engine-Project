@@ -438,6 +438,171 @@ namespace FISH
             return shape;
     }
 
+    Shape* Shape::CreateRectangle(float width, float height) {
+        Shape* shape = new Shape();
+
+        float halfW = width / 2.0f;
+        float halfH = height / 2.0f;
+
+        // 顶点位置 (8个顶点)
+        float positions[] = {
+            // 前面
+            -halfW, -halfH,  0.0,
+            halfW, -halfH,  0.0,
+            halfW,  halfH,  0.0,
+            -halfW,  halfH,  0.0,
+            
+            // 后面
+            -halfW, -halfH, 0.0,
+            halfW, -halfH, 0.0,
+            halfW,  halfH, 0.0,
+            -halfW,  halfH, 0.0
+        };
+
+        // 顶点颜色 (所有顶点白色)
+        float colors[] = {
+            1.0f, 1.0f, 1.0f, 1.0f,
+            1.0f, 1.0f, 1.0f, 1.0f,
+            1.0f, 1.0f, 1.0f, 1.0f,
+            1.0f, 1.0f, 1.0f, 1.0f,
+            1.0f, 1.0f, 1.0f, 1.0f,
+            1.0f, 1.0f, 1.0f, 1.0f,
+            1.0f, 1.0f, 1.0f, 1.0f,
+            1.0f, 1.0f, 1.0f, 1.0f
+        };
+
+        // 法线 (每个面的法线方向)
+        float normals[] = {
+            // 前面法线
+            0.0f, 0.0f, 1.0f,
+            0.0f, 0.0f, 1.0f,
+            0.0f, 0.0f, 1.0f,
+            0.0f, 0.0f, 1.0f,
+            
+            // 后面法线
+            0.0f, 0.0f, -1.0f,
+            0.0f, 0.0f, -1.0f,
+            0.0f, 0.0f, -1.0f,
+            0.0f, 0.0f, -1.0f,
+            
+            // 左面法线 (将在索引中重复使用顶点)
+            -1.0f, 0.0f, 0.0f,
+            -1.0f, 0.0f, 0.0f,
+            -1.0f, 0.0f, 0.0f,
+            -1.0f, 0.0f, 0.0f,
+            
+            // 右面法线
+            1.0f, 0.0f, 0.0f,
+            1.0f, 0.0f, 0.0f,
+            1.0f, 0.0f, 0.0f,
+            1.0f, 0.0f, 0.0f,
+            
+            // 上面法线
+            0.0f, 1.0f, 0.0f,
+            0.0f, 1.0f, 0.0f,
+            0.0f, 1.0f, 0.0f,
+            0.0f, 1.0f, 0.0f,
+            
+            // 下面法线
+            0.0f, -1.0f, 0.0f,
+            0.0f, -1.0f, 0.0f,
+            0.0f, -1.0f, 0.0f,
+            0.0f, -1.0f, 0.0f
+        };
+
+        // 纹理坐标 (每个面使用相同的UV映射)
+        float uvs[] = {
+            // 前面
+            0.0f, 0.0f,
+            1.0f, 0.0f,
+            1.0f, 1.0f,
+            0.0f, 1.0f,
+            
+            // 后面
+            0.0f, 0.0f,
+            1.0f, 0.0f,
+            1.0f, 1.0f,
+            0.0f, 1.0f,
+            
+            // 左面
+            0.0f, 0.0f,
+            1.0f, 0.0f,
+            1.0f, 1.0f,
+            0.0f, 1.0f,
+            
+            // 右面
+            0.0f, 0.0f,
+            1.0f, 0.0f,
+            1.0f, 1.0f,
+            0.0f, 1.0f,
+            
+            // 上面
+            0.0f, 0.0f,
+            1.0f, 0.0f,
+            1.0f, 1.0f,
+            0.0f, 1.0f,
+            
+            // 下面
+            0.0f, 0.0f,
+            1.0f, 0.0f,
+            1.0f, 1.0f,
+            0.0f, 1.0f
+        };
+
+        // 索引 (36个索引，6个面×2个三角形×3个顶点)
+        unsigned int indices[] = {
+            // 前面
+            0, 1, 2,
+            2, 3, 0,
+            
+            // 后面
+            5, 4, 7,
+            7, 6, 5,
+            
+            // 左面
+            4, 0, 3,
+            3, 7, 4,
+            
+            // 右面
+            1, 5, 6,
+            6, 2, 1,
+            
+            // 上面
+            3, 2, 6,
+            6, 7, 3,
+            
+            // 下面
+            4, 5, 1,
+            1, 0, 4
+        };
+
+        // 创建顶点缓冲区和索引缓冲区
+        std::shared_ptr<VertexBuffer> Pos, UV, Normal, Color;
+        Pos.reset(VertexBuffer::Create(positions, sizeof(positions)));
+        Color.reset(VertexBuffer::Create(colors, sizeof(colors)));
+        UV.reset(VertexBuffer::Create(uvs, sizeof(uvs)));
+        Normal.reset(VertexBuffer::Create(normals, sizeof(normals)));
+        
+        std::shared_ptr<IndexBuffer> index;
+        index.reset(IndexBuffer::Create(indices, 36));
+
+        // 设置顶点布局
+        Pos->SetLayout({{ShaderDataType::Float3, VertexType::Position, "pos"}});
+        Color->SetLayout({{ShaderDataType::Float4, VertexType::Color, "color"}});
+        UV->SetLayout({{ShaderDataType::Float2, VertexType::UV, "uv"}});
+        Normal->SetLayout({{ShaderDataType::Float3, VertexType::Normal, "normal"}});
+
+        // 创建顶点数组并添加缓冲区
+        shape->mVao.reset(VertexArray::Create());
+        shape->mVao->AddVertexBuffer(Pos);
+        shape->mVao->AddVertexBuffer(Color);
+        shape->mVao->AddVertexBuffer(UV);
+        shape->mVao->AddVertexBuffer(Normal);                     
+        shape->mVao->SetIndexBuffer(index);
+        
+        return shape;
+    }
+
     Shape* Shape::CreateTriangle2D(float size) {
     Shape* shape = new Shape();
     

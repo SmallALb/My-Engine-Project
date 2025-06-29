@@ -52,7 +52,6 @@ namespace FISH {
         //临时存储一个静态的着色器指针，到时这里将改为一个map存储使用的着色器
         //static std::shared_ptr<Shader> UseShader;
 
-        static std::map<string, std::shared_ptr<Shader>>    ShaderLib;
 
         static std::shared_ptr<Camera>                      UseCamera;
         
@@ -63,5 +62,8 @@ namespace FISH {
         static bool                                         renderLight;
 
         static std::unique_ptr<Renderstatus>                 mstatuss;
+    public:
+        static std::map<string, std::shared_ptr<Shader>>    ShaderLib;
+
     };
 }
