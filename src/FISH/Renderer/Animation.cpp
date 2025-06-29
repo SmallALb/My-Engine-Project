@@ -33,6 +33,7 @@ namespace FISH {
         int count = beginIndex;
         //新建帧
         for (auto& frame : mFrames) {
+            FS_INFO("frame({0})", count);
             AnimationFrame nFrame(std::shared_ptr<Texture>(Texture::CreateTextureFromPath(path + "(" + std::to_string(count) + ").png")),duration);
             frame = std::move(nFrame);
             count++;

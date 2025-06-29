@@ -6,12 +6,12 @@ class MainLayer : public FISH::Layer {
     void OnAttach() override {
 
         shader.reset(FISH::Shader::CreateShader());
-        mAni.reset(new FISH::SpriteAnimation("picture/sprite", "cat ", 17, 1, 100));
+        mAni.reset(new FISH::SpriteAnimation("picture/Dances", "Dance ", 29, 1, 20));
         shader->readVertexShader("sharders/EnginRenderShader/2Dvertex.glsl");
         shader->readFragmentShader("sharders/EnginRenderShader/OnlyColor.glsl");
         shader->CompileLink();
 
-        Pan.reset(FISH::Shape::CreateRectangle(8.0f, 8.0));
+        Pan.reset(FISH::Shape::CreateRectangle(12.0, 8.0));
 
         cameras.emplace_back(FISH::Camera::CreateCamera()); 
         dynamic_cast<FISH::perspectiveCamera*>(cameras[0].get())->
@@ -62,7 +62,7 @@ class MainLayer : public FISH::Layer {
         mMesh->getShape() = std::shared_ptr<FISH::Shape>(FISH::Shape::CreateRectangle(3.0f, 8.0));
         
         mesh2->getShape() = Pan;
-        mesh2->setPosition({0.0, 4.0, 1.0});
+        mesh2->setPosition({0.0, 4.0, -3.0});
 
         objs.push_back(mMesh);
         objs.push_back(point);
