@@ -5,6 +5,7 @@
 #include "FISH/Timer.h"
 #include "Animation.h"
 
+
 namespace FISH {
     //帧计时器
     static std::unique_ptr<Timer>  mAnimationTimer{nullptr};
@@ -60,12 +61,17 @@ namespace FISH {
                     self->mFrameCallFunc();
                 }, 
             mode == AnimationMode::Loop ? TimerMode::REPEATING : TimerMode::SINGLE);
+            FishTag = 0;
         }
-        
+        playMode = mode;
     }
 
     void SpriteAnimation::reset() {
         mCurrentFrame = 0;
+    }
+
+    void SpriteAnimation::setBeginInTexture(int idx) {
+        mCurrentFrame = idx;
     }
 
     void SpriteAnimation::stop() {
@@ -73,8 +79,13 @@ namespace FISH {
         TimerId = 0;
     }
 
-    bool SpriteAnimation::IsFinsh() {
+    bool SpriteAnimation::IsFinsh()
+    {
         return FishTag;
+    }
+
+    bool SpriteAnimation::IsPause() {
+        return PauseTag;
     }
 
     void SpriteAnimation::pause(){
@@ -88,14 +99,19 @@ namespace FISH {
     void SpriteAnimation::setSpeed(float speed) {
         mSpeed = speed;
     }
+
     unsigned long long SpriteAnimation::getCurrentHandle() {
         int cf = mCurrentFrame;
-        //FS_INFO("{0}", cf);
         if (cf >= mFrames.size()) cf = mFrames.size() - 1;
         return mFrames[cf].texture->getHandle();
     }
+
+    void SpriteAnimation::setFameCallBackFunc(const FrameCallFUN &func) {
+        mFrameCallFunc = func;
+    }
+
     void SpriteAnimation::initTimer() {
         if (mAnimationTimer != nullptr) return;
-        mAnimationTimer.reset(new Timer()); 
+        mAnimationTimer.reset(new Timer());
     }
 }

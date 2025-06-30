@@ -3,10 +3,23 @@
 #include <memory>
 
 class MainLayer : public FISH::Layer {
+public:
+    ~MainLayer() {
+        FISH::Sound::Shutdown();
+    }
+
     void OnAttach() override {
+        FISH::Sound::Initialize();
+        mSound.reset(new FISH::Sound("Sounds/oiiai.wav", FISH::AudioType::Audio3D, 1));
+
+        mSound->setMaxDistance(600.0f);
+        mSound->setMinDistance(1.0f);
+        mSound->setPosition({0, 0, 0});
+        mSound->setRolloffFactor(35.0f);
+        mSound->setVolume(0.5);
 
         shader.reset(FISH::Shader::CreateShader());
-        mAni.reset(new FISH::SpriteAnimation("picture/Dances", "Dance ", 29, 1, 20));
+        mAni.reset(new FISH::SpriteAnimation("picture/sprite", "cat ", 23, 1, 80));
         shader->readVertexShader("sharders/EnginRenderShader/2Dvertex.glsl");
         shader->readFragmentShader("sharders/EnginRenderShader/OnlyColor.glsl");
         shader->CompileLink();
@@ -78,7 +91,7 @@ class MainLayer : public FISH::Layer {
         cameras[0]->setLookAt({0.0, 0.0, -5.0f});
         cameras[0]->addChild(mBox);
         dynamic_cast<FISH::perspectiveCamera*>(cameras[0].get())->setSpeed(0.03);
-        dynamic_cast<FISH::perspectiveCamera*>(cameras[0].get())->setSensitivity(0.01);
+        dynamic_cast<FISH::perspectiveCamera*>(cameras[0].get())->setSensitivity(0.07);
         mRenderstatuss->enablestatus(FISH::StatusType::DepthTest);
         mRenderstatuss->enablestatus(FISH::StatusType::CleanDepth);
         mRenderstatuss->enablestatus(FISH::StatusType::CleanColor);
@@ -108,8 +121,10 @@ class MainLayer : public FISH::Layer {
             float y = mBotton->getPosition().y;
             mFont->RenderText("草！", x, y, 0.001, {1.0, 0.0, 0.0});
         });
-        
+        mAni->setBeginInTexture(17);
         mAni->play(FISH::AnimationMode::Loop);
+        mSound->play();
+
     }   
 
     void OnImGuiRender() override {
@@ -119,12 +134,16 @@ class MainLayer : public FISH::Layer {
     }
 
     void OnUpdate() override {
-
+        
         cameras[0]->update();
         dynamic_cast<FISH::perspectiveCamera*>(cameras[0].get())->setAspect((float)(APP.GetWindow().GetWidth()/APP.GetWindow().GetHeight()));
         //dynamic_pointer_cast<FISH::SpotLight>(objs[3])->setLightDir(cameras[0]->getFront());
 
-
+        FISH::Sound::SetListenerPosition(cameras[0]->getPosition());
+        FISH::Sound::SetListenerOrientation(
+            cameras[0]->getFront(),  // 前向向量
+            cameras[0]->getUp()      // 上向量
+        );
         FISH::Renderer::render(objs);
 
         mRenderstatuss->enablestatus(FISH::StatusType::Blend);
@@ -140,7 +159,6 @@ class MainLayer : public FISH::Layer {
         mRenderstatuss->disablestatus(FISH::StatusType::Blend);
 
         mRenderstatuss->disablestatus(FISH::StatusType::DepthTest);
-
         shader->Begin();
         Shape2D->useShape();
         shader->setVector3("InColor", {1.0, 1.0, 1.0});
@@ -156,7 +174,8 @@ class MainLayer : public FISH::Layer {
         if (!lstpress && currntpress) {
             if (!islock) APP.LockCursor(), islock = 1,cameras[0]->setAllowedControl(1);
             else APP.UnLockCursor(), islock = 0,cameras[0]->setAllowedControl(0);
-
+            // if (mAni->IsPause() || mAni->IsFinsh()) mAni->play(FISH::AnimationMode::Loop);
+            // else mAni->pause();
         }
 
         
@@ -180,11 +199,11 @@ class MainLayer : public FISH::Layer {
     std::shared_ptr<FISH::SpriteAnimation>  mAni;
     std::shared_ptr<FISH::Shape>            Pan;
     std::shared_ptr<FISH::Mesh>             mesh2;
+    std::shared_ptr<FISH::Sound>            mSound;
     bool lstpress{0}, islock{0};
     char inputbuffer[256] = "";
     int id{0};
     std::atomic_int co{0};
-
 
 };
 

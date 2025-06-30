@@ -28,6 +28,9 @@ add_requires("imgui", {version = "v1.91.8-docking"})
 add_requires("spdlog", {version = "v1.15.2"})
 --FreeType
 add_requires("freetype")
+--音频库
+add_requires("openal-soft", {configs = {shared = true}})
+add_requires("libsndfile")
 
 
 --opengl接入函数
@@ -67,6 +70,8 @@ target("FISH")
     --链接包（库）
     add_packages("spdlog")
     add_packages("freetype")
+    add_packages("openal-soft")
+    add_packages("libsndfile")
     add_opengl()
     if  is_plat("windows") then 
         add_rules("utils.symbols.export_all", {
@@ -90,6 +95,8 @@ target("ENTRY")
     add_opengl()
     add_packages("spdlog")
     add_packages("freetype")
+    add_packages("openal-soft")
+    add_packages("libsndfile")
     add_includedirs("src")
     if is_mode("release") then
         add_linkdirs("$(buildir)/windows/x64/release")
@@ -105,10 +112,12 @@ after_build(function (target)
         os.cp("sharders", "build/windows/x64/debug")
         os.cp("picture", "build/windows/x64/debug")
         os.cp("Fonts", "build/windows/x64/debug")
+        os.cp("Sounds", "build/windows/x64/debug")
     else
         os.cp("sharders", "build/windows/x64/release")
         os.cp("picture", "build/windows/x64/release")
         os.cp("Fonts", "build/windows/x64/release")
+        os.cp("Sounds", "build/windows/x64/release")
+
     end
-    os.vcp("src/**.h", "build", {rootdir = srcdir}) 
 end)

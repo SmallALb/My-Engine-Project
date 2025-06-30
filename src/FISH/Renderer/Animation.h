@@ -33,6 +33,8 @@ namespace FISH {
 
         //是否完成
         bool IsFinsh();
+        //是否暂停
+        bool IsPause();
         //播放
         void play(AnimationMode mode);
         //停止
@@ -41,13 +43,18 @@ namespace FISH {
         void pause();
         //重置
         void reset();
+        //设置从第几帧开始
+        void setBeginInTexture(int idx);
         //获取当前帧
         std::shared_ptr<Texture> getCurrentFrame();
         //设置播放速度
         void setSpeed(float speed);
-
+        //获取当前帧
         unsigned long long getCurrentHandle();
+        //设置帧回调函数
+        void setFameCallBackFunc(const FrameCallFUN& func);
     private:
+        //初始化计时器
         void initTimer();
     private:
         //当前帧

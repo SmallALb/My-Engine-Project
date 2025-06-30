@@ -23,6 +23,9 @@ namespace  FISH {
 
         //获取看向方向
         virtual glm::vec3 getFront() const = 0;
+        
+        //获取up方向
+        virtual glm::vec3 getUp() const {return mUp;}
 
         //相机创建
         static Camera* CreateCamera(CameraType cameratype = CameraType::PERSPECTIVE, const std::string& name = "Camera");

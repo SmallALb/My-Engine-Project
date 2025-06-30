@@ -51,6 +51,9 @@
 #include "FISH/Renderer/Renderstatus.h"
 #include "FISH/Renderer/Renderer.h"
 
+
+#include "FISH/Sound.h"
+
 //???
 //????
 #include "FISH/Events/Application.h"

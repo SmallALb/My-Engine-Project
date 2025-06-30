@@ -311,7 +311,7 @@ namespace FISH
                     positions.push_back(z);
 
                     float u =  (float)j / (float) numLongLines;
-                    float v =  (float)i / (float)numLatLines;
+                    float v =  1.0f - (float)i / (float)numLatLines;
 
                     uvs.push_back(u);
                     uvs.push_back(v);
