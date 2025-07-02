@@ -17,14 +17,18 @@ namespace FISH {
     SpriteAnimation::SpriteAnimation(string path, string name, int size, int beginIndex, int duration, AnimationMode Mode) {
         mFrameIncreaseFunc = [&]() {
             if (PauseTag || FishTag) return;
+            if (mCurrentFrame == 0) mFrameBeginFunc();
             mCurrentFrame++;
             if (mCurrentFrame >= FrameSize) {
                 mCurrentFrame = 0;
+                mFrameEndFunc();
                 FishTag = playMode == AnimationMode::Once;
             }
         };
 
         mFrameCallFunc = [&]() {};
+        mFrameBeginFunc = [&]() {};
+        mFrameEndFunc = [&]() {};
 
         playMode = Mode;
 
@@ -45,7 +49,7 @@ namespace FISH {
     }   
 
     SpriteAnimation::~SpriteAnimation() {
-
+        mAnimationTimer->stopTimer(TimerId);
     }
 
     void SpriteAnimation::play(AnimationMode mode) {
@@ -53,12 +57,11 @@ namespace FISH {
         //防止多次启动计时器
         if (!TimerId || FishTag){
             initTimer();
-            auto self = shared_from_this(); 
             //启动计时器
             TimerId =  mAnimationTimer->createTimer(int(mDuration*mSpeed), 
-                [self]() {
-                    self->mFrameIncreaseFunc();
-                    self->mFrameCallFunc();
+                [this]() {
+                    this->mFrameIncreaseFunc();
+                    this->mFrameCallFunc();
                 }, 
             mode == AnimationMode::Loop ? TimerMode::REPEATING : TimerMode::SINGLE);
             FishTag = 0;
@@ -100,14 +103,22 @@ namespace FISH {
         mSpeed = speed;
     }
 
-    unsigned long long SpriteAnimation::getCurrentHandle() {
+    unsigned long long SpriteAnimation::getHandle() const {
         int cf = mCurrentFrame;
         if (cf >= mFrames.size()) cf = mFrames.size() - 1;
         return mFrames[cf].texture->getHandle();
     }
 
-    void SpriteAnimation::setFameCallBackFunc(const FrameCallFUN &func) {
+    void SpriteAnimation::setFrameCallBackFunc(const FrameCallFUN &func) {
         mFrameCallFunc = func;
+    }
+
+    void SpriteAnimation::setFrameBeginFunc(const FrameCallFUN &func) {
+        mFrameBeginFunc = func;
+    }
+
+    void SpriteAnimation::setFrameEndFunc(const FrameCallFUN &func) {
+        mFrameEndFunc = func;
     }
 
     void SpriteAnimation::initTimer() {

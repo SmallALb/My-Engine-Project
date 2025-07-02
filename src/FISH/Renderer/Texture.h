@@ -1,9 +1,10 @@
 #pragma once
+#include "TextureHandle.h"
 #include "FISH/Core.h"
 
 namespace FISH {
     //纹理接口
-    class API_ Texture {
+    class Texture : public TextureHandle {
     public:
         virtual ~Texture() = default;
 
@@ -20,8 +21,6 @@ namespace FISH {
         virtual uint32_t getHeight() const = 0;
         //更新纹理部分
         virtual void updateSubTex(int x, int y, int width, int height, unsigned char* data) = 0;
-        //获取纹理句柄
-        virtual unsigned long long getHandle() const = 0;
 
         //设置unit(Opengl)
         virtual void setUnit(uint32_t unit) {};

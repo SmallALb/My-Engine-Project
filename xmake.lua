@@ -17,7 +17,7 @@ add_cxflags("/wd4267")
 add_cxflags("/wd4996")
 add_cxflags("/utf-8")
 add_cxflags("/wd4018")
-
+add_cxflags("/wd4540")
 
 --ÃÌº”opengl“¿¿µ
 add_requires("glfw", {configs = {git = true, shared = true, vs_runtime = "MD"}})

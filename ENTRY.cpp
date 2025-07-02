@@ -24,8 +24,8 @@ public:
         shader->readFragmentShader("sharders/EnginRenderShader/OnlyColor.glsl");
         shader->CompileLink();
 
-        Pan.reset(FISH::Shape::CreateRectangle(12.0, 8.0));
-
+        Pan.reset(FISH::Shape::CreateSphere(3.0));
+        Pan->setTexture(mAni);
         cameras.emplace_back(FISH::Camera::CreateCamera()); 
         dynamic_cast<FISH::perspectiveCamera*>(cameras[0].get())->
             init(   
@@ -81,6 +81,7 @@ public:
         objs.push_back(point);
         objs.push_back(point2);
         objs.push_back(mBox);
+        objs.push_back(mesh2);
         //objs.push_back(spot);
         mBox->setTexture(FISH::Texture::CreateTextureFromPath("picture/Sky.png"));
 
@@ -146,17 +147,17 @@ public:
         );
         FISH::Renderer::render(objs);
 
-        mRenderstatuss->enablestatus(FISH::StatusType::Blend);
-        mRenderstatuss->setstatusFunc(FISH::SetType::BlendFunc,  FISH::FuncType::SrcAlpha,  FISH::FuncType::MinusSrcAlpha);
-        FISH::Renderer::ShaderLib["OnlyTexture"]->Begin();
-        FISH::Renderer::ShaderLib["OnlyTexture"]->setMat4("projection", cameras[0]->getProjectMatrix());
-        FISH::Renderer::ShaderLib["OnlyTexture"]->setMat4("view", cameras[0]->getViewMatrix());
-        FISH::Renderer::ShaderLib["OnlyTexture"]->setMat4("model", mesh2->getModelMatrix());
-        FISH::Renderer::ShaderLib["OnlyTexture"]->setMat4("normat", mesh2->getNormalMatrix());  
-        FISH::Renderer::ShaderLib["OnlyTexture"]->setTextureHandle("uTexture", mAni->getCurrentHandle());
-        mesh2->getShape()->render(TRIANGLES);
-        FISH::Renderer::ShaderLib["OnlyTexture"]->End();
-        mRenderstatuss->disablestatus(FISH::StatusType::Blend);
+        // mRenderstatuss->enablestatus(FISH::StatusType::Blend);
+        // mRenderstatuss->setstatusFunc(FISH::SetType::BlendFunc,  FISH::FuncType::SrcAlpha,  FISH::FuncType::MinusSrcAlpha);
+        // FISH::Renderer::ShaderLib["OnlyTexture"]->Begin();
+        // FISH::Renderer::ShaderLib["OnlyTexture"]->setMat4("projection", cameras[0]->getProjectMatrix());
+        // FISH::Renderer::ShaderLib["OnlyTexture"]->setMat4("view", cameras[0]->getViewMatrix());
+        // FISH::Renderer::ShaderLib["OnlyTexture"]->setMat4("model", mesh2->getModelMatrix());
+        // FISH::Renderer::ShaderLib["OnlyTexture"]->setMat4("normat", mesh2->getNormalMatrix());  
+        // FISH::Renderer::ShaderLib["OnlyTexture"]->setTextureHandle("uTexture", mAni->getHandle());
+        // mesh2->getShape()->render(TRIANGLES);
+        // FISH::Renderer::ShaderLib["OnlyTexture"]->End();
+        // mRenderstatuss->disablestatus(FISH::StatusType::Blend);
 
         mRenderstatuss->disablestatus(FISH::StatusType::DepthTest);
         shader->Begin();

@@ -1,5 +1,5 @@
 #pragma once
-
+#include "TextureHandle.h"
 #include "FISH/Core.h"
 
 namespace FISH {
@@ -23,7 +23,7 @@ namespace FISH {
         {}
     };
 
-    class API_ SpriteAnimation : public std::enable_shared_from_this<SpriteAnimation> {
+    class API_ SpriteAnimation : public TextureHandle {
     public: 
         SpriteAnimation();
 
@@ -50,9 +50,13 @@ namespace FISH {
         //设置播放速度
         void setSpeed(float speed);
         //获取当前帧
-        unsigned long long getCurrentHandle();
+        virtual unsigned long long getHandle() const override;
         //设置帧回调函数
-        void setFameCallBackFunc(const FrameCallFUN& func);
+        void setFrameCallBackFunc(const FrameCallFUN& func);
+        //设置初始帧开始函数
+        void setFrameBeginFunc(const FrameCallFUN& func);
+        //设动画结束函数
+        void setFrameEndFunc(const FrameCallFUN& func);
     private:
         //初始化计时器
         void initTimer();
@@ -79,6 +83,10 @@ namespace FISH {
         FrameCallFUN                    mFrameCallFunc;
         //帧自增函数
         FrameCallFUN                    mFrameIncreaseFunc;
+        //设置帧启动函数
+        FrameCallFUN                    mFrameBeginFunc;
+        //设置帧结束函数        
+        FrameCallFUN                    mFrameEndFunc;
     };
 
 }

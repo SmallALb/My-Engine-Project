@@ -23,7 +23,7 @@ namespace FISH
 
     uint32_t Shape::GetIndexCounts() const {return mVao->GetIndexCounts(); }
 
-    void Shape::setTexture(const std::shared_ptr<Texture>& texture) {
+    void Shape::setTexture(const std::shared_ptr<TextureHandle>& texture) {
         mTexture = texture;
     }
 

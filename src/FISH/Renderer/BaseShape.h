@@ -54,11 +54,11 @@ namespace FISH
         inline void render(int ElementType) {mVao->renderIndex(0, ElementType);}
 
         //设置使用纹理
-        void setTexture(const std::shared_ptr<Texture>& texture);
+        void setTexture(const std::shared_ptr<TextureHandle>& texture);
 
     private:
         std::unique_ptr<VertexArray>    mVao{nullptr};
-        std::shared_ptr<Texture>        mTexture{nullptr};
+        std::shared_ptr<TextureHandle>        mTexture{nullptr};
     };
 
 
