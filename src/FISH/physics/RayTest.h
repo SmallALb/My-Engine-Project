@@ -4,7 +4,9 @@
 
 namespace FISH {
     enum class CastType{
+        //盒体碰撞
         Box,
+        //球体碰撞
         Ball,
     };
 

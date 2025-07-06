@@ -113,7 +113,6 @@ namespace FISH {
                 caculateLight(spotlights, pointlights);
                 auto shape = (dynamic_cast<Mesh*>(obj.get()))->getShape();   
                 ShaderLib["Phong"]->setTextureHandle("sampler", shape->useTexture());
-                shape->useTexture();           
                 ShaderLib["Phong"]->setMat4("model", obj->getModelMatrix());
                 ShaderLib["Phong"]->setMat4("normat", obj->getNormalMatrix());
                 shape->render(TRIANGLES); 

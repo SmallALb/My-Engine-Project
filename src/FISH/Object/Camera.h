@@ -31,10 +31,7 @@ namespace  FISH {
         static Camera* CreateCamera(CameraType cameratype = CameraType::PERSPECTIVE, const std::string& name = "Camera");
 
         //获取相机的right向量
-        const glm::vec3& getRightvec() const {return mRight;}
-
-        //获取相机的up向量
-        const glm::vec3& getUpvec() const {return mUp;}
+        virtual const glm::vec3& getRight() const {return mRight;}
 
         //更新相机
         virtual void update() = 0;

@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include "FISH/Log.h"
+#include "OpenGLErrorCheck.h"
 #include "OpenGLShader.h"
 
 
@@ -126,37 +127,37 @@ namespace FISH {
 
     void GLShader::setFloat(const std::string& name, float value) {
         unsigned int location = (glGetUniformLocation(mProgram, name.c_str()));
-        (glUniform1f(location, value));
+        GL_ERRORCALL(glUniform1f(location, value));
     }
     
     void GLShader::setVector3(const std::string& name, float x, float y, float z) {
         unsigned int location = (glGetUniformLocation(mProgram, name.c_str()));
-        (glUniform3f(location, x, y, z));
+        GL_ERRORCALL(glUniform3f(location, x, y, z));
     }
     
     void GLShader::setVector3(const std::string& name, const float* values) {
         unsigned int location = (glGetUniformLocation(mProgram, name.c_str()));
-        (glUniform3fv(location, 1, values));
+        GL_ERRORCALL(glUniform3fv(location, 1, values));
     }
     
     void GLShader::setVector3(const std::string& name, const glm::vec3& vector) {
         unsigned int location = (glGetUniformLocation(mProgram, name.c_str()));
-        (glUniform3fv(location, 1, glm::value_ptr(vector)));
+        GL_ERRORCALL(glUniform3fv(location, 1, glm::value_ptr(vector)));
     }
     
     void GLShader::setInt(const std::string& name, int value) {
         unsigned int location = (glGetUniformLocation(mProgram, name.c_str()));
-        (glUniform1i(location, value));
+        GL_ERRORCALL(glUniform1i(location, value));
     }
 
     void GLShader::setBool(const std::string &name, bool value) {
         unsigned int location = (glGetUniformLocation(mProgram, name.c_str()));
-        (glUniform1i(location, value));
+        GL_ERRORCALL(glUniform1i(location, value));
     }
 
     void GLShader::setMat4(const std::string& name, glm::mat4 mat) {
         unsigned int location = (glGetUniformLocation(mProgram, name.c_str()));
-        (glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(mat)));
+        GL_ERRORCALL(glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(mat)));
     }
 
     void GLShader::setTextureHandle(const std::string &name, uint64_t handle) {
@@ -169,7 +170,7 @@ namespace FISH {
             return;
         }
         unsigned int location = glGetUniformLocation(mProgram, name.c_str());
-        glUniformHandleui64ARB(location, handle);
+        GL_ERRORCALL(glUniformHandleui64ARB(location, handle));
         
     }
     unsigned int GLShader::getUniformLocation(const std::string &name) {

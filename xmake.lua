@@ -106,6 +106,26 @@ target("ENTRY")
         end
     end
 
+--测试碰撞
+target("TESTCAST")
+    set_kind("binary")
+    add_files("CASTTEST.cpp")
+    add_deps("FISH")
+    add_links("FISH")
+    add_opengl()
+    add_packages("spdlog")
+    add_packages("freetype")
+    add_packages("openal-soft")
+    add_packages("libsndfile")
+    add_includedirs("src")
+    if is_mode("release") then
+        add_linkdirs("$(buildir)/windows/x64/release")
+        if is_plat("windows") then
+            --release模式下关闭终端窗口
+            add_ldflags("/SUBSYSTEM:WINDOWS", "/ENTRY:mainCRTStartup", {force = true})
+        end
+    end
+
 --资源文件复制
 after_build(function (target) 
     if is_mode("debug") then

@@ -117,7 +117,7 @@ void main() {
     vec3 result = vec3(0.0, 0.0, 0.0);
     vec3 viewDir = normalize(cameraPosition - worldPosition);
     vec3 normalN = normalize(normal);
-    vec3 objectColor = texture(sampler, uv).xyz;
+    vec4 objectColor = texture(sampler, uv);
 
     // if (objectColor.a < 0.01) {
     //     objectColor = vec4(1.0, 0.0, 1.0, 1.0); // 紫色标记无效采样
@@ -136,7 +136,7 @@ void main() {
     for (int i = 0; i < numPointLights; i++) {
         result += calculatePointLight(normalN, pointLights[i], viewDir);
     }
-    result += objectColor * ambientcolor * 0.5; // 环境光系数
+    result += objectColor.xyz * ambientcolor * 0.5; // 环境光系数
     
-    FragColor = vec4(result, 1.0);
+    FragColor = vec4(result, objectColor.w);
 }

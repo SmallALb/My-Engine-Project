@@ -4,7 +4,7 @@
 #include "Events/Events.h"
 
 namespace FISH {
-    //Í¼²ã
+    //²ã
     class API_ Layer {
     public:
         Layer(const string& name = "Layer");

@@ -37,7 +37,6 @@ namespace FISH {
         //获取速度
         inline float getSpeed() const {return mSpeed;}
 
-
         //获取灵敏度
         inline float getSensitivity() const {return mSensitivity;}
 
