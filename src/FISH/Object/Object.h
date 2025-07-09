@@ -30,19 +30,28 @@ namespace FISH {
         virtual ~Object3D() {};
         //设置对象位置
         virtual void setPosition(const glm::vec3& pos);
-        //旋转对象X方向
+
+        //旋转对象X角度
         virtual void rotateX(float angle) { mAngleX += angle; }
-        //旋转对象Y方向
+        //旋转对象Y角度
         virtual void rotateY(float angle) { mAngleY += angle; }
-        //旋转对象Z方向
+        //旋转对象Z角度
         virtual void rotateZ(float angle) { mAngleZ += angle; }
 
-        //设置对象的X方向
+        //设置对象的X角度
         virtual void setAngleX(float angle) { mAngleX = angle; }
-        //设置对象的Y方向
+        //设置对象的Y角度
         virtual void setAngleY(float angle) { mAngleY = angle; }
-        //设置对象的Z方向
+        //设置对象的Z角度
         virtual void setAngleZ(float angle) { mAngleZ = angle; }
+
+        //获取对象的X角度
+        virtual float getAngleX() { return mAngleX; }
+        //获取对象的Y角度
+        virtual float getAngleY() { return  mAngleY; }
+        //获取对象的Z角度
+        virtual float getAngleZ() { return mAngleZ; }
+
 
         //获取位置
         virtual glm::vec3 getPosition() const;

@@ -1,5 +1,10 @@
 #include "fspcs.h"
 #include "FISH/Object/Object.h"
+#include "FISH/Renderer/Buffer.h"
+#include "FISH/Renderer/VertexArray.h"
+#include "FISH/Renderer/RenderElement.h"
+#include "FISH/Renderer/Texture.h"
+#include "FISH/Renderer/BaseShape.h"
 #include "FISH/physics/ObjectCast.h"
 #include "FISH/Time.h"
 #include "FISH/Log.h"
@@ -13,10 +18,8 @@ namespace FISH {
 
     void GameObject::setPosition(const glm::vec3& pos) {
         if (mPosition == pos) return;
-        auto dvec = pos - mPosition;
         mPosition = pos;
-        mBounds.Min += dvec;
-        mBounds.Max += dvec;
+        mBounds->setPosition(pos);
         needUpdate = 1;
     }
 
@@ -24,5 +27,5 @@ namespace FISH {
         //FS_INFO("Object collided: {0}, {1}", mName.c_str(), other->getName().c_str());
     }
 
-    const AABB& GameObject::getBounds() const { return mBounds;}
+    ColliderPtr GameObject::getBounds() const { return mBounds;}
 }

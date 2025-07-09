@@ -34,6 +34,8 @@ namespace FISH{
 
         void LockCursor();
 
+        inline bool getLockedState() const { return IsLocked; }
+
         void UnLockCursor();
 
         inline Window& GetWindow() {return *mWindow; }

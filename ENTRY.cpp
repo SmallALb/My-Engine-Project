@@ -1,32 +1,6 @@
 #include <FISH.h>
 #include <vector> 
 #include <memory>
-class AObj : public FISH::GameObject {
-public:
-    AObj(const FISH::AABB& _bounds, const string& name = "GameObj") : GameObject(_bounds, name) {
-
-    }
-
-    ~AObj() {
-
-    }
-
-    void setObj(const std::shared_ptr<FISH::Object3D>& obj) {
-        mObj = obj;
-        mObj->setScale(mBounds.size());
-        mObj->setPosition(mPosition);
-    }
-
-    void update(float dt) override {
-        if (needUpdate) {
-            mObj->setPosition(mPosition);
-        }
-        needUpdate = 0;
-    }
-
-    std::shared_ptr<FISH::Object3D> mObj{nullptr};
-
-};
 
 
 
@@ -105,7 +79,6 @@ public:
         mesh2->getShape() = Pan;
         mesh2->setPosition({0.0, 4.0, -3.0});
         
-                CTest.reset(new FISH::CollisionTest({{-100, -100, -100}, {100, 100, 100}}));
 
         auto shape = std::shared_ptr<FISH::Shape>(FISH::Shape::CreateBox(1.0));;
         auto mesh = std::make_shared<FISH::Mesh>();
@@ -116,20 +89,7 @@ public:
         mesh2->getShape() = shape;
         mesh3->getShape() = shape;
 
-        mGameObj.reset(new AObj({{20, 20, 20}, {30, 30, 30}}, "11"));
-        mGameObj->setObj(mesh);
-        mGameObj2.reset(new AObj({{30, 30, 30}, {40, 40, 40}}, "22"));
-        mGameObj2->setObj(mesh2);
-        mGameObj3.reset(new AObj({{10, 10, 10}, {20, 20, 20}}, "33"));
-        mGameObj3->setObj(mesh3);
 
-        CTest->insert(mGameObj);
-        CTest->insert(mGameObj2);
-        CTest->insert(mGameObj3);
-
-        objs.push_back(mGameObj->mObj);
-        objs.push_back(mGameObj2->mObj);
-        objs.push_back(mGameObj3->mObj);
         objs.push_back(mMesh);
         objs.push_back(point);
         objs.push_back(point2);
@@ -242,10 +202,6 @@ public:
         lstpress = currntpress;
     }
 
-    std::unique_ptr<FISH::CollisionTest> CTest;
-    std::shared_ptr<AObj> mGameObj;
-    std::shared_ptr<AObj> mGameObj2;
-    std::shared_ptr<AObj> mGameObj3;
     std::vector<std::shared_ptr<FISH::Object3D>> objs;
     std::vector<std::shared_ptr<FISH::Camera>> cameras;
     std::shared_ptr<FISH::DirectionLight> light;

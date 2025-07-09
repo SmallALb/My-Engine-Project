@@ -51,7 +51,11 @@ namespace FISH
         }
 
         //绘制此形状
-        inline void render(int ElementType) {mVao->renderIndex(0, ElementType);}
+        inline void render(int ElementType) {
+            useShape();
+            mVao->renderIndex(0, ElementType);
+            unuseShape();
+        }
 
         //设置使用纹理
         void setTexture(const std::shared_ptr<TextureHandle>& texture);

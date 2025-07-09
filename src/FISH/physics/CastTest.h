@@ -9,7 +9,7 @@ namespace FISH {
         //设置碰撞测试为友元
         friend class CollisionTest;
         
-        ONode(const AABB& bounds): mBounds(bounds) {}
+        ONode(const std::shared_ptr<AABB>& bounds): mBounds(bounds) {}
 
         //拷贝禁用
         ONode(const ONode&) = delete;
@@ -28,18 +28,18 @@ namespace FISH {
         bool mergeNodes();
         inline bool IsLeave() const {return LeaveTag;}
     private:
-        std::list<std::shared_ptr<GameObject>>        mObjs{};
+        std::list<std::shared_ptr<GameObject>>          mObjs{};
         std::vector<std::unique_ptr<ONode>>             mChilds{};
         bool                                            LeaveTag{1};
         bool                                            LazyTag{0};
-        AABB                                            mBounds;
+        std::shared_ptr<AABB>                           mBounds;
     };
 
     //碰撞测试(八叉树)
     class API_ CollisionTest {
 
     public:
-        CollisionTest(const AABB& worldBounds):
+        CollisionTest(const std::shared_ptr<AABB>& worldBounds):
             root(std::make_unique<ONode>(worldBounds))
         {}
 

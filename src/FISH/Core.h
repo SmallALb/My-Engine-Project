@@ -18,3 +18,8 @@
 
 
 #define FS_BIND_EVENT_FN(x) std::bind(&x, this, std::placeholders::_1)
+
+template <typename Ty, typename From>
+auto PtrCastTo(From&& ptr) {
+    return dynamic_pointer_cast<Ty>(ptr);
+}

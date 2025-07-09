@@ -12,7 +12,7 @@ namespace FISH {
             needUpdate = 0;
         }
 
-        GameObject(const AABB& _bounds, const string& name = "GameObj") : mBounds(_bounds), mName(name) {}
+        GameObject(const ColliderPtr& _bounds, const string& name = "GameObj") : mBounds(_bounds), mName(name) {}
         virtual ~GameObject() {}
         //物体更新
         virtual void update(float dt = Time::DeltaTime);
@@ -22,7 +22,7 @@ namespace FISH {
 
         string getName() const {return mName;}
 
-        const AABB& getBounds() const;
+        ColliderPtr getBounds() const;
 
         //设置物体位置
         void setPosition(const glm::vec3& pos);
@@ -32,8 +32,10 @@ namespace FISH {
 
         //查看是否需要更新
         inline bool IsNeedUpdate() const { return needUpdate;}
+
+        inline void disableUpdate() {needUpdate = 1; }
     protected:
-        AABB mBounds{};        
+        ColliderPtr mBounds{nullptr};        
         string mName;
         glm::vec3 mPosition{0};
         bool needUpdate{0};

@@ -25,7 +25,7 @@ namespace FISH {
         virtual const uint32_t GetIndexCounts() const = 0;
         //按顶点下标绘制图形
         virtual void renderIndex(int beginId, int ElementType) = 0;
-
+        
         //创建Vao
         static VertexArray* Create();
     };

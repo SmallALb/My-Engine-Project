@@ -1,5 +1,10 @@
 #include "fspcs.h"
 #include "FISH/Time.h"
+#include "FISH/Renderer/Buffer.h"
+#include "FISH/Renderer/VertexArray.h"
+#include "FISH/Renderer/RenderElement.h"
+#include "FISH/Renderer/Texture.h"
+#include "FISH/Renderer/BaseShape.h"
 #include "ObjectCast.h"
 #include "FISH/Game/GameObject.h"
 #include "CastTest.h"
@@ -10,10 +15,11 @@ namespace FISH {
     void ONode::subDivideNode() {
         if (!LeaveTag) return;
 
-        auto center = 0.5f * (mBounds.Min + mBounds.Max);
+        auto [Min, Max] = mBounds->getBoundingPos();
+        auto center = 0.5f * (Min + Max);
         
         for (int i=0; i<8; i++) {
-            auto newMin = mBounds.Min;
+            auto newMin = Min;
             auto newMax = center;
 
             if (i & 1) newMin.x = center.x;
@@ -26,7 +32,7 @@ namespace FISH {
             else newMax.z = center.z;
 
             
-            mChilds.emplace_back(std::make_unique<ONode>(AABB(newMin, newMax)));
+            mChilds.emplace_back(std::make_unique<ONode>(std::make_shared<AABB>(newMin, newMax)));
         }
 
         LeaveTag = 0;
@@ -81,12 +87,12 @@ namespace FISH {
         auto func = [&](
             ONode* node,
             const std::shared_ptr<GameObject> &obj, 
-            const AABB &bounds,
+            const ColliderPtr& bounds,
             int depth,
             auto&& self
         )->void {
             //没有相交，直接返回
-            if (!(node->mBounds & bounds)) return;
+            if (!Collider::intersects(node->mBounds, bounds)) return;
             //叶子直接添加
             if (node->LeaveTag) {
                 node->mObjs.push_back(obj);
@@ -109,7 +115,7 @@ namespace FISH {
         auto func = [&](ONode* node, std::shared_ptr<GameObject> obj, auto&& self)->bool {
             bool removed = 0;
             //没有与盒体相交不需要去除
-            if (!(node->mBounds & obj->getBounds())) return false;
+            if (!Collider::intersects(node->mBounds, obj->getBounds())) return false;
             //是叶子直接删除
             if (node->IsLeave()) {
                 auto it = std::find(node->mObjs.begin(), node->mObjs.end(), obj);
@@ -134,7 +140,7 @@ namespace FISH {
             if (node->IsLeave()) {
                 for (auto i = node->mObjs.begin(); i != node->mObjs.end(); i++) 
                     for (auto j = std::next(i); j != node->mObjs.end(); j++) {
-                        if ((*i)->getBounds() & (*j)->getBounds())
+                        if (Collider::intersects((*i)->getBounds(), (*j)->getBounds()))
                             (*i)->onCollision(*j), (*j)->onCollision(*i);
                 }
             }
