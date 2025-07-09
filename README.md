@@ -19,6 +19,7 @@
 ### 窗体与上下文
 ### 程序事件系统(Event)
 ### 按键输入监听(Input)
+### 手柄输入监听(Controller)
 ### 层级系统(Layer)
 ### 顶点缓冲与顶点描述
 ### 着色器(Shader)
@@ -32,4 +33,7 @@
 ### 字体渲染(Font)
 ### 计时触发器(Timer)
 ### 精灵动画(Animation)
+### 射线检测(RayTest)
+### 碰撞盒体(ObjectCast)
+### 碰撞检测(CastTest)
 有部分并未完全实现。
