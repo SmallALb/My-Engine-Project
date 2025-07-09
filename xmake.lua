@@ -81,6 +81,7 @@ target("FISH")
         add_ldflags("--out-implib=libFISH.dll.a")
         add_ldflags("/NODEFAULTLIB:LIBCMT", {force = true})  -- 忽略冲突的库
         add_ldflags("/NODEFAULTLIB:MSVCRT", {force = true})
+        add_syslinks("xinput", "user32", "gdi32")
     end
     if  is_mode("release") then
         add_linkdirs("$(buildir)/windows/x64/release")
@@ -103,6 +104,7 @@ target("ENTRY")
         if is_plat("windows") then
             --release模式下关闭终端窗口
             add_ldflags("/SUBSYSTEM:WINDOWS", "/ENTRY:mainCRTStartup", {force = true})
+            add_syslinks("xinput", "user32", "gdi32")
         end
     end
 
@@ -123,6 +125,7 @@ target("TESTCAST")
         if is_plat("windows") then
             --release模式下关闭终端窗口
             add_ldflags("/SUBSYSTEM:WINDOWS", "/ENTRY:mainCRTStartup", {force = true})
+            add_syslinks("xinput", "user32", "gdi32")
         end
     end
 

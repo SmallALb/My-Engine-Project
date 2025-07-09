@@ -24,7 +24,7 @@ public:
     }
 
     void onCollision(const std::shared_ptr<GameObject>& other) override {
-        if (mBounds->getType() == FISH::ColliderType::OBB) FS_INFO("CAST: {0}, {1}, count:{2}", mName, other->getName(), ++cou);
+        //if (mBounds->getType() == FISH::ColliderType::OBB) FS_INFO("CAST: {0}, {1}, count:{2}", mName, other->getName(), ++cou);
     }
 
     std::shared_ptr<FISH::OBB> getOBB() const {
@@ -61,7 +61,10 @@ public:
 class MainLayer : public FISH::Layer {
     void OnAttach() override {
         shader.reset(FISH::Shader::CreateShader());
-
+        //手柄测试///////////////
+        mController.reset(FISH::Controller::CreateController());
+        mController->init();
+        ///////////////////
         shader->readVertexShader("sharders/EnginRenderShader/2Dvertex.glsl");
         shader->readFragmentShader("sharders/EnginRenderShader/OnlyColor.glsl");
         Shape2D.reset(FISH::Shape::CreateCircle2D(0.005f));
@@ -128,7 +131,7 @@ class MainLayer : public FISH::Layer {
     }
 
     void OnUpdate() override {
-
+        mController->update();
         mCamera->update();
         CTest->update();
         CTest->check();
@@ -142,7 +145,11 @@ class MainLayer : public FISH::Layer {
         mGameObj->getOBB()->getVertices()->renderIndex(0, LINES);
         Renderer::ShaderLib["OnlyColor"]->End();
 
-        if (FISH::Input::IsKeyPressed(FS_KEY_C)) mGameObj->rotateZ(0.01f);
+        if (mController->getKeyInfo("A").getKeyBool()) FS_INFO("[A] press!");
+
+        mGameObj->rotateZ(0.1f * mController->getKeyInfo("LeftStickX").getKeyFloat());
+
+        mController->setVibration(std::abs(mController->getKeyInfo("LeftStickX").getKeyFloat())*0.4, std::abs(mController->getKeyInfo("LeftStickX").getKeyFloat())*0.4);
 
         if (FISH::Input::IsKeyPressed(FS_KEY_SPACE) && lastPress == 0) {
             if (!APP.getLockedState()) APP.LockCursor(), mCamera->setAllowedControl(1);
@@ -172,6 +179,7 @@ class MainLayer : public FISH::Layer {
     std::shared_ptr<FISH::Shape> Shape2D;
     std::shared_ptr<FISH::Shader> shader;
     bool lastPress = 0;
+    std::shared_ptr<FISH::Controller> mController;
     
 };
 

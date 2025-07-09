@@ -10,6 +10,7 @@
 #include "FISH/MouseButtonCodes.h"
 #include "FISH/Application.h"
 #include "FISH/input.h"
+#include "FISH/Controller.h"
 #include "FISH/Layer.h"
 #include "FISH/Log.h"
 #include "FISH/ImGui/ImGuiLayer.h"
