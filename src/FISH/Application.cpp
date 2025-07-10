@@ -52,7 +52,7 @@ namespace FISH{
             mCleanfun();
 
             for (auto layer : mLayerStack)
-                layer->OnUpdate();
+                layer->OnUpdate(Time::DeltaTime);
             mImGuiLayer->Begin(IsLocked);
             for (auto layer : mLayerStack)
                 layer->OnImGuiRender();

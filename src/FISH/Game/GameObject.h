@@ -33,7 +33,7 @@ namespace FISH {
         //查看是否需要更新
         inline bool IsNeedUpdate() const { return needUpdate;}
 
-        inline void disableUpdate() {needUpdate = 1; }
+        inline void disableUpdate() {needUpdate = 0; }
     protected:
         ColliderPtr mBounds{nullptr};        
         string mName;

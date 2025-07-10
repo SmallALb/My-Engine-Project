@@ -28,20 +28,25 @@ namespace FISH {
 
     glm::vec3 perspectiveCamera::getFront() const{ return glm::normalize(glm::cross(mRight, mUp)); }
 
+    void perspectiveCamera::setLookAtFromMousePosition(const std::pair<float, float> &pos) {
+        auto& [xpos, ypos] = pos;
+        float dY = (ypos - mCurrentY) * mSensitivity;
+        float dX = (xpos - mCurrentX) * mSensitivity;
+        //FS_INFO("{0}", dt);
+        yaw(-dX);
+        pitch(dY);
+        mCurrentX = xpos;
+        mCurrentY = ypos;
+    }
+
     void perspectiveCamera::update() {
         if (!IsControl) return;
 
         mAccumulatedTime += Time::DeltaTime; 
         while(mAccumulatedTime >= Time::Step) {
             //鼠标位置
-            auto [xpos, ypos] = Input::GetMousePos();
-            float dY = (ypos - mCurrentY) * mSensitivity;
-            float dX = (xpos - mCurrentX) * mSensitivity;
-            //FS_INFO("{0}", dt);
-            yaw(-dX);
-            pitch(dY);
-            mCurrentX = xpos;
-            mCurrentY = ypos;
+            setLookAtFromMousePosition(Input::GetMousePos());
+      
             //键盘响应
             auto front = glm::cross(mRight, mUp);
             glm::vec3 dir(0.0);

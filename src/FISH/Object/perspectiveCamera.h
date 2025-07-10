@@ -49,6 +49,8 @@ namespace FISH {
         //获取朝向
         virtual glm::vec3 getFront() const override;
 
+        //从指定位置中设置相机看向视角
+        void setLookAtFromMousePosition(const std::pair<float, float>& pos);
     private:
         //视角上/下
         void pitch(float angle);

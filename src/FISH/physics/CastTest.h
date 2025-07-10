@@ -53,13 +53,18 @@ namespace FISH {
         void check();
         //清除
         void cleanUp(bool force);
+        //渲染碰撞盒
+        void enableRenderBox() {renderBoxTag = 1;}
+        //取消渲染碰撞盒
+        void disableRenderBox() {renderBoxTag = 0;}
     private:
         //是否能够被合并
         bool IsCanMerge(ONode* node) const;
         
     private:
         std::unique_ptr<ONode>  root;
-        int                     Maxdepth{100};
-        int                     MaxObjsPreNode{10};
+        int                     Maxdepth{5};
+        int                     MaxObjsPreNode{2};
+        bool                    renderBoxTag{0};
     };
 }

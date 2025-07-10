@@ -12,3 +12,27 @@
 #define FS_MOUSE_BUTTON_LEFT      FS_MOUSE_BUTTON_1
 #define FS_MOUSE_BUTTON_RIGHT     FS_MOUSE_BUTTON_2
 #define FS_MOUSE_BUTTON_MIDDLE    FS_MOUSE_BUTTON_3
+
+
+#pragma once
+
+namespace FISH {
+
+    // 鼠标按键枚举类
+    enum class MouseCode {
+        Button1 = 0,
+        Button2 = 1,
+        Button3 = 2,
+        Button4 = 3,
+        Button5 = 4,
+        Button6 = 5,
+        Button7 = 6,
+        Button8 = 7,
+        
+        Last    = Button8,
+        Left    = Button1,
+        Right   = Button2,
+        Middle  = Button3
+    };
+
+} // namespace FISH

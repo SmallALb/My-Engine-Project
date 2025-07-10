@@ -15,7 +15,7 @@ namespace FISH {
         //销毁
         virtual void OnDetach() {}
         //更新
-        virtual void OnUpdate() {}
+        virtual void OnUpdate(float dt) {}
         //渲染UI
         virtual void OnImGuiRender() {}
         //事件监听

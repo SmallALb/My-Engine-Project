@@ -3,8 +3,7 @@
 #include "FISH/Renderer/Buffer.h"
 #include "FISH/Renderer/VertexArray.h"
 #include "FISH/Renderer/RenderElement.h"
-#include "FISH/Renderer/Texture.h"
-#include "FISH/Renderer/BaseShape.h"
+#include "FISH/Renderer/Shader.h"
 #include "ObjectCast.h"
 
 namespace FISH {
@@ -44,6 +43,65 @@ namespace FISH {
         Max = newMax - mPosition;
     }
 
+    std::shared_ptr<VertexArray> AABB::getVertices() const {
+         glm::vec3 vertices[8] = {
+            {Min.x, Min.y, Min.z}, // 0: min corner
+            {Min.x, Min.y, Max.z}, // 1: min x,y; max z
+            {Min.x, Max.y, Min.z}, // 2: min x,z; max y
+            {Min.x, Max.y, Max.z}, // 3: min x; max y,z
+            {Max.x, Min.y, Min.z}, // 4: max x; min y,z
+            {Max.x, Min.y, Max.z}, // 5: max x,z; min y
+            {Max.x, Max.y, Min.z}, // 6: max x,y; min z
+            {Max.x, Max.y, Max.z}  // 7: max corner
+        };
+
+        for (auto& v : vertices) v += mPosition;
+
+        std::vector<float> vertexData;
+        vertexData.reserve(8 * 3);
+        for (const auto& v : vertices) {
+            vertexData.push_back(v.x);
+            vertexData.push_back(v.y);
+            vertexData.push_back(v.z);
+        }
+
+        std::vector<unsigned int> indices = {
+                // 底面
+                0, 1, 2, 2, 1, 3,
+                // 顶面
+                4, 6, 5, 5, 6, 7,
+                // 前面
+                0, 4, 1, 1, 4, 5,
+                // 后面
+                2, 3, 6, 6, 3, 7,
+                // 左面
+                0, 2, 4, 4, 2, 6,
+                // 右面
+                1, 5, 3, 3, 5, 7
+        };
+
+        // Create vertex buffer
+        std::shared_ptr<VertexBuffer> vbo;
+        vbo.reset(VertexBuffer::Create(vertexData.data(), 4 * vertexData.size()));
+        
+        // Create index buffer
+        std::shared_ptr<IndexBuffer> ibo;
+        ibo.reset(IndexBuffer::Create(indices.data(), (indices.size())));
+
+        // Set vertex layout
+        vbo->SetLayout({
+            {ShaderDataType::Float3, VertexType::Position, "pos"}
+        });
+
+        // Create vertex array
+        std::shared_ptr<VertexArray> vao;
+        vao.reset(VertexArray::Create());
+        vao->AddVertexBuffer(vbo);
+        vao->SetIndexBuffer(ibo);
+
+        return vao;
+    }
+
     bool Collider::intersects(const ColliderPtr &A, const ColliderPtr &B) {
         auto TyA = A->getType(), TyB = B->getType();
 
@@ -64,6 +122,7 @@ namespace FISH {
         FS_INFO("Unkonwn CastBox Type!");
         return false;
     }
+
 
     bool Collider::intersectsAABBAABB(const ColliderPtr &a, const ColliderPtr &b) {
         auto aPos = PtrCastTo<AABB>(a)->getBoundingPos(); 
@@ -91,27 +150,33 @@ namespace FISH {
 
     bool Collider::intersectsOBBOBB(const ColliderPtr &a, const ColliderPtr &b) {
          // 需要检测的分离轴：两个OBB的6个轴向 + 9个叉积轴 = 15条轴
-        glm::vec3 testAxes[15];
+        
+         //使用无序set来去重
+        std::unordered_set<glm::vec3, decltype([](const glm::vec3& v){
+            return std::hash<float>()(v.x) ^ 
+                    (std::hash<float>()(v.y) << 1) ^ 
+                    (std::hash<float>()(v.z) << 2);
+        })> testAxes;
 
         auto boxA =  PtrCastTo<OBB>(a);
         auto boxB =  PtrCastTo<OBB>(b);
 
 
         // 填充boxA的3个轴向
-        testAxes[0] = boxA->getAxisX(); // boxA的X轴
-        testAxes[1] = boxA->getAxisY(); // boxA的Y轴
-        testAxes[2] = boxA->getAxisZ(); // boxA的Z轴
+        testAxes.insert(boxA->getAxisX()); // boxA的X轴
+        testAxes.insert(boxA->getAxisY()); // boxA的Y轴
+        testAxes.insert(boxA->getAxisZ()); // boxA的Z轴
 
         // 填充boxB的3个轴向
-        testAxes[3] = boxB->getAxisX(); // boxB的X轴
-        testAxes[4] = boxB->getAxisY(); // boxB的Y轴
-        testAxes[5] = boxB->getAxisZ(); // boxB的Z轴
+        testAxes.insert(boxB->getAxisX()); // boxB的X轴
+        testAxes.insert(boxB->getAxisY()); // boxB的Y轴
+        testAxes.insert(boxB->getAxisZ()); // boxB的Z轴
 
         int index = 6;
         //计算所有的叉积轴体
         for (int i=0; i<3; i++) {
             for (int j = 0; j < 3; j++) 
-                testAxes[index++] = glm::cross(boxA->getAxis(i), boxB->getAxis(j));
+                testAxes.insert(glm::cross(boxA->getAxis(i), boxB->getAxis(j)));
         }
 
         //轴分离计算投影半径
@@ -141,6 +206,7 @@ namespace FISH {
 
         return true;
     }
+
 
     float OBB::volume() const {
         return 8.0f * HalfExtents.x * HalfExtents.y * HalfExtents.z;
@@ -192,10 +258,20 @@ namespace FISH {
             std::shared_ptr<VertexBuffer> vbo;
             std::shared_ptr<IndexBuffer>  index;
             vbo.reset(VertexBuffer::Create(result.data(), 4 * result.size()));
+
             std::vector<unsigned int> ix{
-                0, 1, 1, 2, 2, 3, 3, 0, // 底面
-                4, 5, 5, 6, 6, 7, 7, 4, // 顶面
-                0, 4, 1, 5, 2, 6, 3, 7  // 连接底面和顶面
+                // 底面
+                0, 1, 2, 2, 1, 3,
+                // 顶面
+                4, 6, 5, 5, 6, 7,
+                // 前面
+                0, 4, 1, 1, 4, 5,
+                // 后面
+                2, 3, 6, 6, 3, 7,
+                // 左面
+                0, 2, 4, 4, 2, 6,
+                // 右面
+                1, 5, 3, 3, 5, 7
             };
 
             index.reset(IndexBuffer::Create(ix.data(), ix.size()));

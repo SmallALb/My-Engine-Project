@@ -29,6 +29,10 @@ namespace FISH {
         //获取碰撞体类型
         virtual inline ColliderType getType() const {return ColliderType::None;}
 
+        //获取框体顶点信息
+        virtual std::shared_ptr<VertexArray> getVertices() const = 0;
+
+
         //获取位置
         inline const glm::vec3& getPosition() const {return mPosition;} 
 
@@ -52,11 +56,13 @@ namespace FISH {
         //计算包围体积
         float volume() const override;
 
-        virtual inline ColliderType getType() const {return ColliderType::AABB;}
+        inline ColliderType getType() const {return ColliderType::AABB;}
 
         inline glm::vec3 size() const  override {return Max - Min;}
 
         void transform(const glm::mat4 &transform) override;
+
+        std::shared_ptr<VertexArray> getVertices() const override;
 
         //得到带位置的盒体
         std::pair<glm::vec3, glm::vec3> getBoundingPos() {return {mPosition + Min, mPosition + Max};}
@@ -124,6 +130,7 @@ namespace FISH {
         
         // OBB与OBB碰撞检测
         static bool intersectsOBBOBB(const ColliderPtr& a, const ColliderPtr& b);
+
     };
 
 }

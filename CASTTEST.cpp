@@ -16,15 +16,20 @@ public:
         mObj->setPosition(mPosition);
     }
 
+    void addPos(const glm::vec3& dir) {
+        setPosition(mPosition + dir);
+    }
+
     void update(float dt) override {
         if (needUpdate) {
             mObj->setPosition(mPosition);
         }
         needUpdate = 0;
+        hasCollided = 0;
     }
 
     void onCollision(const std::shared_ptr<GameObject>& other) override {
-        //if (mBounds->getType() == FISH::ColliderType::OBB) FS_INFO("CAST: {0}, {1}, count:{2}", mName, other->getName(), ++cou);
+        if (mBounds->getType() == FISH::ColliderType::OBB && !hasCollided) FS_INFO("CAST: {0}, {1}", mName, other->getName()), hasCollided = 1;
     }
 
     std::shared_ptr<FISH::OBB> getOBB() const {
@@ -34,6 +39,7 @@ public:
     }
 
     void rotateZ(float angle) {
+        if (std::abs(angle) <= 0.0001) return;
         float currentAngleZ = mObj->getAngleZ();
             
         // 更新物体的旋转角度
@@ -49,13 +55,14 @@ public:
         // 应用旋转到OBB（保持与物体同步）
         PtrCastTo<FISH::OBB>(mBounds)->setRotation(glm::mat3(rotation));
         
-        needUpdate = true;
+        needUpdate = 1;
     }
 
     std::shared_ptr<FISH::Object3D> mObj{nullptr};
 
-    int cou = 0;
-
+    bool tag{0}, lasttag{0};
+    bool hasCollided{false};
+    
 };
 
 class MainLayer : public FISH::Layer {
@@ -100,7 +107,7 @@ class MainLayer : public FISH::Layer {
         });
 
 
-        CTest.reset(new FISH::CollisionTest(std::make_shared<FISH::AABB>(glm::vec3(-100, -100, -100), glm::vec3(100, 100, 100))));
+        CTest.reset(new FISH::CollisionTest(std::make_shared<FISH::AABB>(glm::vec3(-50, -50, -50), glm::vec3(50, 50, 50))));
 
         auto shape = std::shared_ptr<FISH::Shape>(FISH::Shape::CreateBox(1.0));;
         auto mesh = std::make_shared<FISH::Mesh>();
@@ -113,13 +120,13 @@ class MainLayer : public FISH::Layer {
 
         mGameObj.reset(new AObj(std::make_shared<FISH::OBB>(glm::vec3(1, 1, 1), glm::mat3(1.0f)), "11"));
         mGameObj->setObj(mesh);
-        mGameObj->setPosition({-2, -1.8, -2});
+        mGameObj->setPosition({-5, -1.8, -2});
         mGameObj2.reset(new AObj(std::make_shared<FISH::AABB>(glm::vec3(-1, -1, -1), glm::vec3(1, 1, 1)), "22"));
         mGameObj2->setObj(mesh2);
         mGameObj2->setPosition({3, 3, 3});
         mGameObj3.reset(new AObj(std::make_shared<FISH::AABB>(glm::vec3(-1, -1, -1), glm::vec3(1, 1, 1)), "33"));
         mGameObj3->setObj(mesh3);
-
+        mGameObj3->setPosition({3, 3, -3});
 
 
         CTest->insert(mGameObj);
@@ -130,25 +137,20 @@ class MainLayer : public FISH::Layer {
 
     }
 
-    void OnUpdate() override {
+    void OnUpdate(float dt) override {
         mController->update();
         mCamera->update();
         CTest->update();
         CTest->check();
-        using namespace FISH;
-        Renderer::ShaderLib["OnlyColor"]->Begin();
-        Renderer::ShaderLib["OnlyColor"]->setMat4("projection", mCamera->getProjectMatrix());
-        Renderer::ShaderLib["OnlyColor"]->setMat4("view", mCamera->getViewMatrix());
-        Renderer::ShaderLib["OnlyColor"]->setMat4("model", glm::mat4(1.0f));
-        Renderer::ShaderLib["OnlyColor"]->setMat4("normat", mGameObj->mObj->getNormalMatrix());  
-        Renderer::ShaderLib["OnlyColor"]->setVector3("InColor", {0.0, 0.0, 1.0});
-        mGameObj->getOBB()->getVertices()->renderIndex(0, LINES);
-        Renderer::ShaderLib["OnlyColor"]->End();
+        //FISH::Renderer::renderColliderBox(mGameObj->getBounds());
 
-        if (mController->getKeyInfo("A").getKeyBool()) FS_INFO("[A] press!");
+        if (mController->getKeyInfo("A").getKeyBool()) mGameObj->addPos({0, 3.0* dt, 0});
+        if (mController->getKeyInfo("B").getKeyBool()) mGameObj->addPos({0, -3.0* dt, 0});
+        if (mController->getKeyInfo("LB").getKeyBool()) CTest->enableRenderBox();
+        if (mController->getKeyInfo("RB").getKeyBool()) CTest->disableRenderBox();
 
-        mGameObj->rotateZ(0.1f * mController->getKeyInfo("LeftStickX").getKeyFloat());
-
+        mGameObj->rotateZ(5.0f * mController->getKeyInfo("LeftStickX").getKeyFloat() * dt);
+        mGameObj->addPos({-mController->getKeyInfo("RightStickX").getKeyFloat()*dt*3, 0, mController->getKeyInfo("RightStickY").getKeyFloat()*dt*3});
         mController->setVibration(std::abs(mController->getKeyInfo("LeftStickX").getKeyFloat())*0.4, std::abs(mController->getKeyInfo("LeftStickX").getKeyFloat())*0.4);
 
         if (FISH::Input::IsKeyPressed(FS_KEY_SPACE) && lastPress == 0) {
@@ -161,11 +163,7 @@ class MainLayer : public FISH::Layer {
 
         //FS_INFO("{}", glm::to_string(mCamera->getProjectMatrix()));
 
-        std::vector<std::shared_ptr<FISH::Object3D>> renderObjs;
-
-        renderObjs = {mGameObj->mObj, mGameObj2->mObj, mGameObj3->mObj};
-
-        FISH::Renderer::render(renderObjs);
+        FISH::Renderer::render({mGameObj->mObj, mGameObj2->mObj, mGameObj3->mObj});
 
         //CTest->cleanUp(0);
     }

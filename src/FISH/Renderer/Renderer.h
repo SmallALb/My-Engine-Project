@@ -33,6 +33,8 @@ namespace FISH {
 
         //渲染(2D)
         static void render(const std::vector<std::shared_ptr<Object2D>>& objs);
+        //渲染碰撞盒体
+        static void renderColliderBox(const ColliderPtr& box, const glm::vec3& color);
     private:
         static void RenderObj(const std::shared_ptr<Object3D>& obj,
         const std::vector<std::shared_ptr<SpotLight>> &spotlights, 

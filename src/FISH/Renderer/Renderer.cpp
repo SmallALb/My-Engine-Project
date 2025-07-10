@@ -14,6 +14,7 @@
 #include "../Object/Camera.h"
 #include "../Object/Mesh.h"
 #include "../Object/SkyBox.h"
+#include "../physics/ObjectCast.h"
 #include "../Log.h"
 #include "Renderstatus.h"
 #include "Renderer.h"
@@ -58,6 +59,19 @@ namespace FISH {
     void Renderer::render(const std::vector<std::shared_ptr<Object2D>>& objs) {
         for (auto& obj : objs) if (obj->getParent() == nullptr)
             RenderObj(obj);
+    }
+
+    void Renderer::renderColliderBox(const ColliderPtr &box, const glm::vec3& color) {
+        mstatuss->disablestatus(StatusType::DepthTest);
+        ShaderLib["OnlyColor"]->Begin();
+        ShaderLib["OnlyColor"]->setMat4("projection", UseCamera->getProjectMatrix());
+        ShaderLib["OnlyColor"]->setMat4("view", UseCamera->getViewMatrix());
+        ShaderLib["OnlyColor"]->setMat4("model", glm::mat4(1.0f));
+        ShaderLib["OnlyColor"]->setMat4("normat", {1.0});  
+        ShaderLib["OnlyColor"]->setVector3("InColor", color);
+        box->getVertices()->renderIndex(0, LINES);
+        ShaderLib["OnlyColor"]->End();
+        mstatuss->enablestatus(StatusType::DepthTest);
     }
 
     void Renderer::initDefaultShader() {
