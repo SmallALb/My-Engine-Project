@@ -36,7 +36,6 @@ namespace FISH {
 
     void Timer::stopTimer(int id) {
         std::lock_guard<std::recursive_mutex> lock(timersLock);
-        FreeIds.push(id);
         auto it = std::find_if(timers.begin(), timers.end(), [id](const auto& timer) {
             return timer.id == id;
         });
@@ -46,6 +45,7 @@ namespace FISH {
             timers.erase(it);               // 移除原元素
             timers.emplace(std::move(modifiedTimer));   // 插入修改后的元素
         }
+        FreeIds.push(id);
         //FS_INFO("Done!, stopped the thread:{0}", id);
         conditionV.notify_one();        // 通知工作线程
     }
@@ -92,7 +92,7 @@ namespace FISH {
             auto waitTime = timers.begin()->startTime - now;
             //如果未到达指定触发时间，则等待
             if (waitTime > std::chrono::milliseconds(0)) conditionV.wait_for(lock, waitTime);
-            //需要运行时间的队列
+            //需要运行的队列
             std::vector<TimerProps> needRun;
             //需要重复执行的队列
             std::vector<TimerProps> repTimer;

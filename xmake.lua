@@ -31,7 +31,8 @@ add_requires("freetype")
 --音频库
 add_requires("openal-soft", {configs = {shared = true}})
 add_requires("libsndfile")
-
+--json读取库
+add_requires("nlohmann_json")
 
 --opengl接入函数
 function add_opengl()
@@ -72,6 +73,7 @@ target("FISH")
     add_packages("freetype")
     add_packages("openal-soft")
     add_packages("libsndfile")
+    add_packages("nlohmann_json")
     add_opengl()
     if  is_plat("windows") then 
         add_rules("utils.symbols.export_all", {
@@ -98,6 +100,7 @@ target("ENTRY")
     add_packages("freetype")
     add_packages("openal-soft")
     add_packages("libsndfile")
+    add_packages("nlohmann_json")
     add_includedirs("src")
     if is_mode("release") then
         add_linkdirs("$(buildir)/windows/x64/release")
@@ -119,6 +122,7 @@ target("TESTCAST")
     add_packages("freetype")
     add_packages("openal-soft")
     add_packages("libsndfile")
+    add_packages("nlohmann_json")
     add_includedirs("src")
     if is_mode("release") then
         add_linkdirs("$(buildir)/windows/x64/release")
