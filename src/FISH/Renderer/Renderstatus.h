@@ -5,12 +5,14 @@
 namespace FISH {
     //渲染状态类型
     enum class StatusType {
-        NonestatusType,  //null
-        DepthTest,      //深度检测
-        CleanDepth,     //清理深度
-        CleanColor,     //清理颜色
-        CullFace,       //面剔除
-        Blend           //渲染
+        NonestatusType,     //null
+        DepthTest,          //深度检测
+        CleanDepth,         //清理深度
+        CleanColor,         //清理颜色
+        CullFace,           //面剔除
+        Blend,              //渲染
+        DepthOffsetFill,    //面深度偏移
+        DepthOffsetLine     //线深度偏移
     };
 
     //渲染函数类型
@@ -19,12 +21,16 @@ namespace FISH {
         CullFaceFunc,       //设置剔除面
         FrontFaceDIR,       //设置正面面方向
         DepthFunc,          //设置深度
-        BlendFunc           //设置颜色混合
+        BlendFunc,           //设置颜色混合
+        DepthMask,           //深度写入
+        DepthOffset          //深度偏移
     };
 
     //渲染函数设置类型
     enum class FuncType {
         ZERO,           //Null
+        FALSETyp,       //False
+        TRUETyp,        //True
         ONE,            //one
         DepthLess,      //深度优先最小检测
         DepthGreater,   //深度优先最大检测
@@ -40,6 +46,7 @@ namespace FISH {
         MinusDstColor,  //目标色反相
         MinusSrcAlpha,  //源透明度反相
         MinusDstAlpha,  //目标透明度反向
+        DepthOffsetData //偏移信息传入
     }; 
 
     //渲染状态接口

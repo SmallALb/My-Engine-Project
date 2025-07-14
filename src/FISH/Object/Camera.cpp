@@ -9,10 +9,13 @@ namespace FISH {
     }
 
     glm::mat4 Camera::getViewMatrix() {
+        auto pos = getPosition();
         glm::vec3 front = glm::cross(mRight, mUp);
-        glm::vec3 center = mPosition + front;
+        auto Wfront = glm::normalize(glm::vec3(getModelMatrix() * glm::vec4(front, 0.0)));
+        auto Wup = glm::normalize(glm::vec3(getModelMatrix() * glm::vec4(mUp, 0.0)));
+        glm::vec3 center = pos + Wfront;
 
-        return glm::lookAt(mPosition, center, mUp);
+        return glm::lookAt(pos, center, Wup);
     }
 
 

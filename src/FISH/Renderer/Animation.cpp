@@ -49,7 +49,7 @@ namespace FISH {
     }   
 
     SpriteAnimation::~SpriteAnimation() {
-        mAnimationTimer->stopTimer(TimerId);
+        if (TimerId) mAnimationTimer->stopTimer(TimerId);
     }
 
     void SpriteAnimation::play(AnimationMode mode) {

@@ -3,24 +3,28 @@
 #include "Core.h"
 
 namespace FISH {
-    //ÊäÈë²éÑ¯½Ó¿Ú
+    //è¾“å…¥æŸ¥è¯¢æ¥å£
     class API_ Input {
     public:
-        //¼üÅÌÊÇ·ñ°´ÏÂ
+        //é”®ç›˜æ˜¯å¦æŒ‰ä¸‹
         inline static bool IsKeyPressed(int keycode) { return GetInstance().IsKeyPressedImpl(keycode); }
-        //Êó±êÊÇ·ñ±»°´ÏÂ
+        //é”®ç›˜æ˜¯å¦è¢«æŒ‰ä¸‹ä¸€æ¬¡
+        inline static bool IsKeyPressedOnce(int keycode) {return GetInstance().IsKeyPressedOnceImpl(keycode);}
+        //é¼ æ ‡æ˜¯å¦è¢«æŒ‰ä¸‹
         inline static bool IsMouseButtonPressed(int button) {return GetInstance().IsButtonPressedImpl(button);}
-        //Êó±êµÄx
+        //é¼ æ ‡çš„x
         inline static double GetMouseX() {return GetInstance().GetMouseXImpl();}
-        //Êó±êµÄy
+        //é¼ æ ‡çš„y
         inline static double GetMouseY() {return GetInstance().GetMouseYImpl();}
-        //Êó±êµÄx,y
+        //é¼ æ ‡çš„x,y
         inline static std::pair<double, double> GetMousePos() {return GetInstance().GetMousePosImpl(); }
+        
 
-        //»ñÈ¡µ¥Àı£¬Ò»°ãÔÚÅÉÉúÀàÖĞÊµÏÖ
+        //è·å–å•ä¾‹ï¼Œä¸€èˆ¬åœ¨æ´¾ç”Ÿç±»ä¸­å®ç°
         static Input& GetInstance();
     protected:
         virtual bool IsKeyPressedImpl(int keycode) = 0;
+        virtual bool IsKeyPressedOnceImpl(int keycode) = 0;
         virtual bool IsButtonPressedImpl(int button) = 0;
         virtual double GetMouseXImpl() = 0;
         virtual double GetMouseYImpl() = 0;

@@ -48,7 +48,7 @@
 //物理和游戏基本
 #include "FISH/physics/ObjectCast.h"
 #include "FISH/Game/GameObject.h"
-
+#include "FISH/physics/Movement.h"
 //渲染
 #include "FISH/Renderer/Renderstatus.h"
 #include "FISH/Renderer/Renderer.h"

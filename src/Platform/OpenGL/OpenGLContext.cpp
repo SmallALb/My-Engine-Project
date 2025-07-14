@@ -27,7 +27,6 @@ namespace FISH {
         FS_CORE_INFO("{0}",render_info); 
         //glEnable(GL_DEPTH_TEST);
         glfwWindowHint(GLFW_DEPTH_BITS, 24);
-        glfwWindowHint(GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
     }
 
     void OpenGLContext::SwapBuffers() {

@@ -48,14 +48,12 @@ namespace FISH {
                 newMax.x = center.x;
             }
 
-            // Y轴处理（使用位掩码2）
             if ((i & 2)) { // 上半
                 newMin.y = center.y;
             } else {     // 下半
                 newMax.y = center.y;
             }
 
-            // Z轴处理（使用位掩码4）
             if ((i & 4)) { // 前半
                 newMin.z = center.z;
             } else {     // 后半
@@ -169,12 +167,28 @@ namespace FISH {
         func(root.get(), obj, func);
     }
 
+    bool CollisionTest::query(const std::shared_ptr<GameObject> &obj) {
+        auto func = [&](ONode* node, auto&& self)->bool {
+            if (!Collider::intersects(node->mBounds, obj->getBounds())) return false;
+            bool tag = false;
+            if (node->IsLeave()) {
+                for (const auto& nobj : node->mObjs) if (Collider::intersects(nobj->getBounds(), obj->getBounds())) 
+                    obj->onCollision(nobj), tag = true;
+            }
+            else for (auto& child : node->mChilds)
+                tag = self(child.get(), self);
+            return tag;
+        };
+
+        return func(root.get(), func);
+    }
+
     void CollisionTest::check() {
         auto func = [&] (ONode* node, auto&& self)->void {
             if (node == nullptr) return;
-            if (renderBoxTag) Renderer::renderColliderBox(node->mBounds, node->mObjs.empty() ? glm::vec3{0.0, 1.0, 0.0}: glm::vec3{1.0, 0.0, 0.0});
             //是叶子，取出所有的盒内物体进行检测
             if (node->IsLeave()) {
+                if (renderBoxTag) Renderer::renderColliderBox(node->mBounds, {1.0, 0.0, 0.0});
                 if (renderBoxTag) for (auto& obj : node->mObjs)  Renderer::renderColliderBox(obj->getBounds(), {0.0, 0.0, 1.0});
 
                 for (auto i = node->mObjs.begin(); i != node->mObjs.end(); i++) 
@@ -184,8 +198,11 @@ namespace FISH {
                 }
             }
             //否则继续递归
-            else for (auto& child : node->mChilds)
+            else {
+                if (renderBoxTag) Renderer::renderColliderBox(node->mBounds, {0.0, 1.0, 0.0});
+                for (auto& child : node->mChilds)
                     self(child.get(), self); 
+            }
         };
         func(root.get(), func);
     }

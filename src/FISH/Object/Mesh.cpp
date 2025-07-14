@@ -7,10 +7,6 @@
 #include "Mesh.h"
 
 namespace FISH {
-    Mesh::Mesh(const string& name) {
-        mName = name;
-        mType = ObjType::Mesh;
-    }
 
     Mesh::~Mesh()
     {

@@ -108,8 +108,9 @@ class MainLayer : public FISH::Layer {
 
 
         CTest.reset(new FISH::CollisionTest(std::make_shared<FISH::AABB>(glm::vec3(-50, -50, -50), glm::vec3(50, 50, 50))));
-
-        auto shape = std::shared_ptr<FISH::Shape>(FISH::Shape::CreateBox(1.0));;
+        CTest->setMaxObjsPreNode(20);
+        CTest->setMaxdepth(3);
+        auto shape = std::shared_ptr<FISH::Shape>(FISH::Shape::CreateBox(1.0));
         auto mesh = std::make_shared<FISH::Mesh>();
         auto mesh2 = std::make_shared<FISH::Mesh>();
         auto mesh3 = std::make_shared<FISH::Mesh>();
@@ -127,7 +128,33 @@ class MainLayer : public FISH::Layer {
         mGameObj3.reset(new AObj(std::make_shared<FISH::AABB>(glm::vec3(-1, -1, -1), glm::vec3(1, 1, 1)), "33"));
         mGameObj3->setObj(mesh3);
         mGameObj3->setPosition({3, 3, -3});
+        objs = {mGameObj->mObj, mGameObj2->mObj, mGameObj3->mObj};
+        std::vector<std::shared_ptr<AObj>> gameObjects;
+        for(int i = 4; i <= 12; i++) {
+            auto obj = std::make_shared<AObj>(
+                    std::make_shared<FISH::OBB>(glm::vec3(0.8f), glm::mat3(1.0f))
+            );
+            
+            obj->setObj(std::make_shared<FISH::Mesh>(shape));
+            
+            objs.push_back(obj->mObj);
+            // 在场景中分散位置
+            float x = (i % 5) * 3.0f - 6.0f;
+            float y = ((i + 1) % 3) * 3.0f - 3.0f;
+            float z = ((i + 2) % 4) * 2.0f - 4.0f;
+            obj->setPosition({x, y, z});
+            
+            // 随机旋转一些OBB对象
+            if(i % 3 == 0) {
+                obj->rotateZ(30.0f * i);
+            }
+            
+            gameObjects.push_back(obj);
+        }
 
+        for(auto& obj : gameObjects) {
+            CTest->insert(obj);
+        }
 
         CTest->insert(mGameObj);
         CTest->insert(mGameObj2);
@@ -163,7 +190,7 @@ class MainLayer : public FISH::Layer {
 
         //FS_INFO("{}", glm::to_string(mCamera->getProjectMatrix()));
 
-        FISH::Renderer::render({mGameObj->mObj, mGameObj2->mObj, mGameObj3->mObj});
+        FISH::Renderer::render(objs);
 
         //CTest->cleanUp(0);
     }
@@ -176,6 +203,7 @@ class MainLayer : public FISH::Layer {
     std::shared_ptr<FISH::perspectiveCamera> mCamera;
     std::shared_ptr<FISH::Shape> Shape2D;
     std::shared_ptr<FISH::Shader> shader;
+    std::vector<std::shared_ptr<FISH::Object3D>> objs;
     bool lastPress = 0;
     std::shared_ptr<FISH::Controller> mController;
     

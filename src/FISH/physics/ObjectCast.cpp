@@ -139,11 +139,13 @@ namespace FISH {
 
         glm::vec3 halfSize = (aabb->Max - aabb->Min) * 0.5f;
 
+        glm::vec3 aabbCenter = aabb->getPosition() + (aabb->Min + aabb->Max) * 0.5f;
+
         auto abb_obb = std::make_shared<OBB>(
             halfSize,
             glm::mat3(1.0f)
         );
-        abb_obb->setPosition(aabb->getPosition());
+        abb_obb->setPosition(aabbCenter);
 
         return intersectsOBBOBB(obb, abb_obb);
     }
@@ -201,7 +203,7 @@ namespace FISH {
             //中心点距离
             float dis = std::abs(glm::dot(boxB->getPosition() - boxA->getPosition(), normAxis));
 
-            if (dis > rA + rB + + 0.001f) return false; 
+            if (dis > rA + rB + 0.001f) return false; 
         }
 
         return true;

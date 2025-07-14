@@ -147,7 +147,7 @@ public:
 
     }
 
-    void OnUpdate() override {
+    void OnUpdate(float dt) override {
         
         cameras[0]->update();
         dynamic_cast<FISH::perspectiveCamera*>(cameras[0].get())->setAspect((float)(APP.GetWindow().GetWidth()/APP.GetWindow().GetHeight()));
@@ -184,8 +184,8 @@ public:
 
         mFont->RenderText(std::to_string(co), -0.2, 0, 0.004f, {1.0, 1.0, 1.0});
 
-        bool currntpress = FISH::Input::IsKeyPressed(FS_KEY_C);
-        if (!lstpress && currntpress) {
+        //bool currntpress = FISH::Input::IsKeyPressed(FS_KEY_C);
+        if (FISH::Input::IsKeyPressedOnce(FS_KEY_C)) {
             if (!islock) APP.LockCursor(), islock = 1,cameras[0]->setAllowedControl(1);
             else APP.UnLockCursor(), islock = 0,cameras[0]->setAllowedControl(0);
             // if (mAni->IsPause() || mAni->IsFinsh()) mAni->play(FISH::AnimationMode::Loop);
@@ -199,7 +199,7 @@ public:
         auto [mx, my] = FISH::Input::GetMousePos();
         auto ndc = ToNDC({mx, my}, APP.GetWindow().GetWidth(), APP.GetWindow().GetHeight());
         mBotton->update(ndc.x, ndc.y);
-        lstpress = currntpress;
+        //lstpress = currntpress;
     }
 
     std::vector<std::shared_ptr<FISH::Object3D>> objs;

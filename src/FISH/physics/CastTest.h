@@ -42,13 +42,18 @@ namespace FISH {
         CollisionTest(const std::shared_ptr<AABB>& worldBounds):
             root(std::make_unique<ONode>(worldBounds))
         {}
-
+        //设置最大深度
+        void setMaxdepth(int depth) {Maxdepth = depth;}
+        //设置单个节点最大物体数量
+        void setMaxObjsPreNode(int count) {MaxObjsPreNode = count;}
         //更新
         void update();
         //插入
         void insert(const std::shared_ptr<GameObject>& obj);
         //移除
         void remove(const std::shared_ptr<GameObject>& obj);
+        //查询当前obj
+        bool query(const std::shared_ptr<GameObject>& obj);
         //检测
         void check();
         //清除
@@ -64,7 +69,7 @@ namespace FISH {
     private:
         std::unique_ptr<ONode>  root;
         int                     Maxdepth{5};
-        int                     MaxObjsPreNode{2};
+        int                     MaxObjsPreNode{10};
         bool                    renderBoxTag{0};
     };
 }

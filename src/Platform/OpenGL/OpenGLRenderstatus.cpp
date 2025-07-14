@@ -37,7 +37,10 @@ namespace FISH {
                 glDepthFunc(choiceFuncTypeToGL(typ));
                 return;
             }
-            
+            case SetType::DepthMask: {
+                glDepthMask(choiceFuncTypeToGL(typ));
+                return;
+            }
             case SetType::BlendFunc: {
                 va_list args;
                 va_start(args, typ);
@@ -46,7 +49,17 @@ namespace FISH {
                 glBlendFunc(choiceFuncTypeToGL(sfactor), choiceFuncTypeToGL(dfactor));
                 va_end(args);
                 return;
-            }    
+            }
+            case SetType::DepthOffset: {
+                va_list args;
+                int factor = 0, units = 0;
+                va_start(args, typ);
+                factor = va_arg(args, int);
+                units = va_arg(args, int);
+                va_end(args);
+                glPolygonOffset(factor, units);
+                return;
+            }
         }
     }
     
@@ -55,12 +68,14 @@ namespace FISH {
     }
     unsigned int  GLstatus::choicestatusTypeToGL(StatusType typ) {
         switch(typ) {
-            case StatusType::NonestatusType: return GL_NONE;
-            case StatusType::CleanDepth:    return GL_DEPTH_BUFFER_BIT;
-            case StatusType::CleanColor:    return GL_COLOR_BUFFER_BIT;   
-            case StatusType::DepthTest:     return GL_DEPTH_TEST;    
-            case StatusType::CullFace:      return GL_CULL_FACE;
-            case StatusType::Blend:         return GL_BLEND;         
+            case StatusType::NonestatusType:    return GL_NONE;
+            case StatusType::CleanDepth:        return GL_DEPTH_BUFFER_BIT;
+            case StatusType::CleanColor:        return GL_COLOR_BUFFER_BIT;   
+            case StatusType::DepthTest:         return GL_DEPTH_TEST;    
+            case StatusType::CullFace:          return GL_CULL_FACE;
+            case StatusType::Blend:             return GL_BLEND;    
+            case StatusType::DepthOffsetFill:   return GL_POLYGON_OFFSET_FILL;
+            case StatusType::DepthOffsetLine:   return GL_POLYGON_OFFSET_LINE;     
         }
         return GL_NONE;
     }
@@ -69,6 +84,8 @@ namespace FISH {
         switch(typ) {
             case FuncType::ZERO:            return GL_ZERO;
             case FuncType::ONE:             return GL_ONE;
+            case FuncType::FALSETyp:        return GL_FALSE;
+            case FuncType::TRUETyp:         return GL_TRUE;
             case FuncType::Front:           return GL_FRONT;
             case FuncType::Back:            return GL_BACK;
             case FuncType::FaceCW:          return GL_CW;

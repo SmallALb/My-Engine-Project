@@ -59,7 +59,10 @@ namespace FISH {
             if (Input::IsKeyPressed(FS_KEY_A) || Input::IsKeyPressed(FS_KEY_LEFT))
                 dir += mRight;
             
-            if (glm::length(dir) != 0) mPosition += glm::normalize(dir) * mSpeed;
+            if (glm::length(dir) != 0) {
+                auto locaDir = glm::inverse(glm::mat3(getModelMatrix())) * dir;
+                mPosition += glm::normalize(locaDir) * mSpeed;
+            }
 
             mAccumulatedTime -= Time::Step;
         }

@@ -9,7 +9,15 @@ namespace FISH {
     //模型类
     class Mesh : public Object3D {
     public:
-        Mesh(const string& name = "Mesh");
+        Mesh(const string& name = "Mesh") {
+            mName = name;
+            mType = ObjType::Mesh;
+        }
+
+        Mesh(const std::shared_ptr<FISH::Shape>& shape, const string& name = "Mesh"):mShape(shape) {
+            mName = name;
+            mType = ObjType::Mesh;
+        }
 
         ~Mesh();
 

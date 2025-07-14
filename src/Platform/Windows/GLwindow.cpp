@@ -78,6 +78,7 @@ namespace FISH {
             s_GLFWInitalized = 1;
             
         }
+
         //OpenGL的窗口创建
         mWindow = glfwCreateWindow((int)mData.Width, (int)mData.Height, mData.Title.c_str(), nullptr, nullptr);
         mContext = new OpenGLContext(mWindow);
@@ -87,7 +88,7 @@ namespace FISH {
        
         glfwSetWindowUserPointer(mWindow, &mData);
         //垂直同步
-        SetVSync(true);        
+        SetVSync(false);        
 
 
         //更改大小回调
