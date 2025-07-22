@@ -59,6 +59,9 @@
 //声音
 #include "FISH/Sound.h"
 
+//文件管理系统
+#include "FISH/FileManger.h"
+
 //入口
 #include "FISH/Events/Application.h"
 #include "FISH/EntryPoint.h"

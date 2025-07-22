@@ -2,8 +2,27 @@
 
 #include "FISH/Core.h"
 
+//自定义Json数据类型存储
+namespace nlohmann {
+    template<>
+    struct adl_serializer<glm::vec3> {
+        static void to_json(nlohmann::json& j, const glm::vec3& vec) { 
+            j = nlohmann::json::array({vec.x, vec.y, vec.z});
+        }
+
+        static void from_json(const nlohmann::json& j, glm::vec3& vec) {
+            vec.x = j[0];
+            vec.y = j[1];
+            vec.z = j[2];
+        }
+    };
+
+}
+
+
 namespace FISH {
     using Json = nlohmann::json;
+
 
     //数据存储模板接口
     template <class T>
@@ -40,4 +59,5 @@ namespace FISH {
         string mBaseDir;
         
     }; 
+
 }

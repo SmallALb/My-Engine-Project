@@ -35,8 +35,9 @@ namespace FISH {
 
     bool JsonFileStorage::save(const string &id, const Json &data) {
         auto filePath = getPath(id);
-
-        std::ofstream file(filePath);
+        auto dir = std::filesystem::path(filePath).parent_path();
+        if (!std::filesystem::exists(dir)) std::filesystem::create_directories(dir);
+        std::ofstream file;
         file.exceptions(std::ofstream::failbit | std::ofstream::badbit);
         try {
             file.open(filePath);
@@ -65,4 +66,5 @@ namespace FISH {
     string JsonFileStorage::getPath(const string &id) const {
         return (std::filesystem::path(mBaseDir) / (id + ".json")).string();
     }
+
 }

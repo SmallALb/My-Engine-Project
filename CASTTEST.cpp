@@ -66,7 +66,16 @@ public:
 };
 
 class MainLayer : public FISH::Layer {
+public:
+    ~MainLayer() {
+        mGameData["Position"] = mGameObj->getPosition();
+        mStorage->save("Test", mGameData);
+
+    }
+
     void OnAttach() override {
+        mStorage.reset(new FISH::JsonFileStorage("TestData"));
+        mStorage->load("Test", mGameData);
         shader.reset(FISH::Shader::CreateShader());
         //手柄测试///////////////
         mController.reset(FISH::Controller::CreateController());
@@ -82,6 +91,7 @@ class MainLayer : public FISH::Layer {
         light->setColor({1.0, 1.0, 1.0});
         FISH::Renderer::setUseAmbientLight(light);
 
+        
         mCamera.reset(new FISH::perspectiveCamera("camera"));
         mCamera->init(
             60.f, 
@@ -115,13 +125,18 @@ class MainLayer : public FISH::Layer {
         auto mesh2 = std::make_shared<FISH::Mesh>();
         auto mesh3 = std::make_shared<FISH::Mesh>();
 
+        // FISH::Json mValue;
+        // if (mStorage->load("Test", mValue))  {
+        //     int value = mValue["value"];
+        //     FS_INFO("value = {0}", value);
+        // }
         mesh->getShape() = shape;
         mesh2->getShape() = shape;
         mesh3->getShape() = shape;
 
         mGameObj.reset(new AObj(std::make_shared<FISH::OBB>(glm::vec3(1, 1, 1), glm::mat3(1.0f)), "11"));
         mGameObj->setObj(mesh);
-        mGameObj->setPosition({-5, -1.8, -2});
+        mGameObj->setPosition( mGameData["Position"]);
         mGameObj2.reset(new AObj(std::make_shared<FISH::AABB>(glm::vec3(-1, -1, -1), glm::vec3(1, 1, 1)), "22"));
         mGameObj2->setObj(mesh2);
         mGameObj2->setPosition({3, 3, 3});
@@ -202,11 +217,12 @@ class MainLayer : public FISH::Layer {
     std::unique_ptr<FISH::Renderstatus> mRenderstatuss;
     std::shared_ptr<FISH::perspectiveCamera> mCamera;
     std::shared_ptr<FISH::Shape> Shape2D;
-    std::shared_ptr<FISH::Shader> shader;
-    std::vector<std::shared_ptr<FISH::Object3D>> objs;
+    std::shared_ptr<FISH::Shader>                       shader;
+    std::vector<std::shared_ptr<FISH::Object3D>>        objs;
     bool lastPress = 0;
-    std::shared_ptr<FISH::Controller> mController;
-    
+    std::shared_ptr<FISH::Controller>                   mController;
+    std::unique_ptr<FISH::JsonFileStorage>              mStorage;
+    FISH::Json                                          mGameData;
 };
 
 
