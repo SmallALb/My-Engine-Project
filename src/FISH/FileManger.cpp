@@ -14,7 +14,7 @@ namespace FISH {
         auto filePath = getPath(id);
 
         if (!exists(id)) {
-            FS_ERROR("JSON file not exists!");
+            FS_ERROR("JSON file:{0} not exists!", id);
             return false;
         }
 

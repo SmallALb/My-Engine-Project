@@ -67,7 +67,9 @@ namespace FISH {
 
         //添加孩子节点
         virtual void addChild(const std::shared_ptr<Object3D>& obj);
-        
+        //删除节点
+        virtual void eraseChild(const std::shared_ptr<Object3D>& obj);
+    
         //获取所有的孩子节点
         virtual std::vector<std::shared_ptr<Object3D>>& getChilds() { return mChilds; };
 

@@ -23,7 +23,7 @@ namespace FISH {
         switch(cameratype) {
             case CameraType::PERSPECTIVE : return new perspectiveCamera(name); 
         }
-        FS_ERROR("Î´ÖªÉãÏñ»úÀàĞÍ");
+        FS_ERROR("æœªçŸ¥æ‘„åƒæœºç±»å‹");
         return nullptr;
     }
 

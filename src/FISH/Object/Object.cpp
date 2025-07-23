@@ -97,6 +97,12 @@ namespace FISH {
         obj->mParent = shared_from_this();
         mChilds.push_back(obj);
     }
+    void Object3D::eraseChild(const std::shared_ptr<Object3D> &obj) {
+        auto it = std::find(mChilds.begin(), mChilds.end(), obj);
+        if (it == mChilds.end()) return;
+        obj->mParent.reset();
+        mChilds.erase(it);
+    }
 
     ///////////////////////
     /// 2D  //////////////

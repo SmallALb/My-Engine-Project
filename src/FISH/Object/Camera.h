@@ -3,48 +3,48 @@
 #include "FISH/Core.h"
 
 namespace  FISH {
-    //Ïà»úÀàĞÍ
+    //ç›¸æœºç±»å‹
     enum class CameraType {
-        PERSPECTIVE,            //Í¸ÊÓ
-        ORTHOGRAPHIC            //Õı½»
+        PERSPECTIVE,            //é€è§†
+        ORTHOGRAPHIC            //æ­£äº¤
     };
-    //Ïà»úÀà
+    //ç›¸æœºç±»
     class API_ Camera : public Object3D {
     public:
         Camera();
 
         ~Camera() {}
-        //»ñÈ¡ÊÓ½Ç¾ØÕó
+        //è·å–è§†è§’çŸ©é˜µ
         glm::mat4 getViewMatrix();
-        //»ñÈ¡Í¸ÊÓ¾ØÕó
+        //è·å–é€è§†çŸ©é˜µ
         virtual glm::mat4 getProjectMatrix() { return glm::mat4();}
-        //ÉèÖÃÊÓ½ÇËõ·Å
+        //è®¾ç½®è§†è§’ç¼©æ”¾
         virtual void scale(float deltaScale) = 0;
 
-        //»ñÈ¡¿´Ïò·½Ïò
+        //è·å–çœ‹å‘æ–¹å‘
         virtual glm::vec3 getFront() const = 0;
         
-        //»ñÈ¡up·½Ïò
+        //è·å–upæ–¹å‘
         virtual glm::vec3 getUp() const {return mUp;}
 
-        //Ïà»ú´´½¨
+        //ç›¸æœºåˆ›å»º
         static Camera* CreateCamera(CameraType cameratype = CameraType::PERSPECTIVE, const std::string& name = "Camera");
 
-        //»ñÈ¡Ïà»úµÄrightÏòÁ¿
+        //è·å–ç›¸æœºçš„rightå‘é‡
         virtual const glm::vec3& getRight() const {return mRight;}
 
-        //¸üĞÂÏà»ú
+        //æ›´æ–°ç›¸æœº
         virtual void update() = 0;
 
         virtual void setLookAt(const glm::vec3& pos);
 
-        //²é¿´ÊÇ·ñÄÜ¹»½øĞĞ¿ØÖÆ
+        //æŸ¥çœ‹æ˜¯å¦èƒ½å¤Ÿè¿›è¡Œæ§åˆ¶
         virtual bool IsAllowControl() const { return IsControl;}
 
-        //ÉèÖÃÊÇ·ñÄÜ¹»¿ØÖÆ
+        //è®¾ç½®æ˜¯å¦èƒ½å¤Ÿæ§åˆ¶
         virtual void setAllowedControl(bool status) { IsControl = status; }
 
-        //»ñÈ¡¿´ÏòµÄµã
+        //è·å–çœ‹å‘çš„ç‚¹
         virtual glm::vec3 getLookAtPoint() const; 
 
 

@@ -4,23 +4,23 @@
 #include "Events/Events.h"
 
 namespace FISH {
-    //²ã
+    //å±‚
     class API_ Layer {
     public:
         Layer(const string& name = "Layer");
 
         virtual ~Layer();
-        //³õÊ¼»¯
+        //åˆå§‹åŒ–
         virtual void OnAttach() {}
-        //Ïú»Ù
+        //é”€æ¯
         virtual void OnDetach() {}
-        //¸üĞÂ
+        //æ›´æ–°
         virtual void OnUpdate(float dt) {}
-        //äÖÈ¾UI
+        //æ¸²æŸ“UI
         virtual void OnImGuiRender() {}
-        //ÊÂ¼ş¼àÌı
+        //äº‹ä»¶ç›‘å¬
         virtual void OnEvent(Event& event) {}
-        //»ñÈ¡Ãû×Ö
+        //è·å–åå­—
         inline const string& GetName() const {return mDebugName;}
     protected:
         string mDebugName;

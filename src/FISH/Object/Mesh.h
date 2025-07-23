@@ -20,7 +20,12 @@ namespace FISH {
         }
 
         ~Mesh();
+        //设置材质翻转
+        void setflip(bool tag) {flip = tag;}
 
+        //获取翻转标志
+        bool getflip() const {return flip;}
+        
         //得到该模型的形状和材质
         std::shared_ptr<Shape>& getShape();
         
@@ -29,6 +34,7 @@ namespace FISH {
         OBJ_CLASS_TYPE(Mesh)
     private:
         std::shared_ptr<Shape> mShape{nullptr};
+        bool                   flip{0};
     };
 
 }
