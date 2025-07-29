@@ -43,7 +43,7 @@ namespace FISH {
         FT_Set_Pixel_Sizes(mFace, 0, mFontSize);
         FT_Select_Charmap(mFace, ft_encoding_unicode);
 
-        mFontTexture.reset(Texture::CreateNullTexture(fontpath, ATLAS_WIDTH, ATLAS_WIDTH, ChannelType::Red, 1));
+        mFontTexture = (Texture::CreateNullTexture(fontpath, ATLAS_WIDTH, ATLAS_WIDTH, ChannelType::Red, 1));
 
         for (int i = 0; i < wcslen(commonChars); ++i) {
             loadCharacter(commonChars[i]);

@@ -1,4 +1,7 @@
 #include "FISH.h"
+#include <algorithm>
+#include <ranges>
+#include "FISH/Editor/ColliderEditor.h"
 //继承GameObject生成的AObj
 class AObj : public FISH::GameObject {
 public:
@@ -10,7 +13,7 @@ public:
 
     }
 
-    void setObj(const std::shared_ptr<FISH::Object3D>& obj) {
+    void setObj(const std::shared_ptr<FISH::Mesh>& obj) {
         mObj = obj;
         mObj->setScale(mBounds->size());
         mObj->setPosition(mPosition);
@@ -29,7 +32,21 @@ public:
     }
 
     void onCollision(const std::shared_ptr<GameObject>& other) override {
-        if (mBounds->getType() == FISH::ColliderType::OBB && !hasCollided) FS_INFO("CAST: {0}, {1}", mName, other->getName()), hasCollided = 1;
+        if (mBounds->getType() == FISH::ColliderType::OBB && !hasCollided) {
+            FS_INFO("CAST: {0}, {1}", mName, other->getName());
+            string face = "None";
+            switch (other->getBounds()->getCollisionInfo(mBounds).collisionFace) {
+                case FISH::CollisionFace::Top:      face = "Top"; break;
+                case FISH::CollisionFace::Back:     face = "Back"; break;
+                case FISH::CollisionFace::Bottom:   face = "Bottom"; break;
+                case FISH::CollisionFace::Front:    face = "Front"; break;
+                case FISH::CollisionFace::Right:    face = "Right"; break;
+                case FISH::CollisionFace::Left:    face = "Left"; break;
+            }
+            FS_INFO("Collision_FACE:{0}", face);
+            hasCollided = 1;
+        }
+        
     }
 
     std::shared_ptr<FISH::OBB> getOBB() const {
@@ -58,7 +75,7 @@ public:
         needUpdate = 1;
     }
 
-    std::shared_ptr<FISH::Object3D> mObj{nullptr};
+    std::shared_ptr<FISH::Mesh> mObj{nullptr};
 
     bool tag{0}, lasttag{0};
     bool hasCollided{false};
@@ -74,6 +91,7 @@ public:
     }
 
     void OnAttach() override {
+        FISH::ColliderEditor::get()->openColliderEditor();
         mStorage.reset(new FISH::JsonFileStorage("TestData"));
         mStorage->load("Test", mGameData);
         shader.reset(FISH::Shader::CreateShader());
@@ -81,6 +99,13 @@ public:
         mController.reset(FISH::Controller::CreateController());
         mController->init();
         ///////////////////
+
+        //模板测试//
+        std::shared_ptr<FISH::Shape> box;
+        box.reset(FISH::Shape::CreateBox(2.1));
+        wMesh.reset(new FISH::Mesh());
+        wMesh->getShape() = box;
+        ///////////
         shader->readVertexShader("sharders/EnginRenderShader/2Dvertex.glsl");
         shader->readFragmentShader("sharders/EnginRenderShader/OnlyColor.glsl");
         Shape2D.reset(FISH::Shape::CreateCircle2D(0.005f));
@@ -108,9 +133,10 @@ public:
         mRenderstatuss.reset(FISH::Renderstatus::CreateRenderstatus());
         mRenderstatuss->enablestatus(FISH::StatusType::CleanColor);
         mRenderstatuss->enablestatus(FISH::StatusType::CleanDepth);
+        mRenderstatuss->enablestatus(FISH::StatusType::CleanStencil);
+        mRenderstatuss->enablestatus(FISH::StatusType::StencilTest);
         mRenderstatuss->enablestatus(FISH::StatusType::DepthTest);
-        mRenderstatuss->setstatusFunc(FISH::SetType::DepthFunc, FISH::FuncType::DepthLess);
-
+        
         //设置清理APP函数
         APP.setClean([this]() {
             APP.GetWindow().CleanBuffer(mRenderstatuss->getCleanstatuss());
@@ -121,18 +147,15 @@ public:
         CTest->setMaxObjsPreNode(20);
         CTest->setMaxdepth(3);
         auto shape = std::shared_ptr<FISH::Shape>(FISH::Shape::CreateBox(1.0));
-        auto mesh = std::make_shared<FISH::Mesh>();
+        auto mesh = std::make_shared<FISH::Mesh>("TestS");
         auto mesh2 = std::make_shared<FISH::Mesh>();
         auto mesh3 = std::make_shared<FISH::Mesh>();
 
-        // FISH::Json mValue;
-        // if (mStorage->load("Test", mValue))  {
-        //     int value = mValue["value"];
-        //     FS_INFO("value = {0}", value);
-        // }
+
         mesh->getShape() = shape;
         mesh2->getShape() = shape;
         mesh3->getShape() = shape;
+        
 
         mGameObj.reset(new AObj(std::make_shared<FISH::OBB>(glm::vec3(1, 1, 1), glm::mat3(1.0f)), "11"));
         mGameObj->setObj(mesh);
@@ -143,8 +166,10 @@ public:
         mGameObj3.reset(new AObj(std::make_shared<FISH::AABB>(glm::vec3(-1, -1, -1), glm::vec3(1, 1, 1)), "33"));
         mGameObj3->setObj(mesh3);
         mGameObj3->setPosition({3, 3, -3});
+        objs.push_back(mGameObj->mObj);
+        objs.push_back(mGameObj2->mObj);
+        objs.push_back(mGameObj3->mObj);
         objs = {mGameObj->mObj, mGameObj2->mObj, mGameObj3->mObj};
-        std::vector<std::shared_ptr<AObj>> gameObjects;
         for(int i = 4; i <= 12; i++) {
             auto obj = std::make_shared<AObj>(
                     std::make_shared<FISH::OBB>(glm::vec3(0.8f), glm::mat3(1.0f))
@@ -176,7 +201,8 @@ public:
         CTest->insert(mGameObj3);
 
        // mCamera->setAllowedControl(1);
-
+        FISH::ColliderEditor::get();
+        FISH::ColliderEditor::get()->setViewer(mCamera);
     }
 
     void OnUpdate(float dt) override {
@@ -184,6 +210,9 @@ public:
         mCamera->update();
         CTest->update();
         CTest->check();
+        const auto& vec = FISH::ColliderEditor::get()->outputGameBoxData(); 
+        for (auto& box : vec) objs.push_back(box->getMesh());
+        
         //FISH::Renderer::renderColliderBox(mGameObj->getBounds());
 
         if (mController->getKeyInfo("A").getKeyBool()) mGameObj->addPos({0, 3.0* dt, 0});
@@ -195,17 +224,22 @@ public:
         mGameObj->addPos({-mController->getKeyInfo("RightStickX").getKeyFloat()*dt*3, 0, mController->getKeyInfo("RightStickY").getKeyFloat()*dt*3});
         mController->setVibration(std::abs(mController->getKeyInfo("LeftStickX").getKeyFloat())*0.4, std::abs(mController->getKeyInfo("LeftStickX").getKeyFloat())*0.4);
 
-        if (FISH::Input::IsKeyPressed(FS_KEY_SPACE) && lastPress == 0) {
-            if (!APP.getLockedState()) APP.LockCursor(), mCamera->setAllowedControl(1);
-            else APP.UnLockCursor(), mCamera->setAllowedControl(0);
-        }
+        // if (FISH::Input::IsKeyPressed(FS_KEY_SPACE) && lastPress == 0) {
+        //     if (!APP.getLockedState()) APP.LockCursor(), mCamera->setAllowedControl(1);
+        //     else APP.UnLockCursor(), mCamera->setAllowedControl(0);
+        // }
 
         lastPress =  FISH::Input::IsKeyPressed(FS_KEY_SPACE);
 
 
+        
+        
+
         //FS_INFO("{}", glm::to_string(mCamera->getProjectMatrix()));
 
         FISH::Renderer::render(objs);
+
+        for (int i=0; i<vec.size(); i++) objs.pop_back();
 
         //CTest->cleanUp(0);
     }
@@ -223,6 +257,10 @@ public:
     std::shared_ptr<FISH::Controller>                   mController;
     std::unique_ptr<FISH::JsonFileStorage>              mStorage;
     FISH::Json                                          mGameData;
+    std::shared_ptr<FISH::Mesh>                        wMesh;
+    std::vector<std::shared_ptr<AObj>>                  gameObjects;
+    std::set<FISH::MeshPtr>                                   has;
+
 };
 
 
@@ -232,6 +270,7 @@ public:
         FISH::Texture::initDefaultTexture();
         FISH::Renderer::initDefaultShader();
         PushLayer(new MainLayer());
+        PushLayer(FISH::ColliderEditor::get());
     }
 
     ~Sandbox() {}

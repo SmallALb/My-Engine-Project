@@ -55,7 +55,6 @@ namespace FISH {
         //static std::shared_ptr<Shader> UseShader;
 
 
-        static std::shared_ptr<Camera>                      UseCamera;
         
         static std::unique_ptr<Shape>                       ball;
 
@@ -66,6 +65,8 @@ namespace FISH {
         static std::unique_ptr<Renderstatus>                 mstatuss;
     public:
         static std::map<string, std::shared_ptr<Shader>>    ShaderLib;
+
+        static std::shared_ptr<Camera>                      UseCamera;
 
     };
 }

@@ -22,7 +22,7 @@ namespace nlohmann {
 
 namespace FISH {
     using Json = nlohmann::json;
-
+    using Ini = std::unordered_map<string, std::unordered_map<string, string>>;
 
     //数据存储模板接口
     template <class T>
@@ -59,5 +59,29 @@ namespace FISH {
         string mBaseDir;
         
     }; 
+
+    class API_ IniFileStorage : public DataStorage<Ini> {
+    public:
+        explicit IniFileStorage(const std::string& baseDir = "Configs");
+
+                //加载
+        virtual bool load(const string& id, Ini& data) override;
+        //保存
+        virtual bool save(const string& id, const Ini& data) override;
+        //查看是否存在
+        virtual bool exists(const string& id) const override;
+        //移除
+        virtual bool remove(const string& id) override;
+    
+    private:
+        string getPath(const string& id) const;
+
+        void parseLine(const string& line, string& currentSection, Ini& data) const;
+
+        void wirteInSection(std::ofstream& file, const string& section, const std::unordered_map<string, string>& keyValues) const;
+    
+    private:
+        string mBaseDir;
+    };
 
 }

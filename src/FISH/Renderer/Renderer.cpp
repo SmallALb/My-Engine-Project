@@ -41,6 +41,7 @@ namespace FISH {
     void Renderer::render(const std::vector<std::shared_ptr<Object3D>> &objs) {
         std::vector<std::shared_ptr<SpotLight>> spotlights;
         std::vector<std::shared_ptr<PointLight>> pointlights;
+
         for (auto obj : objs) {
             if (obj->GetObjType() == ObjType::Light) {
                 auto lightobj = dynamic_pointer_cast<Light>(obj);
@@ -121,6 +122,13 @@ namespace FISH {
                 mstatuss->enablestatus(StatusType::CullFace);
                 mstatuss->setstatusFunc(SetType::CullFaceFunc, FuncType::Back);
                 mstatuss->setstatusFunc(SetType::FrontFaceDIR, FuncType::FaceCW);
+                auto ptr = Static_PtrCastTo<Mesh>(obj);
+                //渲染被标记时的边缘
+                if (ptr && ptr->isHightLight()){       
+                    mstatuss->setstatusFunc(SetType::StencilFunc, FuncType::Always, 1, 0xff);
+                    mstatuss->setstatusFunc(FISH::SetType::StencilOperation, FISH::FuncType::Keep, FISH::FuncType::Keep, FISH::FuncType::Replace);
+                    mstatuss->setstatusFunc(SetType::StencilMask, FuncType::ZERO, 0xff);         
+                }
                 ShaderLib["Phong"]->Begin();
                 ShaderLib["Phong"]->setMat4("projection", UseCamera->getProjectMatrix());
                 ShaderLib["Phong"]->setMat4("view", UseCamera->getViewMatrix());
@@ -130,7 +138,21 @@ namespace FISH {
                 ShaderLib["Phong"]->setMat4("model", obj->getModelMatrix());
                 ShaderLib["Phong"]->setMat4("normat", obj->getNormalMatrix());
                 shape->render(TRIANGLES); 
-                ShaderLib["Phong"]->End();  
+                ShaderLib["Phong"]->End();
+                if (ptr && ptr->isHightLight()) {
+                    auto wMode = ptr->getModelMatrix();
+                    wMode = glm::scale(wMode, glm::vec3(1.02));
+                    mstatuss->setstatusFunc(FISH::SetType::StencilFunc, FISH::FuncType::NotEqual, 1, 0xff);
+                    mstatuss->setstatusFunc(FISH::SetType::StencilMask, FISH::FuncType::ZERO, 0xff);
+                    ShaderLib["OnlyColor"]->Begin();
+                    ShaderLib["OnlyColor"]->setVector3("InColor", {1.0, 1.0, 1.0});
+                    ShaderLib["OnlyColor"]->setMat4("projection", UseCamera->getProjectMatrix());
+                    ShaderLib["OnlyColor"]->setMat4("view", UseCamera->getViewMatrix());
+                    ShaderLib["OnlyColor"]->setMat4("model", wMode);
+                    ptr->renderMesh(TRIANGLES);
+                    ShaderLib["OnlyColor"]->End();
+                }
+
                 mstatuss->disablestatus(StatusType::CullFace);
                 break;
             }
@@ -171,6 +193,9 @@ namespace FISH {
             }
         
         }
+        mstatuss->setstatusFunc(FISH::SetType::DepthFunc, FISH::FuncType::DepthLess);
+        mstatuss->setstatusFunc(FISH::SetType::StencilOperation, FISH::FuncType::Keep, FISH::FuncType::Keep, FISH::FuncType::Keep);
+        mstatuss->setstatusFunc(FISH::SetType::StencilMask, FISH::FuncType::ZERO, 0xff);
         //渲染子节点
         for (auto &child : obj->getChilds()) {
             RenderObj(child, spotlights, pointlights);

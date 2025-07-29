@@ -8,8 +8,8 @@
 
 namespace FISH {
 
-    Mesh::~Mesh()
-    {
+    Mesh::~Mesh() {
+        
     }
     std::shared_ptr<Shape>& Mesh::getShape() {return mShape; }
     

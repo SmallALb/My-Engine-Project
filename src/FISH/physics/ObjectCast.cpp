@@ -7,7 +7,7 @@
 #include "ObjectCast.h"
 
 namespace FISH {
-    
+
     float AABB::volume() const {
         auto size = Max - Min;
         return size.x* size.y *size.z;
@@ -102,6 +102,67 @@ namespace FISH {
         return vao;
     }
 
+    CollisionInfo AABB::getCollisionInfo(const ColliderPtr &other) const {
+        switch (other->getType()) {
+            case ColliderType::AABB:
+                return CollisionWithAABB(PtrCastTo<AABB>(other));
+            case ColliderType::OBB:
+                return CollisionWithOBB(PtrCastTo<OBB>(other));
+        }
+        return CollisionInfo();
+    }
+
+    CollisionInfo AABB::CollisionWithAABB(const AABBPtr &other) const {
+        CollisionInfo info;
+        auto [minA, maxA] = getBoundingPos();
+        auto [minB, maxB] = other->getBoundingPos();
+
+        // 检查各轴重叠
+        bool overlapX = (maxA.x >= minB.x) && (minA.x <= maxB.x);
+        bool overlapY = (maxA.y >= minB.y) && (minA.y <= maxB.y);
+        bool overlapZ = (maxA.z >= minB.z) && (minA.z <= maxB.z);
+
+        info.IsColliding = overlapX && overlapY && overlapZ;
+
+        if (info.IsColliding) {
+            // 计算穿透深度和碰撞法线
+            glm::vec3 overlap(
+                (std::min)(maxA.x, maxB.x) - (std::max)(minA.x, minB.x),
+                (std::min)(maxA.y, maxB.y) - (std::max)(minA.y, minB.y),
+                (std::min)(maxA.z, maxB.z) - (std::max)(minA.z, minB.z)
+            );
+            
+            // 找到最小重叠的轴
+            if (overlap.x < overlap.y && overlap.x < overlap.z) {
+                info.Depth = overlap.x;
+                info.collisionNormal = glm::vec3((minA.x < minB.x) ? -1.0f : 1.0f, 0.0f, 0.0f);
+            } else if (overlap.y < overlap.z) {
+                info.Depth = overlap.y;
+                info.collisionNormal = glm::vec3(0.0f, (minA.y < minB.y) ? -1.0f : 1.0f, 0.0f);
+            } else {
+                info.Depth = overlap.z;
+                info.collisionNormal = glm::vec3(0.0f, 0.0f, (minA.z < minB.z) ? -1.0f : 1.0f);
+            }
+            info.collisionFace = Collider::determineCollisionFace(info.collisionNormal);
+        }
+        
+        info.colliderType = "AABB - AABB";
+        return info;
+    }
+
+    CollisionInfo AABB::CollisionWithOBB(const OBBPtr &other) const {
+        CollisionInfo info;
+        auto half = (Max - Min) * 0.5f;
+        auto center = mPosition + (Min + Max) * 0.5f;
+        
+        auto aabbObb = std::make_shared<OBB>(half, glm::mat3(1.0f));
+        aabbObb->setPosition(center);
+
+        info = other->CollisionWithOBB(aabbObb);
+        info.colliderType = "AABB - OBB";
+        return info;
+    }
+
     bool Collider::intersects(const ColliderPtr &A, const ColliderPtr &B) {
         auto TyA = A->getType(), TyB = B->getType();
 
@@ -123,6 +184,25 @@ namespace FISH {
         return false;
     }
 
+    CollisionFace Collider::determineCollisionFace(const glm::vec3 &normal, const glm::vec3 &Upvec) {
+        const float faceThreshold = glm::cos(glm::radians(35.5));
+
+        glm::vec3 nor = glm::normalize(normal);
+        if (glm::dot(nor, Upvec) > faceThreshold) return CollisionFace::Top;
+
+        if (glm::dot(nor, -Upvec) > faceThreshold) return CollisionFace::Bottom;
+
+        auto right = glm::vec3{1, 0, 0}, forward = glm::vec3{0, 0, 1};
+
+        if (std::abs(glm::dot(nor, right)) > faceThreshold) 
+            return (glm::dot(nor, right) > 0.0) ? CollisionFace::Right : CollisionFace::Left;
+        
+        
+        if (std::abs(glm::dot(nor, forward)) > faceThreshold) 
+            return (glm::dot(nor, right) > 0.0) ? CollisionFace::Right : CollisionFace::Left;
+        
+        return CollisionFace::None; 
+     }
 
     bool Collider::intersectsAABBAABB(const ColliderPtr &a, const ColliderPtr &b) {
         auto aPos = PtrCastTo<AABB>(a)->getBoundingPos(); 
@@ -284,5 +364,101 @@ namespace FISH {
             vao->AddVertexBuffer(vbo);
             vao->SetIndexBuffer(index);
             return vao;
+    }
+
+    CollisionInfo OBB::getCollisionInfo(const ColliderPtr &other) const {
+        switch (other->getType()) {
+            case ColliderType::AABB:
+                return CollisionWithAABB(PtrCastTo<AABB>(other));
+            case ColliderType::OBB:
+                return CollisionWithOBB(PtrCastTo<OBB>(other));
+        }
+        return CollisionInfo();
+    }
+    
+    CollisionInfo OBB::CollisionWithAABB(const AABBPtr &other) const {
+
+        glm::vec3 halfSize = (other->getMax() - other->getMin()) * 0.5f;
+
+        glm::vec3 aabbCenter = other->getPosition() + (other->getMin() + other->getMax()) * 0.5f;
+
+        auto abb_obb = std::make_shared<OBB>(
+            halfSize,
+            glm::mat3(1.0f)
+        );
+        abb_obb->setPosition(aabbCenter);
+        auto info = CollisionWithOBB(abb_obb);
+        info.colliderType = "OBB - AABB";
+        return info;
+    }
+
+    CollisionInfo OBB::CollisionWithOBB(const OBBPtr &other) const {
+        CollisionInfo info;
+        info.IsColliding = false;
+        info.Depth = (std::numeric_limits<float>::min)();
+         //使用无序set来去重
+        std::unordered_set<glm::vec3, decltype([](const glm::vec3& v){
+            return std::hash<float>()(v.x) ^ 
+                    (std::hash<float>()(v.y) << 1) ^ 
+                    (std::hash<float>()(v.z) << 2);
+        })> testAxes;
+
+        // 填充boxA的3个轴向
+        testAxes.insert(getAxisX()); // boxA的X轴
+        testAxes.insert(getAxisY()); // boxA的Y轴
+        testAxes.insert(getAxisZ()); // boxA的Z轴
+
+        // 填充boxB的3个轴向
+        testAxes.insert(other->getAxisX()); // boxB的X轴
+        testAxes.insert(other->getAxisY()); // boxB的Y轴
+        testAxes.insert(other->getAxisZ()); // boxB的Z轴
+
+        int index = 6;
+        //计算所有的叉积轴体
+        for (int i=0; i<3; i++) {
+            for (int j = 0; j < 3; j++) 
+                testAxes.insert(glm::cross(getAxis(i), other->getAxis(j)));
+        }
+
+                //轴分离计算投影半径
+        for (const auto& axis : testAxes) {
+            //0向量跳过
+            if (glm::length(axis) < (std::numeric_limits<float>::min)()) continue;
+            
+            glm::vec3 normAxis = glm::normalize(axis);
+
+            //A
+            float rA = 0.0f;
+            rA += HalfExtents.x * std::abs(glm::dot((getAxisX()), normAxis));
+            rA += HalfExtents.y * std::abs(glm::dot((getAxisY()), normAxis));
+            rA += HalfExtents.z * std::abs(glm::dot((getAxisZ()), normAxis));
+
+            //B;
+            float rB = 0.0f;
+            rB += other->HalfExtents.x * std::abs(glm::dot((other->getAxisX()), normAxis));
+            rB += other->HalfExtents.y * std::abs(glm::dot((other->getAxisY()), normAxis));
+            rB += other->HalfExtents.z * std::abs(glm::dot((other->getAxisZ()), normAxis));
+
+            //中心点距离
+            float dis = glm::dot(other->getPosition() - getPosition(), normAxis);
+            float overlap = (rA + rB) - std::abs(dis);
+            if (overlap <= 0.001f) {
+                info.IsColliding = false;
+                return info;
+            }; 
+
+            if (overlap > info.Depth) {
+                info.Depth = overlap;
+                info.collisionNormal = normAxis * (dis < 0 ? -1.0f : 1.0f); 
+            }
+
+        }
+
+        info.IsColliding = 1;
+        glm::vec3 localNormal = glm::transpose(Rotation) * info.collisionNormal;
+        info.collisionFace = Collider::determineCollisionFace(localNormal);
+        info.colliderType = "OBS - OBS";
+
+        return info;
     }
 }

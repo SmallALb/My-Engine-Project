@@ -113,6 +113,10 @@ namespace FISH {
         destory();
     }
 
+    unsigned long long GLTexture::getTextureID() const {
+        return mTexture;
+    }
+
     inline unsigned long long GLTexture::getHandle() const
     {
         return mTextureHandle;

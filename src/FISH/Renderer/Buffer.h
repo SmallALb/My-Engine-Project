@@ -2,7 +2,7 @@
 #include "FISH/Core.h"
 
 namespace FISH {
-    //´«ÈëµÄÀàĞÍ
+    //ä¼ å…¥çš„ç±»å‹
     enum class ShaderDataType {
         None = 0,
         Float,
@@ -18,7 +18,7 @@ namespace FISH {
         Bool
     };
 
-    //¶¥µãÀàĞÍ
+    //é¡¶ç‚¹ç±»å‹
     enum class VertexType {
         None = 0,
         Normal,
@@ -26,7 +26,7 @@ namespace FISH {
         Color,
         UV,
     };
-    //·µ»Ø¶ÔÓ¦ÀàĞÍµÄ´óĞ¡
+    //è¿”å›å¯¹åº”ç±»å‹çš„å¤§å°
     static uint32_t ShaderDataTypeSize(ShaderDataType type) {
         switch(type) {
             case ShaderDataType::Float:     return 4;
@@ -47,7 +47,7 @@ namespace FISH {
         return 0;
     }
 
-    //·Ö²¼ÊôĞÔÃèÊö
+    //åˆ†å¸ƒå±æ€§æè¿°
     struct BufferElement {
         ShaderDataType Type;
         uint32_t Size;
@@ -62,7 +62,7 @@ namespace FISH {
             Type(type), Size(ShaderDataTypeSize(type)), Offset(0), Normalized(normalized), Name(name), ElementType(typ)
         {}
 
-        //»ñÈ¡ÀàĞÍµÄ¼ÆÊı
+        //è·å–ç±»å‹çš„è®¡æ•°
         uint32_t GetComponentCount() const {
             switch(Type) {
                 case ShaderDataType::Float:     return 1;
@@ -84,16 +84,16 @@ namespace FISH {
         
     };
 
-    //VboĞÅÏ¢¼ÇÂ¼²ã
+    //Vboä¿¡æ¯è®°å½•å±‚
     class API_ BufferLayout {
     public:
         BufferLayout() {}
-        //´«ÈëVboĞÅÏ¢¼¯ºÏ
+        //ä¼ å…¥Vboä¿¡æ¯é›†åˆ
         BufferLayout(const std::initializer_list<BufferElement>& elements) : mElements(elements) {
             CalculateOffsetsAndStride();
         }
 
-        //»ñÈ¡ËùÓĞµÄvboĞÅÏ¢
+        //è·å–æ‰€æœ‰çš„vboä¿¡æ¯
         inline const std::vector<BufferElement>& GetElements() const {return mElements; }
 
         std::vector<BufferElement>::iterator begin() {return mElements.begin();}
@@ -102,7 +102,7 @@ namespace FISH {
         std::vector<BufferElement>::const_iterator begin() const {return mElements.begin();}
         std::vector<BufferElement>::const_iterator end() const {return mElements.end();}
         inline size_t size() const {return mElements.size(); }
-        //»ñÈ¡Æ«ÒÆ
+        //è·å–åç§»
         inline uint32_t GetStride() const {return mStride;}
 
         BufferElement& operator [] (const uint32_t& idx) {return mElements[idx];}
@@ -120,23 +120,23 @@ namespace FISH {
         uint32_t mStride = 0;
     };
 
-    //¶¥µã»º³åÇø
+    //é¡¶ç‚¹ç¼“å†²åŒº
     class API_ VertexBuffer {
     public:
         virtual ~VertexBuffer() {}
-        //°ó¶¨
+        //ç»‘å®š
         virtual void bind() const = 0;
-        //È¡Ïû°ó¶¨
+        //å–æ¶ˆç»‘å®š
         virtual void unbind() const = 0;
-        //ÉèÖÃBuffer²ã
+        //è®¾ç½®Bufferå±‚
         virtual void SetLayout(const BufferLayout& layout) = 0;
-        //»ñÈ¡µ±Ç°µÄ»º³å²ã
+        //è·å–å½“å‰çš„ç¼“å†²å±‚
         virtual const BufferLayout& GetLayout() const = 0;
-        //´´½¨¶¥µãbuffer
+        //åˆ›å»ºé¡¶ç‚¹buffer
         static VertexBuffer* Create(float* vertices, uint32_t size);
     };
 
-    //»æÖÆÏÂ±ê»º³åÇø
+    //ç»˜åˆ¶ä¸‹æ ‡ç¼“å†²åŒº
     class API_ IndexBuffer {
     public:
         virtual ~IndexBuffer() {}

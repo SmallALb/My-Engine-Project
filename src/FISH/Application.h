@@ -43,9 +43,11 @@ namespace FISH{
         inline static Application& GetInstance() {return *Instance; }
 
         inline Timer& GetTimer() {return *mTimer;}
+    protected:
+        virtual bool OnWindowClose(WindowCloseEvent& e);
+        virtual bool OnWindowResize(WindowResizeEvent& e);
     private:
-        bool OnWindowClose(WindowCloseEvent& e);
-        bool OnWindowResize(WindowResizeEvent& e);
+
         bool                                                IsLocked{0};
         bool                                                HadBeenLocked{0};
         bool                                                mLastPressed{0};

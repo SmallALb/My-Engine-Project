@@ -29,67 +29,68 @@ namespace FISH
 
     Shape* Shape::CreateBox(float size) {
         Shape* shape = new Shape();
+        shape->mType = ShapeType::Box;
         float halfSize = size / 2.0f;
-        //Î»ÖÃ
+        //ä½ç½®
         float vertices[] = {
-            // Ç°Ãæ£¨-Z£©
+            // å‰é¢ï¼ˆ-Zï¼‰
 
             -halfSize, -halfSize, -halfSize,   // v0
             halfSize, -halfSize, -halfSize,    // v1
             halfSize,  halfSize, -halfSize,     // v2
-            -halfSize, -halfSize, -halfSize,    // v0 (ÖØ¸´)
-            halfSize,  halfSize, -halfSize,     // v2 (ÖØ¸´)
+            -halfSize, -halfSize, -halfSize,    // v0 (é‡å¤)
+            halfSize,  halfSize, -halfSize,     // v2 (é‡å¤)
             -halfSize,  halfSize, -halfSize,    // v3
 
-            // ºóÃæ£¨+Z£©
+            // åé¢ï¼ˆ+Zï¼‰
 
             -halfSize, -halfSize,  halfSize,   // v4
             -halfSize,  halfSize,  halfSize,   // v5
             halfSize,  halfSize,  halfSize,    // v6
-            -halfSize, -halfSize,  halfSize,   // v4 (ÖØ¸´)
-            halfSize,  halfSize,  halfSize,    // v6 (ÖØ¸´)
+            -halfSize, -halfSize,  halfSize,   // v4 (é‡å¤)
+            halfSize,  halfSize,  halfSize,    // v6 (é‡å¤)
             halfSize, -halfSize,  halfSize,    // v7
 
-            // ×óÃæ£¨-X£©
+            // å·¦é¢ï¼ˆ-Xï¼‰
 
             -halfSize,  halfSize,  halfSize,   // v8
             -halfSize, -halfSize,  halfSize,   // v9
             -halfSize, -halfSize, -halfSize,   // v10
-            -halfSize,  halfSize,  halfSize,   // v8 (ÖØ¸´)
-            -halfSize, -halfSize, -halfSize,   // v10 (ÖØ¸´)
+            -halfSize,  halfSize,  halfSize,   // v8 (é‡å¤)
+            -halfSize, -halfSize, -halfSize,   // v10 (é‡å¤)
             -halfSize,  halfSize, -halfSize,   // v11
 
-            // ÓÒÃæ£¨+X£©
+            // å³é¢ï¼ˆ+Xï¼‰
 
             halfSize,  halfSize, -halfSize,    // v12
             halfSize, -halfSize, -halfSize,    // v13
             halfSize, -halfSize,  halfSize,    // v14
-            halfSize,  halfSize, -halfSize,    // v12 (ÖØ¸´)
-            halfSize, -halfSize,  halfSize,    // v14 (ÖØ¸´)
+            halfSize,  halfSize, -halfSize,    // v12 (é‡å¤)
+            halfSize, -halfSize,  halfSize,    // v14 (é‡å¤)
             halfSize,  halfSize,  halfSize,    // v15
 
-            // ÉÏÃæ£¨+Y£©
+            // ä¸Šé¢ï¼ˆ+Yï¼‰
 
             -halfSize,  halfSize, -halfSize,   // v16
             halfSize,  halfSize, -halfSize,    // v17
             halfSize,  halfSize,  halfSize,    // v18
-            -halfSize,  halfSize, -halfSize,   // v16 (ÖØ¸´)
-            halfSize,  halfSize,  halfSize,    // v18 (ÖØ¸´)
+            -halfSize,  halfSize, -halfSize,   // v16 (é‡å¤)
+            halfSize,  halfSize,  halfSize,    // v18 (é‡å¤)
             -halfSize,  halfSize,  halfSize,   // v19
 
-            // ÏÂÃæ£¨-Y£©
+            // ä¸‹é¢ï¼ˆ-Yï¼‰
 
             -halfSize, -halfSize, -halfSize,   // v20
             -halfSize, -halfSize,  halfSize,   // v21
             halfSize, -halfSize,  halfSize,    // v22
-            -halfSize, -halfSize, -halfSize,   // v20 (ÖØ¸´)
-            halfSize, -halfSize,  halfSize,    // v22 (ÖØ¸´)
+            -halfSize, -halfSize, -halfSize,   // v20 (é‡å¤)
+            halfSize, -halfSize,  halfSize,    // v22 (é‡å¤)
             halfSize, -halfSize, -halfSize,    // v23             
         };
 
-        // ¶¨Òåuv×ø±êÊı×é
+        // å®šä¹‰uvåæ ‡æ•°ç»„
         float uvs[] = {
-       // Ç°Ãæ
+       // å‰é¢
 
             0.0f, 0.0f,   // v0
             1.0f, 0.0f,   // v1
@@ -98,7 +99,7 @@ namespace FISH
             1.0f, 1.0f,   // v2
             0.0f, 1.0f,   // v3
 
-            // ºóÃæ
+            // åé¢
 
             0.0f, 0.0f,   // v4
             0.0f, 1.0f,   // v5
@@ -107,7 +108,7 @@ namespace FISH
             1.0f, 1.0f,   // v6
             1.0f, 0.0f,   // v7
 
-            // ×óÃæ
+            // å·¦é¢
 
             1.0f, 0.0f,   // v8
             0.0f, 0.0f,   // v9
@@ -116,7 +117,7 @@ namespace FISH
             0.0f, 1.0f,   // v10
             1.0f, 1.0f,   // v11
 
-            // ÓÒÃæ
+            // å³é¢
 
             1.0f, 0.0f,   // v12
             0.0f, 0.0f,   // v13
@@ -125,7 +126,7 @@ namespace FISH
             0.0f, 1.0f,   // v14
             1.0f, 1.0f,   // v15
 
-            // ÉÏÃæ
+            // ä¸Šé¢
 
             0.0f, 1.0f,   // v16
             1.0f, 1.0f,   // v17
@@ -134,7 +135,7 @@ namespace FISH
             1.0f, 0.0f,   // v18
             0.0f, 0.0f,   // v19
 
-            // ÏÂÃæ
+            // ä¸‹é¢
 
             0.0f, 1.0f,   // v20
             0.0f, 0.0f,   // v21
@@ -144,9 +145,9 @@ namespace FISH
             1.0f, 1.0f,   // v23
         };
 
-        //·¨Ïß
+        //æ³•çº¿
         float normals[] = {
-            // Ç°Ãæ£¨-Z£©
+            // å‰é¢ï¼ˆ-Zï¼‰
 
             0.0f, 0.0f, -1.0f,
             0.0f, 0.0f, -1.0f,
@@ -155,7 +156,7 @@ namespace FISH
             0.0f, 0.0f, -1.0f,
             0.0f, 0.0f, -1.0f,
 
-            // ºóÃæ£¨+Z£©
+            // åé¢ï¼ˆ+Zï¼‰
 
             0.0f, 0.0f, 1.0f,
             0.0f, 0.0f, 1.0f,
@@ -164,7 +165,7 @@ namespace FISH
             0.0f, 0.0f, 1.0f,
             0.0f, 0.0f, 1.0f,
 
-            // ×óÃæ£¨-X£©
+            // å·¦é¢ï¼ˆ-Xï¼‰
 
             -1.0f, 0.0f, 0.0f,
             -1.0f, 0.0f, 0.0f,
@@ -173,7 +174,7 @@ namespace FISH
             -1.0f, 0.0f, 0.0f,
             -1.0f, 0.0f, 0.0f,
 
-            // ÓÒÃæ£¨+X£©
+            // å³é¢ï¼ˆ+Xï¼‰
 
             1.0f, 0.0f, 0.0f,
             1.0f, 0.0f, 0.0f,
@@ -182,7 +183,7 @@ namespace FISH
             1.0f, 0.0f, 0.0f,
             1.0f, 0.0f, 0.0f,
 
-            // ÉÏÃæ£¨+Y£©
+            // ä¸Šé¢ï¼ˆ+Yï¼‰
 
             0.0f, 1.0f, 0.0f,
             0.0f, 1.0f, 0.0f,
@@ -191,7 +192,7 @@ namespace FISH
             0.0f, 1.0f, 0.0f,
             0.0f, 1.0f, 0.0f,
 
-            // ÏÂÃæ£¨-Y£©
+            // ä¸‹é¢ï¼ˆ-Yï¼‰
 
             0.0f, -1.0f, 0.0f,
             0.0f, -1.0f, 0.0f,
@@ -201,7 +202,7 @@ namespace FISH
             0.0f, -1.0f, 0.0f,
         };
 
-        // ¶¨ÒåË÷ÒıÊı×é£¨Ã¿Ãæ4¸ö¶¥µã£¬Ã¿¸öÈı½ÇĞÎµÄË÷ÒıÊÇÁ¬ĞøµÄ£©
+        // å®šä¹‰ç´¢å¼•æ•°ç»„ï¼ˆæ¯é¢4ä¸ªé¡¶ç‚¹ï¼Œæ¯ä¸ªä¸‰è§’å½¢çš„ç´¢å¼•æ˜¯è¿ç»­çš„ï¼‰
         unsigned int indices[] = {
             0, 1, 2, 3, 4, 5,
             6, 7, 8, 9, 10, 11,
@@ -211,9 +212,9 @@ namespace FISH
             30,31,32,33,34,35
         };
 
-        //ÑÕÉ«
+        //é¢œè‰²
         float colors[] = {
-            // µÚÒ»Ãæ£¨ºìÉ«£¬ÍêÈ«²»Í¸Ã÷£©
+            // ç¬¬ä¸€é¢ï¼ˆçº¢è‰²ï¼Œå®Œå…¨ä¸é€æ˜ï¼‰
             1.0, 0.1, 0.0, 1.0,
             1.0, 0.1, 0.0, 1.0,
             1.0, 0.1, 0.0, 1.0,
@@ -221,7 +222,7 @@ namespace FISH
             1.0, 0.1, 0.0, 1.0,
             1.0, 0.1, 0.0, 1.0,
         
-            // µÚ¶şÃæ£¨ºìÉ«£¬ÉÔÎ¢Í¸Ã÷£©
+            // ç¬¬äºŒé¢ï¼ˆçº¢è‰²ï¼Œç¨å¾®é€æ˜ï¼‰
             1.0, 0.3, 0.0, 0.8,
             1.0, 0.3, 0.0, 0.8,
             1.0, 0.3, 0.0, 0.8,
@@ -229,7 +230,7 @@ namespace FISH
             1.0, 0.3, 0.0, 0.8,
             1.0, 0.3, 0.0, 0.8,
         
-            // µÚÈıÃæ£¨ºìÉ«£¬Í¸Ã÷¶È½µµÍ£©
+            // ç¬¬ä¸‰é¢ï¼ˆçº¢è‰²ï¼Œé€æ˜åº¦é™ä½ï¼‰
             1.0, 0.5, 0.0, 0.6,
             1.0, 0.5, 0.0, 0.6,
             1.0, 0.5, 0.0, 0.6,
@@ -237,7 +238,7 @@ namespace FISH
             1.0, 0.5, 0.0, 0.6,
             1.0, 0.5, 0.0, 0.6,
         
-            // µÚËÄÃæ£¨ºìÉ«£¬¸ü¼ÓÍ¸Ã÷£©
+            // ç¬¬å››é¢ï¼ˆçº¢è‰²ï¼Œæ›´åŠ é€æ˜ï¼‰
             1.0, 0.7, 0.0, 0.4,
             1.0, 0.7, 0.0, 0.4,
             1.0, 0.7, 0.0, 0.4,
@@ -245,7 +246,7 @@ namespace FISH
             1.0, 0.7, 0.0, 0.4,
             1.0, 0.7, 0.0, 0.4,
         
-            // µÚÎåÃæ£¨ºìÉ«£¬½Ó½üÍêÈ«Í¸Ã÷£©
+            // ç¬¬äº”é¢ï¼ˆçº¢è‰²ï¼Œæ¥è¿‘å®Œå…¨é€æ˜ï¼‰
             1.0, 0.9, 0.0, 0.2,
             1.0, 0.9, 0.0, 0.2,
             1.0, 0.9, 0.0, 0.2,
@@ -253,7 +254,7 @@ namespace FISH
             1.0, 0.9, 0.0, 0.2,
             1.0, 0.9, 0.0, 0.2,
         
-            // µÚÁùÃæ£¨ºìÉ«£¬ÍêÈ«Í¸Ã÷£©
+            // ç¬¬å…­é¢ï¼ˆçº¢è‰²ï¼Œå®Œå…¨é€æ˜ï¼‰
             1.0, 1.0, 0.0, 0.1,
             1.0, 1.0, 0.0, 0.1,
             1.0, 1.0, 0.0, 0.1,
@@ -288,7 +289,7 @@ namespace FISH
 
     Shape *Shape::CreateSphere(float radius) {
         	Shape* shape = new Shape();
-
+            shape->mType = ShapeType::Sphere;
             std::vector<float> positions{};
             std::vector<float> uvs{};
             std::vector<unsigned int> indeices{};
@@ -376,7 +377,7 @@ namespace FISH
 
     Shape *Shape::CreatePlan(float width, float height) {
             Shape* shape = new Shape();
-
+            shape->mType = ShapeType::Plan;
             float hafw = width / 2.0;
             float hafh = height / 2.0;
 
@@ -389,17 +390,17 @@ namespace FISH
             };
 
             float colors[] = {
-                1.0f, 1.0f, 1.0f, 1.0f, // ×óÏÂ
-                1.0f, 1.0f, 1.0f, 1.0f, // ÓÒÏÂ
-                1.0f, 1.0f, 1.0f, 1.0f, // ÓÒÉÏ
-                1.0f, 1.0f, 1.0f, 1.0f  // ×óÉÏ
+                1.0f, 1.0f, 1.0f, 1.0f, // å·¦ä¸‹
+                1.0f, 1.0f, 1.0f, 1.0f, // å³ä¸‹
+                1.0f, 1.0f, 1.0f, 1.0f, // å³ä¸Š
+                1.0f, 1.0f, 1.0f, 1.0f  // å·¦ä¸Š
             };
 
             float normals[] = {
-                0.0f, 0.0f, 1.0f, // ×óÏÂ
-                0.0f, 0.0f, 1.0f, // ÓÒÏÂ
-                0.0f, 0.0f, 1.0f, // ÓÒÉÏ
-                0.0f, 0.0f, 1.0f  // ×óÉÏ
+                0.0f, 0.0f, 1.0f, // å·¦ä¸‹
+                0.0f, 0.0f, 1.0f, // å³ä¸‹
+                0.0f, 0.0f, 1.0f, // å³ä¸Š
+                0.0f, 0.0f, 1.0f  // å·¦ä¸Š
             };
 
             float uvs[] = {
@@ -440,26 +441,26 @@ namespace FISH
 
     Shape* Shape::CreateRectangle(float width, float height) {
         Shape* shape = new Shape();
-
+        shape->mType = ShapeType::Plan;
         float halfW = width / 2.0f;
         float halfH = height / 2.0f;
 
-        // ¶¥µãÎ»ÖÃ (8¸ö¶¥µã)
+        // é¡¶ç‚¹ä½ç½® (8ä¸ªé¡¶ç‚¹)
         float positions[] = {
-            // Ç°Ãæ
+            // å‰é¢
             -halfW, -halfH,  0.0,
             halfW, -halfH,  0.0,
             halfW,  halfH,  0.0,
             -halfW,  halfH,  0.0,
             
-            // ºóÃæ
+            // åé¢
             -halfW, -halfH, 0.0,
             halfW, -halfH, 0.0,
             halfW,  halfH, 0.0,
             -halfW,  halfH, 0.0
         };
 
-        // ¶¥µãÑÕÉ« (ËùÓĞ¶¥µã°×É«)
+        // é¡¶ç‚¹é¢œè‰² (æ‰€æœ‰é¡¶ç‚¹ç™½è‰²)
         float colors[] = {
             1.0f, 1.0f, 1.0f, 1.0f,
             1.0f, 1.0f, 1.0f, 1.0f,
@@ -471,112 +472,112 @@ namespace FISH
             1.0f, 1.0f, 1.0f, 1.0f
         };
 
-        // ·¨Ïß (Ã¿¸öÃæµÄ·¨Ïß·½Ïò)
+        // æ³•çº¿ (æ¯ä¸ªé¢çš„æ³•çº¿æ–¹å‘)
         float normals[] = {
-            // Ç°Ãæ·¨Ïß
+            // å‰é¢æ³•çº¿
             0.0f, 0.0f, 1.0f,
             0.0f, 0.0f, 1.0f,
             0.0f, 0.0f, 1.0f,
             0.0f, 0.0f, 1.0f,
             
-            // ºóÃæ·¨Ïß
+            // åé¢æ³•çº¿
             0.0f, 0.0f, -1.0f,
             0.0f, 0.0f, -1.0f,
             0.0f, 0.0f, -1.0f,
             0.0f, 0.0f, -1.0f,
             
-            // ×óÃæ·¨Ïß (½«ÔÚË÷ÒıÖĞÖØ¸´Ê¹ÓÃ¶¥µã)
+            // å·¦é¢æ³•çº¿ (å°†åœ¨ç´¢å¼•ä¸­é‡å¤ä½¿ç”¨é¡¶ç‚¹)
             -1.0f, 0.0f, 0.0f,
             -1.0f, 0.0f, 0.0f,
             -1.0f, 0.0f, 0.0f,
             -1.0f, 0.0f, 0.0f,
             
-            // ÓÒÃæ·¨Ïß
+            // å³é¢æ³•çº¿
             1.0f, 0.0f, 0.0f,
             1.0f, 0.0f, 0.0f,
             1.0f, 0.0f, 0.0f,
             1.0f, 0.0f, 0.0f,
             
-            // ÉÏÃæ·¨Ïß
+            // ä¸Šé¢æ³•çº¿
             0.0f, 1.0f, 0.0f,
             0.0f, 1.0f, 0.0f,
             0.0f, 1.0f, 0.0f,
             0.0f, 1.0f, 0.0f,
             
-            // ÏÂÃæ·¨Ïß
+            // ä¸‹é¢æ³•çº¿
             0.0f, -1.0f, 0.0f,
             0.0f, -1.0f, 0.0f,
             0.0f, -1.0f, 0.0f,
             0.0f, -1.0f, 0.0f
         };
 
-        // ÎÆÀí×ø±ê (Ã¿¸öÃæÊ¹ÓÃÏàÍ¬µÄUVÓ³Éä)
+        // çº¹ç†åæ ‡ (æ¯ä¸ªé¢ä½¿ç”¨ç›¸åŒçš„UVæ˜ å°„)
         float uvs[] = {
-            // Ç°Ãæ
+            // å‰é¢
             0.0f, 0.0f,
             1.0f, 0.0f,
             1.0f, 1.0f,
             0.0f, 1.0f,
             
-            // ºóÃæ
+            // åé¢
             0.0f, 0.0f,
             1.0f, 0.0f,
             1.0f, 1.0f,
             0.0f, 1.0f,
             
-            // ×óÃæ
+            // å·¦é¢
             0.0f, 0.0f,
             1.0f, 0.0f,
             1.0f, 1.0f,
             0.0f, 1.0f,
             
-            // ÓÒÃæ
+            // å³é¢
             0.0f, 0.0f,
             1.0f, 0.0f,
             1.0f, 1.0f,
             0.0f, 1.0f,
             
-            // ÉÏÃæ
+            // ä¸Šé¢
             0.0f, 0.0f,
             1.0f, 0.0f,
             1.0f, 1.0f,
             0.0f, 1.0f,
             
-            // ÏÂÃæ
+            // ä¸‹é¢
             0.0f, 0.0f,
             1.0f, 0.0f,
             1.0f, 1.0f,
             0.0f, 1.0f
         };
 
-        // Ë÷Òı (36¸öË÷Òı£¬6¸öÃæ¡Á2¸öÈı½ÇĞÎ¡Á3¸ö¶¥µã)
+        // ç´¢å¼• (36ä¸ªç´¢å¼•ï¼Œ6ä¸ªé¢Ã—2ä¸ªä¸‰è§’å½¢Ã—3ä¸ªé¡¶ç‚¹)
         unsigned int indices[] = {
-            // Ç°Ãæ
+            // å‰é¢
             0, 1, 2,
             2, 3, 0,
             
-            // ºóÃæ
+            // åé¢
             5, 4, 7,
             7, 6, 5,
             
-            // ×óÃæ
+            // å·¦é¢
             4, 0, 3,
             3, 7, 4,
             
-            // ÓÒÃæ
+            // å³é¢
             1, 5, 6,
             6, 2, 1,
             
-            // ÉÏÃæ
+            // ä¸Šé¢
             3, 2, 6,
             6, 7, 3,
             
-            // ÏÂÃæ
+            // ä¸‹é¢
             4, 5, 1,
             1, 0, 4
         };
 
-        // ´´½¨¶¥µã»º³åÇøºÍË÷Òı»º³åÇø
+        // åˆ›å»ºé¡¶ç‚¹ç¼“å†²åŒºå’Œç´¢å¼•ç¼“å†²åŒº
         std::shared_ptr<VertexBuffer> Pos, UV, Normal, Color;
         Pos.reset(VertexBuffer::Create(positions, sizeof(positions)));
         Color.reset(VertexBuffer::Create(colors, sizeof(colors)));
@@ -586,13 +587,13 @@ namespace FISH
         std::shared_ptr<IndexBuffer> index;
         index.reset(IndexBuffer::Create(indices, 36));
 
-        // ÉèÖÃ¶¥µã²¼¾Ö
+        // è®¾ç½®é¡¶ç‚¹å¸ƒå±€
         Pos->SetLayout({{ShaderDataType::Float3, VertexType::Position, "pos"}});
         Color->SetLayout({{ShaderDataType::Float4, VertexType::Color, "color"}});
         UV->SetLayout({{ShaderDataType::Float2, VertexType::UV, "uv"}});
         Normal->SetLayout({{ShaderDataType::Float3, VertexType::Normal, "normal"}});
 
-        // ´´½¨¶¥µãÊı×é²¢Ìí¼Ó»º³åÇø
+        // åˆ›å»ºé¡¶ç‚¹æ•°ç»„å¹¶æ·»åŠ ç¼“å†²åŒº
         shape->mVao.reset(VertexArray::Create());
         shape->mVao->AddVertexBuffer(Pos);
         shape->mVao->AddVertexBuffer(Color);
@@ -605,24 +606,24 @@ namespace FISH
 
     Shape* Shape::CreateTriangle2D(float size) {
     Shape* shape = new Shape();
-    
+    shape->mType = ShapeType::Triangle2D;
     float halfSize = size / 2.0f;
     float vertices[] = {
-        -halfSize, -halfSize,  // ×óÏÂ
-        halfSize, -halfSize,   // ÓÒÏÂ
-        0.0f, halfSize         // ÉÏÖĞ
+        -halfSize, -halfSize,  // å·¦ä¸‹
+        halfSize, -halfSize,   // å³ä¸‹
+        0.0f, halfSize         // ä¸Šä¸­
     };
 
     float colors[] = {
-        1.0f, 0.0f, 0.0f, 1.0f,    // ºì
-        0.0f, 1.0f, 0.0f, 1.0f,    // ÂÌ
-        0.0f, 0.0f, 1.0f, 1.0f     // À¶
+        1.0f, 0.0f, 0.0f, 1.0f,    // çº¢
+        0.0f, 1.0f, 0.0f, 1.0f,    // ç»¿
+        0.0f, 0.0f, 1.0f, 1.0f     // è“
     };
 
     float uvs[] = {
-        0.0f, 0.0f,    // ×óÏÂ
-        1.0f, 0.0f,    // ÓÒÏÂ
-        0.5f, 1.0f     // ÉÏÖĞ
+        0.0f, 0.0f,    // å·¦ä¸‹
+        1.0f, 0.0f,    // å³ä¸‹
+        0.5f, 1.0f     // ä¸Šä¸­
     };
 
     unsigned int indices[] = {0, 1, 2};
@@ -635,7 +636,7 @@ namespace FISH
     std::shared_ptr<IndexBuffer> index;
     index.reset(IndexBuffer::Create(indices, 3));
 
-    // Ö»Ê¹ÓÃ2D×ø±ê
+    // åªä½¿ç”¨2Dåæ ‡
     Pos->SetLayout({{ShaderDataType::Float2, VertexType::Position, "pos"}});
     Color->SetLayout({{ShaderDataType::Float4, VertexType::Color, "color"}});
     UV->SetLayout({{ShaderDataType::Float2, VertexType::UV, "uv"}});
@@ -650,15 +651,15 @@ namespace FISH
 
 Shape* Shape::CreateRectangle2D(float width, float height) {
     Shape* shape = new Shape();
-    
+    shape->mType = ShapeType::Plan;    
     float halfW = width / 2.0f;
     float halfH = height / 2.0f;
     
     float vertices[] = {
-        -halfW, -halfH,  // ×óÏÂ
-        halfW, -halfH,   // ÓÒÏÂ
-        halfW, halfH,    // ÓÒÉÏ
-        -halfW, halfH    // ×óÉÏ
+        -halfW, -halfH,  // å·¦ä¸‹
+        halfW, -halfH,   // å³ä¸‹
+        halfW, halfH,    // å³ä¸Š
+        -halfW, halfH    // å·¦ä¸Š
     };
 
     float colors[] = {
@@ -669,10 +670,10 @@ Shape* Shape::CreateRectangle2D(float width, float height) {
     };
 
     float uvs[] = {
-        0.0f, 0.0f,    // ×óÏÂ
-        1.0f, 0.0f,    // ÓÒÏÂ
-        1.0f, 1.0f,    // ÓÒÉÏ
-        0.0f, 1.0f     // ×óÉÏ
+        0.0f, 0.0f,    // å·¦ä¸‹
+        1.0f, 0.0f,    // å³ä¸‹
+        1.0f, 1.0f,    // å³ä¸Š
+        0.0f, 1.0f     // å·¦ä¸Š
     };
 
     unsigned int indices[] = {0, 1, 2, 2, 3, 0};
@@ -699,13 +700,13 @@ Shape* Shape::CreateRectangle2D(float width, float height) {
 
 Shape* Shape::CreateCircle2D(float radius, int segments) {
     Shape* shape = new Shape();
-    
+    shape->mType = ShapeType::Circle2D;
     std::vector<float> positions;
     std::vector<float> colors;
     std::vector<float> uvs;
     std::vector<unsigned int> indices;
     
-    // ÖĞĞÄ¶¥µã
+    // ä¸­å¿ƒé¡¶ç‚¹
     positions.push_back(0.0f);
     positions.push_back(0.0f);
     
@@ -717,7 +718,7 @@ Shape* Shape::CreateCircle2D(float radius, int segments) {
     uvs.push_back(0.5f);
     uvs.push_back(0.5f);
     
-    // Éú³ÉÔ²ÖÜÉÏµÄ¶¥µã
+    // ç”Ÿæˆåœ†å‘¨ä¸Šçš„é¡¶ç‚¹
     for (int i = 0; i <= segments; i++) {
         float theta = 2.0f * glm::pi<float>() * float(i) / float(segments);
         float x = radius * cos(theta);
@@ -735,13 +736,13 @@ Shape* Shape::CreateCircle2D(float radius, int segments) {
         uvs.push_back((y / radius + 1.0f) / 2.0f);
     }
     
-    // Éú³ÉË÷Òı
+    // ç”Ÿæˆç´¢å¼•
     for (int i = 1; i <= segments; i++) {
-        indices.push_back(0);       // ÖĞĞÄ
+        indices.push_back(0);       // ä¸­å¿ƒ
         indices.push_back(i + 1);
         indices.push_back(i);
     }
-    // ±ÕºÏÔ²
+    // é—­åˆåœ†
     indices.push_back(0);
     indices.push_back(1);
     indices.push_back(segments);
@@ -768,25 +769,25 @@ Shape* Shape::CreateCircle2D(float radius, int segments) {
 
 Shape* Shape::CreateLine2D(float x1, float y1, float x2, float y2, float thickness) {
     Shape* shape = new Shape();
-    
-    // ¼ÆËãÏßµÄ·½ÏòÏòÁ¿
+    shape->mType = ShapeType::Line2D;
+    // è®¡ç®—çº¿çš„æ–¹å‘å‘é‡
     float dx = x2 - x1;
     float dy = y2 - y1;
     
-    // ¼ÆËã´¹Ö±ÏòÁ¿
+    // è®¡ç®—å‚ç›´å‘é‡
     float nx = -dy;
     float ny = dx;
     float len = sqrt(nx*nx + ny*ny);
     nx /= len;
     ny /= len;
     
-    // ¼ÆËãËÄ¸ö¶¥µã
+    // è®¡ç®—å››ä¸ªé¡¶ç‚¹
     float halfThickness = thickness / 2.0f;
     float vertices[] = {
-        x1 + nx * halfThickness, y1 + ny * halfThickness,  // ¶¥µã1
-        x1 - nx * halfThickness, y1 - ny * halfThickness,  // ¶¥µã2
-        x2 - nx * halfThickness, y2 - ny * halfThickness,  // ¶¥µã3
-        x2 + nx * halfThickness, y2 + ny * halfThickness   // ¶¥µã4
+        x1 + nx * halfThickness, y1 + ny * halfThickness,  // é¡¶ç‚¹1
+        x1 - nx * halfThickness, y1 - ny * halfThickness,  // é¡¶ç‚¹2
+        x2 - nx * halfThickness, y2 - ny * halfThickness,  // é¡¶ç‚¹3
+        x2 + nx * halfThickness, y2 + ny * halfThickness   // é¡¶ç‚¹4
     };
 
     float colors[] = {

@@ -302,4 +302,52 @@ namespace FISH {
     ImGuiID UI::GetWindowDockID() { return ImGui::GetWindowDockID(); }
     
     bool UI::IsWindowDocked() { return ImGui::IsWindowDocked(); }
+
+    bool UI::DragFloat(const char* label, float* v, float v_speed, float v_min, float v_max, const char* format, ImGuiSliderFlags flags) {
+        return ImGui::DragFloat(label, v, v_speed, v_min, v_max, format, flags);
+    }
+
+    bool UI::DragFloat2(const char* label, float v[2], float v_speed, float v_min, float v_max, const char* format, ImGuiSliderFlags flags) {
+        return ImGui::DragFloat2(label, v, v_speed, v_min, v_max, format, flags);
+    }
+
+    bool UI::DragFloat3(const char* label, float v[3], float v_speed, float v_min, float v_max, const char* format, ImGuiSliderFlags flags) {
+        return ImGui::DragFloat3(label, v, v_speed, v_min, v_max, format, flags);
+    }
+
+    bool UI::DragFloat4(const char* label, float v[4], float v_speed, float v_min, float v_max, const char* format, ImGuiSliderFlags flags) {
+        return ImGui::DragFloat4(label, v, v_speed, v_min, v_max, format, flags);
+    }
+
+    bool UI::DragFloatRange2(const char* label, float* v_current_min, float* v_current_max, float v_speed, float v_min, float v_max, const char* format, const char* format_max, ImGuiSliderFlags flags) {
+        return ImGui::DragFloatRange2(label, v_current_min, v_current_max, v_speed, v_min, v_max, format, format_max, flags);
+    }
+
+    bool UI::DragInt(const char* label, int* v, float v_speed, int v_min, int v_max, const char* format, ImGuiSliderFlags flags) {
+        return ImGui::DragInt(label, v, v_speed, v_min, v_max, format, flags);
+    }
+
+    bool UI::DragInt2(const char* label, int v[2], float v_speed, int v_min, int v_max, const char* format, ImGuiSliderFlags flags) {
+        return ImGui::DragInt2(label, v, v_speed, v_min, v_max, format, flags);
+    }
+
+    bool UI::DragInt3(const char* label, int v[3], float v_speed, int v_min, int v_max, const char* format, ImGuiSliderFlags flags) {
+        return ImGui::DragInt3(label, v, v_speed, v_min, v_max, format, flags);
+    }
+
+    bool UI::DragInt4(const char* label, int v[4], float v_speed, int v_min, int v_max, const char* format, ImGuiSliderFlags flags) {
+        return ImGui::DragInt4(label, v, v_speed, v_min, v_max, format, flags);
+    }
+
+    bool UI::DragIntRange2(const char* label, int* v_current_min, int* v_current_max, float v_speed, int v_min, int v_max, const char* format, const char* format_max, ImGuiSliderFlags flags) {
+        return ImGui::DragIntRange2(label, v_current_min, v_current_max, v_speed, v_min, v_max, format, format_max, flags);
+    }
+
+    bool UI::DragScalar(const char* label, ImGuiDataType data_type, void* p_data, float v_speed, const void* p_min, const void* p_max, const char* format, ImGuiSliderFlags flags) {
+        return ImGui::DragScalar(label, data_type, p_data, v_speed, p_min, p_max, format, flags);
+    }
+
+    bool UI::DragScalarN(const char* label, ImGuiDataType data_type, void* p_data, int components, float v_speed, const void* p_min, const void* p_max, const char* format, ImGuiSliderFlags flags) {
+        return ImGui::DragScalarN(label, data_type, p_data, components, v_speed, p_min, p_max, format, flags);
+    }
 }

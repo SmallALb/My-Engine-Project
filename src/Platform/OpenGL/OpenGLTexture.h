@@ -17,6 +17,8 @@ namespace FISH {
 
         inline virtual uint32_t getHeight() const override {return mHeight;}
 
+        virtual unsigned long long getTextureID() const override;
+
         inline virtual void setUnit(uint32_t unit) override {mUnit = unit;}
 
         inline virtual unsigned long long getHandle() const;

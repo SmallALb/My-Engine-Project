@@ -25,6 +25,14 @@ namespace FISH {
         return state == GLFW_PRESS || state == GLFW_REPEAT;
     }
 
+    bool WindowsInput::IsButtonPressedImplOnce(int button) {
+        auto window = static_cast<GLFWwindow*>(Application::GetInstance().GetWindow().GetNativeWindow()); 
+        int state = glfwGetMouseButton(window, button);
+        bool returnStates = (state == GLFW_PRESS) && (!MouseMap[button]);
+        MouseMap[button] = (state == GLFW_PRESS);
+        return returnStates;
+    }
+
     bool WindowsInput::IsKeyPressedOnceImpl(int keycode) {
         auto window = static_cast<GLFWwindow*>(Application::GetInstance().GetWindow().GetNativeWindow()); 
         int state = glfwGetKey(window, keycode);

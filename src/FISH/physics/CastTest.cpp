@@ -14,7 +14,6 @@
 #include "FISH/Renderer/RenderElement.h"
 #include "FISH/Renderer/Buffer.h"
 #include "FISH/Renderer/VertexArray.h"
-#include "FISH/Renderer/Texture.h"
 #include "FISH/Renderer/BaseShape.h"
 #include "../Object/Object.h"
 #include "../Object/SpotLight.h"

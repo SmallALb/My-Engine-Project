@@ -3,6 +3,9 @@
 #include "FISH/Core.h"
 
 namespace FISH {
+    class Texture;
+    using TexturePtr = std::shared_ptr<Texture>;
+
     //纹理接口
     class Texture : public TextureHandle {
     public:
@@ -25,8 +28,9 @@ namespace FISH {
         //设置unit(Opengl)
         virtual void setUnit(uint32_t unit) {};
 
+
         //从内存中读取
-        static Texture* CreateTextureFromMemory(
+        static TexturePtr CreateTextureFromMemory(
             const string& path,
              unsigned char* dataIN, 
              uint32_t WidthIn, uint32_t HeightIn,
@@ -35,9 +39,9 @@ namespace FISH {
             );
         
         //从路径中读取
-        static Texture* CreateTextureFromPath(const string& path, ChannelType channel = ChannelType::RGBA, uint32_t unit = 0);
+        static TexturePtr CreateTextureFromPath(const string& path, ChannelType channel = ChannelType::RGBA, uint32_t unit = 0);
         //创建空纹理
-        static Texture* CreateNullTexture(
+        static TexturePtr CreateNullTexture(
             const string& path, uint32_t WidthIn, uint32_t HeightIn,
              ChannelType channel = ChannelType::RGBA, 
              uint32_t unit = 0);
@@ -45,13 +49,13 @@ namespace FISH {
         static void initDefaultTexture();
     private:
         //纹理内存映射表
-        static std::unordered_map<std::string, Texture*> TextureMap;
+        static std::unordered_map<std::string, TexturePtr> TextureMap;
     public:
         //预处理纹理
-        static std::shared_ptr<Texture> NoneTexture;
+        static TexturePtr NoneTexture;
     protected:
         //枚举纹理通道
         ChannelType             mEnumChannel;
-            
     };
+
 }

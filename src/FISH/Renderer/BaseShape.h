@@ -1,47 +1,57 @@
 #pragma once
 #include "FISH/Core.h"
 
-namespace FISH
-{
-    //ĞÎ×´Àà
+namespace FISH {
+    //å½¢çŠ¶æšä¸¾ç±»
+    enum class ShapeType {
+        Unknown = 0,
+        Box,
+        Plan,
+        Sphere,
+        Circle2D,
+        Line2D,
+        Triangle2D
+    };
+
+    //å½¢çŠ¶ç±»
     class API_ Shape {
     public:
         Shape();
 
         ~Shape();
 
-        //Ö±½Ó´«ÈëVertexBufferºÍindex
+        //ç›´æ¥ä¼ å…¥VertexBufferå’Œindex
         Shape(std::shared_ptr<VertexBuffer> vertx, std::shared_ptr<IndexBuffer> index);
 
-        //´´½¨ºĞÌå
+        //åˆ›å»ºç›’ä½“
         static Shape* CreateBox(float size);
 
-        //´´½¨ÇòÌå
+        //åˆ›å»ºçƒä½“
         static Shape* CreateSphere(float radius);
         
-        //´´½¨Æ½Ãæ
+        //åˆ›å»ºå¹³é¢
         static Shape* CreatePlan(float width, float height);
-        //´´½¨¾ØĞÎ
+        //åˆ›å»ºçŸ©å½¢
         static Shape* CreateRectangle(float width, float height);
 
-        //2dÈı½ÇĞÎ
+        //2dä¸‰è§’å½¢
         static Shape* CreateTriangle2D(float size);
-        //2d³¤·½ĞÎ
+        //2dé•¿æ–¹å½¢
         static Shape* CreateRectangle2D(float width, float height);
-        //2dÔ²ĞÎ
+        //2dåœ†å½¢
         static Shape* CreateCircle2D(float radius, int segments = 32);
-        //2dÏß
+        //2dçº¿
         static Shape* CreateLine2D(float x1, float y1, float x2, float y2, float thickness = 1.0f);
 
-        //»ñÈ¡×ø±ê¼ÆÊı
+        //è·å–åæ ‡è®¡æ•°
         uint32_t GetIndexCounts() const;
 
-        //Ê¹ÓÃ¸ÃÄ£ĞÍvao
+        //ä½¿ç”¨è¯¥æ¨¡å‹vao
         inline void useShape() { 
             mVao->bind();
         }
 
-        //Ê¹ÓÃ´ËÄ£ĞÍµÄÎÆÀíÌùÍ¼
+        //ä½¿ç”¨æ­¤æ¨¡å‹çš„çº¹ç†è´´å›¾
         inline uint64_t useTexture() {
             return mTexture->getHandle();
         }
@@ -50,21 +60,28 @@ namespace FISH
             mVao->unbind();
         }
 
-        //»æÖÆ´ËĞÎ×´
+        //ç»˜åˆ¶æ­¤å½¢çŠ¶
         inline void render(int ElementType) {
             useShape();
             mVao->renderIndex(0, ElementType);
             unuseShape();
         }
 
-        //ÉèÖÃÊ¹ÓÃÎÆÀí
+        //è®¾ç½®ä½¿ç”¨çº¹ç†
         void setTexture(const std::shared_ptr<TextureHandle>& texture);
+        inline ShapeType getShapeType() const {return mType;}
+        //è·å–ID
+        unsigned long long getTextureID() const {return mTexture->getTextureID();}
+        //è·å–çº¹ç†è·¯å¾„
+        string getTexturePath() const {return mTexture->getPath();}
 
     private:
         std::unique_ptr<VertexArray>    mVao{nullptr};
         std::shared_ptr<TextureHandle>        mTexture{nullptr};
+        ShapeType                       mType{ShapeType::Unknown};
     };
 
+    using ShapePtr = std::shared_ptr<Shape>;
 
 
 } // namespace FISH

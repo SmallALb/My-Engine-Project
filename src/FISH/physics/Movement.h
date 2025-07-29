@@ -39,6 +39,14 @@ namespace FISH {
             mSpeed = speed;
             mVelocity = mSpeed * mDirection;
         };
+
+        //设置X方向的速度
+        inline void setVelocity_X(float value) {mVelocity.x = value;}
+        //设置Y方向的速度
+        inline void setVelocity_Y(float value) {mVelocity.y = value;}
+        //设置Z方向的速度
+        inline void setVelocity_Z(float value) {mVelocity.z = value;}
+
         //设置重力
         inline void setGravity(float gravity) {mgravity = gravity;};
         //设置加速度
@@ -56,7 +64,8 @@ namespace FISH {
         const glm::vec3& getCurrentDirection() const {return mDirection;}
         //获取位置增量
         glm::vec3 getPositionDelta() const {return mPosD; }
-        
+        //获取重力
+        float getGravity() const {return mgravity;}
         // 更新运动状态
         void update(float dt);
         

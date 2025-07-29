@@ -51,8 +51,8 @@ namespace FISH {
         virtual float getAngleY() { return  mAngleY; }
         //获取对象的Z角度
         virtual float getAngleZ() { return mAngleZ; }
-
-
+        //获取名字
+        virtual string getName() const {return mName;}
         //获取位置
         virtual glm::vec3 getPosition() const;
 
@@ -128,5 +128,6 @@ namespace FISH {
         std::string mName{};
     };
 
+    using Object3DPtr = std::shared_ptr<Object3D>;
     
 } // namespace FISH

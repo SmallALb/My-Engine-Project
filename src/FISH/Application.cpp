@@ -22,7 +22,7 @@ namespace FISH{
 
     Application* Application::Instance = nullptr;
 
-    Application::Application() {
+    Application:: Application() {
         
         FS_CORE_ASSERT(!Instance, "Application alread exists!");
         Instance = this;

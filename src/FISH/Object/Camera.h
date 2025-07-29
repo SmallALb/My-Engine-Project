@@ -46,8 +46,8 @@ namespace  FISH {
 
         //获取看向的点
         virtual glm::vec3 getLookAtPoint() const; 
-
-
+        //获取相机类型
+        CameraType getCameraType() const { return mCameraType; } 
 
         OBJ_CLASS_TYPE(Camera)
 
@@ -61,4 +61,5 @@ namespace  FISH {
         bool IsControl{0};
     };
 
+    using CameraPtr = std::shared_ptr<Camera>;
 } // namespace  FISH

@@ -29,13 +29,21 @@ namespace FISH {
         //得到该模型的形状和材质
         std::shared_ptr<Shape>& getShape();
         
+        //标记高亮
+        inline void allowHightLight(bool tag) {hightLightTag = tag;}
+
+        inline bool isHightLight() const {return hightLightTag;}
+
         void renderMesh(int typ);
 
         OBJ_CLASS_TYPE(Mesh)
     private:
         std::shared_ptr<Shape> mShape{nullptr};
         bool                   flip{0};
+        bool                   hightLightTag{0};
     };
+
+    using MeshPtr = std::shared_ptr<Mesh>;
 
 }
 

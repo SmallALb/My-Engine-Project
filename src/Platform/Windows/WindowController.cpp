@@ -21,6 +21,10 @@ namespace FISH {
         if (!ConnectTag) init();
         if (!ConnectTag) return;
     #ifdef _WIN32
+        for (auto& [key, info] : KeyInfoMap) {
+            info.predata = info.data;
+        }
+
         ZeroMemory(&mCurrentState, sizeof(XINPUT_STATE));
         if (XInputGetState(mControllerId, &mCurrentState) != ERROR_SUCCESS) {
             return;

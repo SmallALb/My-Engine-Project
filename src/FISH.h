@@ -47,14 +47,16 @@
 #include "FISH/Object/perspectiveCamera.h"
 //物理和游戏基本
 #include "FISH/physics/ObjectCast.h"
-#include "FISH/Game/GameObject.h"
 #include "FISH/physics/Movement.h"
+#include "FISH/Game/GameObject.h"
 //渲染
 #include "FISH/Renderer/Renderstatus.h"
 #include "FISH/Renderer/Renderer.h"
 //物理检测
 #include "FISH/physics/RayTest.h"
 #include "FISH/physics/CastTest.h"
+
+
 
 //声音
 #include "FISH/Sound.h"

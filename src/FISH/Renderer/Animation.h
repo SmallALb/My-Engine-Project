@@ -51,6 +51,8 @@ namespace FISH {
         void setSpeed(float speed);
         //获取当前帧
         virtual unsigned long long getHandle() const override;
+        //获取ID
+        virtual unsigned long long getTextureID() const override;
         //设置帧回调函数
         void setFrameCallBackFunc(const FrameCallFUN& func);
         //设置初始帧开始函数

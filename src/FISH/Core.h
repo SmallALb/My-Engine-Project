@@ -23,3 +23,14 @@ template <typename Ty, typename From>
 auto PtrCastTo(From&& ptr) {
     return dynamic_pointer_cast<Ty>(ptr);
 }
+
+template <typename Ty, typename From>
+auto Static_PtrCastTo(From&& ptr) {
+    return static_pointer_cast<Ty>(ptr);
+}
+
+template<class... Ty> 
+struct overload : Ty... {using Ty::operator()...; };
+
+template<class... Ty>
+overload(Ty...) -> overload<Ty...>;

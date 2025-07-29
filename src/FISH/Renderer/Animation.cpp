@@ -25,6 +25,7 @@ namespace FISH {
                 FishTag = playMode == AnimationMode::Once;
             }
         };
+        
 
         mFrameCallFunc = [&]() {};
         mFrameBeginFunc = [&]() {};
@@ -35,11 +36,12 @@ namespace FISH {
         mFrames.resize(size);
         FrameSize = size;
         path += "/" + name;
+        mPath = path;
         int count = beginIndex;
         //新建帧
         for (auto& frame : mFrames) {
             FS_INFO("frame({0})", count);
-            AnimationFrame nFrame(std::shared_ptr<Texture>(Texture::CreateTextureFromPath(path + "(" + std::to_string(count) + ").png")),duration);
+            AnimationFrame nFrame(Texture::CreateTextureFromPath(path + "(" + std::to_string(count) + ").png"),duration);
             frame = std::move(nFrame);
             count++;
         }
@@ -107,6 +109,12 @@ namespace FISH {
         int cf = mCurrentFrame;
         if (cf >= mFrames.size()) cf = mFrames.size() - 1;
         return mFrames[cf].texture->getHandle();
+    }
+
+    unsigned long long SpriteAnimation::getTextureID() const {
+        int cf = mCurrentFrame;
+        if (cf >= mFrames.size()) cf = mFrames.size() - 1;
+        return mFrames[cf].texture->getTextureID();
     }
 
     void SpriteAnimation::setFrameCallBackFunc(const FrameCallFUN &func) {

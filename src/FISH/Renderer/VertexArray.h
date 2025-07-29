@@ -5,28 +5,28 @@
 #include "FISH/Core.h"
 
 namespace FISH {
-    //VAO·â×°
+    //VAOå°è£…
     class API_ VertexArray {
     public:
         virtual ~VertexArray() {}
-        //°ó¶¨Ê¹ÓÃ¸ÃVao
+        //ç»‘å®šä½¿ç”¨è¯¥Vao
         virtual void bind() const = 0;
-        //È¡Ïû°ó¶¨
+        //å–æ¶ˆç»‘å®š
         virtual void unbind() const = 0;
-        //Ìí¼Ó¶¥µã²ã£¨¹àÈëÊı¾İ£©
+        //æ·»åŠ é¡¶ç‚¹å±‚ï¼ˆçŒå…¥æ•°æ®ï¼‰
         virtual void AddVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuffer)  = 0;
-        //ÉèÖÃÏÂ±ê²ãĞÅÏ¢
+        //è®¾ç½®ä¸‹æ ‡å±‚ä¿¡æ¯
         virtual void SetIndexBuffer(const std::shared_ptr<IndexBuffer>& indexBuffer)  = 0;
-        //»ñÈ¡ËùÓĞ¶¥µã²ãĞÅÏ¢
+        //è·å–æ‰€æœ‰é¡¶ç‚¹å±‚ä¿¡æ¯
         virtual const std::vector<std::shared_ptr<VertexBuffer>>& GetVertexBuffers() const = 0;
-        //»ñÈ¡ÏÂ±ê²ãĞÅÏ¢
+        //è·å–ä¸‹æ ‡å±‚ä¿¡æ¯
         virtual const std::shared_ptr<IndexBuffer>& GetIndexBuffer() const = 0;
-        //»ñÈ¡ÏÂ±ê¼ÆÊı
+        //è·å–ä¸‹æ ‡è®¡æ•°
         virtual const uint32_t GetIndexCounts() const = 0;
-        //°´¶¥µãÏÂ±ê»æÖÆÍ¼ĞÎ
+        //æŒ‰é¡¶ç‚¹ä¸‹æ ‡ç»˜åˆ¶å›¾å½¢
         virtual void renderIndex(int beginId, int ElementType) = 0;
         
-        //´´½¨Vao
+        //åˆ›å»ºVao
         static VertexArray* Create();
     };
 

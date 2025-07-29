@@ -7,8 +7,10 @@ namespace FISH {
     enum class StatusType {
         NonestatusType,     //null
         DepthTest,          //深度检测
+        StencilTest,        //模板测试
         CleanDepth,         //清理深度
         CleanColor,         //清理颜色
+        CleanStencil,       //清理模板缓冲
         CullFace,           //面剔除
         Blend,              //渲染
         DepthOffsetFill,    //面深度偏移
@@ -23,7 +25,10 @@ namespace FISH {
         DepthFunc,          //设置深度
         BlendFunc,           //设置颜色混合
         DepthMask,           //深度写入
-        DepthOffset          //深度偏移
+        DepthOffset,          //深度偏移
+        StencilFunc,        //模板测试条件
+        StencilOperation,   //模板测试操作
+        StencilMask         //模板标记
     };
 
     //渲染函数设置类型
@@ -32,6 +37,19 @@ namespace FISH {
         FALSETyp,       //False
         TRUETyp,        //True
         ONE,            //one
+        Less,           //小于
+        Never,          //从不
+        Always,         //总是
+        Equal,          //相等
+        NotEqual,       //不等
+        Greater,        //大于
+        Keep,           //保持
+        Replace,        //替换
+        Incr,           //加一
+        Incr_wrap,      //取模增1，大于最大可表示范围则回到0
+        Decr,           //减一(大于0的时候才会执行)
+        Decr_wrap,      //取模减一，小于0会回到此数的最表示值
+        Invert,         //按位取反
         DepthLess,      //深度优先最小检测
         DepthGreater,   //深度优先最大检测
         Front,          //正面

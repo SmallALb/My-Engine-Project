@@ -15,12 +15,23 @@ namespace FISH {
         unsigned int code;
         //要么为bool 要么为向量
         std::variant<bool, glm::vec2, float> data;
+        //上一次的数据
+        std::variant<bool, glm::vec2, float> predata;
         //取得布尔
         bool getKeyBool() const {
             if (const auto val = std::get_if<bool>(&data)) {
                 return *val;
             }
             return 0;
+        }
+
+        bool getKeyBoolOnce() const {
+            bool cur = getKeyBool();
+            bool pre = 0;
+            if (const auto val = std::get_if<bool>(&predata))
+                pre = *val;
+            else return false;
+            return !pre && cur;
         }
         //取得向量
         glm::vec2 getKeyVec() const {
