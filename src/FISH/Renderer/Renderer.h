@@ -17,13 +17,15 @@ namespace FISH {
 
         //分离(obj, 灯光, 点)渲染
         static void render(
-            const std::vector<std::shared_ptr<Object3D>>& objs,
+            const std::vector<Object3DPtr>& objs,
             const std::vector<std::shared_ptr<SpotLight>>& spotights,
             const std::vector<std::shared_ptr<PointLight>>& pointlights
         );
         //渲染(3D)
         static void render(const std::vector<std::shared_ptr<Object3D>>& objs);
         
+        static void RenderMeshEdge(const MeshPtr& mesh);
+
         //初始化基本渲染着色器
         //  1.基本冯氏光照(带纹理)
         //  2.纯色着色(3D)

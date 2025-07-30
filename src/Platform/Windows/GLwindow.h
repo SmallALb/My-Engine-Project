@@ -34,6 +34,8 @@ namespace FISH {
         inline virtual void* GetNativeWindow() const { return mWindow; }
         //清理缓冲
         inline void CleanBuffer(int cleanState) override;
+        //鼠标居中
+        virtual void SetCursorOnMid() const override;
     private:
         //初始化
         virtual void Init(const WindowProps& props);

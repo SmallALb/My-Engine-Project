@@ -15,6 +15,7 @@
 #include "FISH/Object/PointLight.h"
 #include "FISH/Object/DirectionLight.h"
 #include "FISH/Object/Camera.h"
+#include "FISH/Object/perspectiveCamera.h"
 #include "FISH/Object/Mesh.h"
 #include "FISH/Object/SkyBox.h"
 #include "FISH/Object/Mesh.h"
@@ -57,7 +58,10 @@ namespace FISH {
     }
     
     void ColliderEditor::OnUpdate(float dt) {
-        if (enableTag == 0) return;
+        if (enableTag == 0) {
+            FreeControl = 0;
+            return;
+        }
         Renderer::setUseCamera(mViewer);
         //保存快捷键
         if (Input::IsKeyPressed(FS_KEY_LEFT_CONTROL) && Input::IsKeyPressedOnce(FS_KEY_S))
@@ -81,20 +85,50 @@ namespace FISH {
         if (Input::IsKeyPressed(FS_KEY_LEFT_CONTROL) && Input::IsKeyPressedOnce(FS_KEY_C)) Copy();
         //粘贴
         if (Input::IsKeyPressed(FS_KEY_LEFT_CONTROL) && Input::IsKeyPressedOnce(FS_KEY_V)) Paste();
+        //新建
+        if (Input::IsKeyPressed(FS_KEY_LEFT_CONTROL) && Input::IsKeyPressed(FS_KEY_N))  needSave = newFileTag = 1;
         //相机锁
-        if (Input::IsKeyPressed(FS_KEY_LEFT_ALT) && Input::IsKeyPressedOnce(FS_KEY_L)) {
+        if (Mode == View && Input::IsKeyPressed(FS_KEY_LEFT_ALT) && Input::IsKeyPressedOnce(FS_KEY_L)) {
             FreeControl = !FreeControl;
-            if (FreeControl) APP.LockCursor();
-            mViewer->setAllowedControl(FreeControl);
-            if (!FreeControl) APP.UnLockCursor();
+            if (FreeControl) {
+                APP.LockCursor();
+                auto [X, Y] = Input::GetMousePos();
+                Static_PtrCastTo<perspectiveCamera>(mViewer)->setCurrentX(X);
+                Static_PtrCastTo<perspectiveCamera>(mViewer)->setCurrentY(Y);
+                mViewer->setAllowedControl(FreeControl);
+            }
+            else {
+                mViewer->setAllowedControl(FreeControl);
+                APP.UnLockCursor();
+            }
         }
 
-        if (Mode == View && !FreeControl) {
-            if (Input::IsKeyPressed(FS_KEY_A)) mViewer->setPosition(mViewer->getPosition() + glm::normalize(mViewer->getRight())*MoveSpeed*dt);
-            if (Input::IsKeyPressed(FS_KEY_D)) mViewer->setPosition(mViewer->getPosition() - glm::normalize(mViewer->getRight())*MoveSpeed*dt);
-            if (Input::IsKeyPressed(FS_KEY_SPACE)) mViewer->setPosition(mViewer->getPosition() + glm::vec3(0.0, MoveSpeed*dt, 0.0));
-            if (Input::IsKeyPressed(FS_KEY_LEFT_SHIFT)) mViewer->setPosition(mViewer->getPosition() + glm::vec3(0.0, -MoveSpeed*dt, 0.0));
+        if ( !FreeControl && Input::IsKeyPressed(FS_KEY_LEFT_ALT) && Input::IsKeyPressedOnce(FS_KEY_P)) {
+            int current = Mode;
+            current = (current + 1) % ((int)(Modify) + 1);
+            Mode = (EditMode)current;
+            if (Mode == Draw) BeenChoices.clear();
         }
+
+        bool cameraMove = 0;
+        //固定相机移动
+        if (!FreeControl && !needSave && enableTag) {
+            if (cameraMove = Input::IsKeyPressed(FS_KEY_A)) mViewer->setPosition(mViewer->getPosition() + glm::normalize(mViewer->getRight())*MoveSpeed*dt);
+            else if (cameraMove = Input::IsKeyPressed(FS_KEY_D)) mViewer->setPosition(mViewer->getPosition() - glm::normalize(mViewer->getRight())*MoveSpeed*dt);
+            else if (cameraMove = Input::IsKeyPressed(FS_KEY_SPACE)) mViewer->setPosition(mViewer->getPosition() + glm::vec3(0.0, MoveSpeed*dt, 0.0));
+            else if (cameraMove = Input::IsKeyPressed(FS_KEY_LEFT_SHIFT)) mViewer->setPosition(mViewer->getPosition() + glm::vec3(0.0, -MoveSpeed*dt, 0.0));
+            // 拖动时始终lookAt物体
+            if (cameraMove && DraggingTag && Mode == Modify && !BeenChoices.empty()) {
+                mViewer->setLookAt(BeenChoices.begin()->first->getPosition());
+            }
+        }
+
+        //选取锁定相机移动
+        if (cameraMove && Mode == Modify && !BeenChoices.empty() && Input::IsMouseButtonPressed(FS_MOUSE_BUTTON_RIGHT)) {
+            mViewer->setLookAt(BeenChoices.begin()->first->getPosition()); 
+        }
+
+        if (FreeControl) mViewer->update();
         
         auto currentProj = mViewer->getProjectMatrix();
         auto currentView = mViewer->getViewMatrix();
@@ -154,8 +188,9 @@ namespace FISH {
     void ColliderEditor::OnImGuiRender() {
         if (enableTag == 0) return;
 
+
         if (needSave) {
-            if (currentFileName.empty()) {
+            if (currentFileName.empty() || newFileTag) {
                 ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x * 0.5f, 
                                          ImGui::GetIO().DisplaySize.y * 0.5f), 
                                    ImGuiCond_Always, ImVec2(0.5f, 0.5f));
@@ -165,10 +200,22 @@ namespace FISH {
 
                 string setname;
                 if (ImGui::InputText("##filename", &setname, ImGuiInputTextFlags_EnterReturnsTrue)) {
+
+                    saveToFile(currentFileName);
+
+                    if (newFileTag) {
+                        GameBoxs.clear();
+                        BeenChoices.clear();
+                        Colliders.clear();
+                        UndoStack.clear();
+                        RedoStack.clear();
+                    }
+                    newFileTag = 0;
+
                     currentFileName = setname;
                     saveToFile(currentFileName);
                 }
-                if (ImGui::Button("Cancel")) needSave = 0;
+                if (ImGui::Button("Cancel")) newFileTag = needSave = 0;
                 ImGui::End();
             }
             else {
@@ -177,12 +224,36 @@ namespace FISH {
             }
         }
 
+
         //基本设置
 
-        ImGui::Begin("AABB Editor", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+        ImGui::Begin("AABB Editor", nullptr);
+
+        
+        if (ImGui::Button("Save (Ctrl+S)")) {
+            needSave = 1;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Undo (Ctrl+Z)")) {
+            undo();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Redo (Ctrl+Y)")) {
+            redo();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Copy (Ctrl+C)")) {
+            Copy();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Paste (Ctrl+V)")) {
+            Paste();
+        }
+
 
         ImGui::Text("Load Json:");
-        string FileName;
+        ImGui::SameLine();
+        string FileName = currentFileName;
         if(ImGui::InputText("##LoadJson", &FileName, ImGuiInputTextFlags_EnterReturnsTrue)) {
             if (!FileName.empty()) {
                 saveToFile(currentFileName);
@@ -196,18 +267,39 @@ namespace FISH {
                 }
             }
         }
+        ImGui::SameLine();
+        if (ImGui::Button("[+]New (Ctrl+N)")) {
+            needSave = newFileTag = 1;
+        }
+
+        if (ImGui::Button("Reset Viewer Position")) {
+            mViewer->setUp({0, 1, 0});
+            mViewer->setPosition({0, 0, -13});
+            mViewer->setLookAt({0, 0, 0});
+        }
         ImGui::Spacing();
 
         ImGui::Text("Creation Settings");
+        //创建距离
         ImGui::SliderFloat("Creation Distance", &distance, 0.1f, 100, "%.1f");
+        //拖拽速度
         ImGui::SliderFloat("Drag Speed Setting", &DragSpeed, 0.1, 100, "%.2f");
+        //观察者移动速度
         ImGui::SliderFloat("Viewer Speed Setting", &MoveSpeed, 0.1, 100, "%.2f");
+        //是否锁定相机
         string CamreaMode = FreeControl ? "Free" : "Lock";
         if (ImGui::Button(CamreaMode.c_str())) {
-            FreeControl = !FreeControl;
-            if (FreeControl) APP.LockCursor();
+            FreeControl = !FreeControl && Mode == View;
+            if (FreeControl) {
+                auto [X, Y] = Input::GetMousePos();
+                Static_PtrCastTo<perspectiveCamera>(mViewer)->setCurrentX(X);
+                Static_PtrCastTo<perspectiveCamera>(mViewer)->setCurrentY(Y);
+                APP.LockCursor();
+            }
             mViewer->setAllowedControl(FreeControl);
-            if (!FreeControl) APP.UnLockCursor();
+            if (!FreeControl) {
+                APP.UnLockCursor();
+            }
         }
 
 
@@ -248,6 +340,7 @@ namespace FISH {
 
                 //设置名字
                 ImGui::Text("Name:");
+                ImGui::SameLine();
                 string Name = selectObj->getName();
                 if(ImGui::InputText(("##setName" + std::to_string(count)).c_str(), &Name, ImGuiInputTextFlags_EnterReturnsTrue)) {
                     preInfo = serializeBox(selectObj);
@@ -258,6 +351,7 @@ namespace FISH {
                 //全局位置
                 tmp = ("Game Position(" + std::to_string(count) + ")");
                 ImGui::Text((tmp + " :").c_str());
+                ImGui::SameLine();
                 auto pos = selectObj->getPosition();
                 if (ImGui::DragFloat3("##BoxPos", &pos.x, 0.01)) {
                     selectObj->setPosition(pos);
@@ -278,6 +372,7 @@ namespace FISH {
                 tmp = "Collider Position(" + std::to_string(count) + ")";
                 auto Colliderpos = selectObj->getBounds()->getPosition();
                 ImGui::Text((tmp + " :").c_str());
+                ImGui::SameLine();
                 if (ImGui::DragFloat3(("##" + tmp).c_str(), &Colliderpos.x, 0.01)) {
                         selectObj->getBounds()->setPosition(Colliderpos);
                 }
@@ -325,6 +420,7 @@ namespace FISH {
                 tmp = "Mesh Position(" + std::to_string(count) + ")";
                 auto Meshpos = selectObj->getMesh()->getPosition();
                 ImGui::Text((tmp + " :").c_str());
+                ImGui::SameLine();
                 if (ImGui::DragFloat3(("##" + tmp).c_str(), &Meshpos.x, 0.01)) {
                     selectObj->getMesh()->setPosition(Meshpos);
                 }
@@ -343,6 +439,8 @@ namespace FISH {
                 //渲染体材质
                 tmp = "Mesh Texture(" + std::to_string(count) + ")";
                 string path = selectObj->getMesh()->getShape()->getTexturePath();
+                ImGui::Text((tmp + ":").c_str());
+                ImGui::SameLine();
                 if (ImGui::InputText(("##" + tmp).c_str(), &path, ImGuiInputTextFlags_EnterReturnsTrue)) {
                     std::replace(path.begin(), path.end(), '\\', '/');
                     Json preInfo = serializeBox(selectObj);
@@ -370,6 +468,7 @@ namespace FISH {
 
     void ColliderEditor::OnEvent(Event &event) {
         if (enableTag == 0) return;
+        
         EventDispatcher dipatcher(event);
         dipatcher.Dispatch<MouseButtonPressedEvent>(FS_BIND_EVENT_FN(ColliderEditor::MousePressed));
         dipatcher.Dispatch<MouseButtonReleasedEvent>(FS_BIND_EVENT_FN(ColliderEditor::MouseRelesed));
@@ -388,7 +487,7 @@ namespace FISH {
                 box->setPosition(newPos);
             }
         }
-        else if (Mode == View) {
+        else if (!Input::IsMouseButtonPressed(FS_MOUSE_BUTTON_RIGHT) || BeenChoices.empty()) {
             float dz = e.GetY() * MoveSpeed * 0.01;
             mViewer->setPosition(mViewer->getPosition() + mViewer->getFront()*dz);
             distance += -dz;
@@ -413,6 +512,7 @@ namespace FISH {
         }
         else if (e.GetMouseBUtton() == FS_MOUSE_BUTTON_RIGHT && !DraggingTag && Mode == Modify && !needSave && !BeenChoices.empty()) {
             FS_INFO("choice Press!");
+
             startPos = MousePosToWorldPos_InViewPlane(
                 Input::GetMousePos(),
                 mViewer,
@@ -423,7 +523,7 @@ namespace FISH {
                 info.first = serializeBox(selectObj);
             }
             APP.LockCursor();
-
+            lastCameraPos = mViewer->getPosition();
             DraggingTag = 1;
         }
         return false;
@@ -476,6 +576,7 @@ namespace FISH {
             zOffset = 1.0f;
         }
         else if (e.GetMouseBUtton() == FS_MOUSE_BUTTON_RIGHT && Mode == Modify && DraggingTag && !needSave) {
+            
             DraggingTag = 0;
             for (auto& [selectObj, info] : BeenChoices) PushModifyCommand(selectObj, info.first);
             APP.UnLockCursor();
@@ -484,8 +585,7 @@ namespace FISH {
     }
     bool ColliderEditor::MouseMove(MouseMovedEvent &e) {
         if (DraggingTag && Mode == Draw && !needSave) {
-            // if (Input::IsKeyPressed(FS_KEY_EQUAL)) zOffset += 0.01f; // 增加Z轴长度
-            // if (Input::IsKeyPressed(FS_KEY_MINUS)) zOffset -= 0.01f; // 减少Z轴长度
+
             auto currentPos = MousePosToWorldPos_AtDistance(
                 Input::GetMousePos(),
                 mViewer,
@@ -497,7 +597,20 @@ namespace FISH {
             glm::vec3 maxOffset = (glm::max)(glm::vec3(0), glm::vec3(currentPos.x - startPos.x, currentPos.y - startPos.y, zOffset));
             currentAABB->setBounding(minOffset, maxOffset);
         }
+
         if (DraggingTag && Mode == Modify && !needSave) {
+            // 检查相机是否移动
+            if (lastCameraPos != mViewer->getPosition()) {
+                startPos = MousePosToWorldPos_InViewPlane(
+                    Input::GetMousePos(),
+                    mViewer,
+                    APP.GetWindow().GetWidth(),
+                    APP.GetWindow().GetHeight()
+                );
+                lastCameraPos = mViewer->getPosition();
+                return false; // 本帧不做物体移动
+            }
+
             auto currentPos = MousePosToWorldPos_InViewPlane(
                 Input::GetMousePos(),
                 mViewer,
@@ -511,6 +624,7 @@ namespace FISH {
                 auto nPos = box->getPosition() + glm::vec3(Dpos.x, Dpos.y, 0.0);
                 box->setPosition(nPos);
             }
+            
         }
         return false;
     }
@@ -804,6 +918,7 @@ namespace FISH {
     }
 
     bool ColliderEditor::saveToFile(const string &filename) {
+        if (filename.empty()) return false;
         JsonFileStorage storage("GameBoxData");
         return storage.save(filename, toJson());
     }

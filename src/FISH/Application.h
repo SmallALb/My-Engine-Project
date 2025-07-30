@@ -38,6 +38,8 @@ namespace FISH{
 
         void UnLockCursor();
 
+        void SetCursorOnScreenMidle();
+
         inline Window& GetWindow() {return *mWindow; }
 
         inline static Application& GetInstance() {return *Instance; }

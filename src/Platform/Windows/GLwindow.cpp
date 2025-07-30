@@ -62,6 +62,10 @@ namespace FISH {
         glClear(cleanState);
     }
 
+    void GLwindow::SetCursorOnMid() const {
+        glfwSetCursorPos(mWindow, mData.Width/2.0f, mData.Height/2.0f);
+    }
+
     void GLwindow::Init(const WindowProps &props)
     {
         mData.Title = props.Title;

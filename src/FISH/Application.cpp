@@ -106,5 +106,8 @@ namespace FISH{
     void Application::UnLockCursor() {
         IsLocked = 0;
     }
-    
+
+    void Application::SetCursorOnScreenMidle() {
+        mWindow->SetCursorOnMid();
+    }
 }

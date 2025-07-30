@@ -43,7 +43,9 @@ namespace  FISH {
 
         //设置是否能够控制
         virtual void setAllowedControl(bool status) { IsControl = status; }
-
+        
+        //设置摄像机坐标系y向量
+        virtual void setUp(const glm::vec3& upVec) {mUp = upVec;}
         //获取看向的点
         virtual glm::vec3 getLookAtPoint() const; 
         //获取相机类型

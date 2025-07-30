@@ -29,7 +29,7 @@ namespace FISH {
     bool Renderer::renderLight = 1;
 
     void Renderer::render(
-        const std::vector<std::shared_ptr<Object3D>> &objs,
+        const std::vector<Object3DPtr> &objs,
         const std::vector<std::shared_ptr<SpotLight>> &spotlights, 
         const std::vector<std::shared_ptr<PointLight>> &pointlights) {
 
@@ -55,6 +55,20 @@ namespace FISH {
         }
         for (auto& obj : objs) if (obj->getParent() == nullptr || obj->getParent()->GetObjType() == ObjType::Camera) 
             RenderObj(obj, spotlights, pointlights);
+    }
+
+    void Renderer::RenderMeshEdge(const MeshPtr & mesh) {
+        auto wMode = mesh->getModelMatrix();
+        wMode = glm::scale(wMode, glm::vec3(1.02));
+        mstatuss->setstatusFunc(FISH::SetType::StencilFunc, FISH::FuncType::NotEqual, 1, 0xff);
+        mstatuss->setstatusFunc(FISH::SetType::StencilMask, FISH::FuncType::ZERO, 0xff);
+        ShaderLib["OnlyColor"]->Begin();
+        ShaderLib["OnlyColor"]->setVector3("InColor", {1.0, 1.0, 1.0});
+        ShaderLib["OnlyColor"]->setMat4("projection", UseCamera->getProjectMatrix());
+        ShaderLib["OnlyColor"]->setMat4("view", UseCamera->getViewMatrix());
+        ShaderLib["OnlyColor"]->setMat4("model", wMode);
+        mesh->renderMesh(TRIANGLES);
+        ShaderLib["OnlyColor"]->End();
     }
 
     void Renderer::render(const std::vector<std::shared_ptr<Object2D>>& objs) {
@@ -133,24 +147,14 @@ namespace FISH {
                 ShaderLib["Phong"]->setMat4("projection", UseCamera->getProjectMatrix());
                 ShaderLib["Phong"]->setMat4("view", UseCamera->getViewMatrix());
                 caculateLight(spotlights, pointlights);
-                auto shape = (dynamic_cast<Mesh*>(obj.get()))->getShape();   
+                auto shape = ptr->getShape();   
                 ShaderLib["Phong"]->setTextureHandle("sampler", shape->useTexture());
                 ShaderLib["Phong"]->setMat4("model", obj->getModelMatrix());
                 ShaderLib["Phong"]->setMat4("normat", obj->getNormalMatrix());
                 shape->render(TRIANGLES); 
                 ShaderLib["Phong"]->End();
                 if (ptr && ptr->isHightLight()) {
-                    auto wMode = ptr->getModelMatrix();
-                    wMode = glm::scale(wMode, glm::vec3(1.02));
-                    mstatuss->setstatusFunc(FISH::SetType::StencilFunc, FISH::FuncType::NotEqual, 1, 0xff);
-                    mstatuss->setstatusFunc(FISH::SetType::StencilMask, FISH::FuncType::ZERO, 0xff);
-                    ShaderLib["OnlyColor"]->Begin();
-                    ShaderLib["OnlyColor"]->setVector3("InColor", {1.0, 1.0, 1.0});
-                    ShaderLib["OnlyColor"]->setMat4("projection", UseCamera->getProjectMatrix());
-                    ShaderLib["OnlyColor"]->setMat4("view", UseCamera->getViewMatrix());
-                    ShaderLib["OnlyColor"]->setMat4("model", wMode);
-                    ptr->renderMesh(TRIANGLES);
-                    ShaderLib["OnlyColor"]->End();
+                    RenderMeshEdge(ptr);
                 }
 
                 mstatuss->disablestatus(StatusType::CullFace);

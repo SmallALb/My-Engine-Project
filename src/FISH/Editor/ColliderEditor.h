@@ -8,7 +8,6 @@ namespace FISH {
             Colliders.reserve(100);
             GameBoxs.reserve(100);
             BeenChoices.reserve(100);
-            EditingStates.reserve(100);
             IniFileStorage iniManager;
             Ini config;
             // 设置默认值
@@ -75,6 +74,8 @@ namespace FISH {
         //设置观察者（相机）接下来的创建都会在这个相机中进行
         inline void setViewer(const CameraPtr& viewer) {
             mViewer = viewer;
+            if (mViewer->getCameraType() == CameraType::PERSPECTIVE)
+                Static_PtrCastTo<perspectiveCamera>(mViewer)->setSpeed(MoveSpeed*0.01);
             mViewer->setPosition({0.0, 0.0, -13.0});
             mViewer->setLookAt({0.0, 0.0, 0.0});
         }
@@ -123,9 +124,11 @@ namespace FISH {
         bool                    enableTag{0};
         bool                    needSave{0};
         bool                    FreeControl{0};
+        bool                    newFileTag{0};
         float                   zOffset{1.0};
         float                   DragSpeed{10.0f};
         float                   MoveSpeed{1.0};
+        glm::vec3               lastCameraPos;
         //生成模型Type
         ShapeType               mType{ShapeType::Box};
         string                  currentFileName{};
@@ -152,7 +155,6 @@ namespace FISH {
 
         using EditCommand = std::variant<AddCommand, RemoveCommand, ModifyCommand>;
 
-        std::unordered_map<GameBoxPtr, std::pair<Json, bool>> EditingStates;
         //指令栈
         std::deque<EditCommand> UndoStack{};
         std::deque<EditCommand> RedoStack{};
