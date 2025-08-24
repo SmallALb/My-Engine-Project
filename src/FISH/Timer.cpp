@@ -3,8 +3,6 @@
 #include "Timer.h"
 
 namespace FISH {
-    static int idCounter = 0;
-    static std::queue<int> FreeIds;
     Timer::~Timer() {
         stopAll();
         FS_INFO("Timer destruct!");
@@ -17,8 +15,8 @@ namespace FISH {
         if (FreeIds.empty()) 
             id = ++idCounter;
         else {
-            id = FreeIds.front();
-            FreeIds.pop();
+            id = *FreeIds.begin();
+            FreeIds.erase(FreeIds.begin());
         }
 
         timers.emplace(id, interval, 
@@ -36,16 +34,16 @@ namespace FISH {
 
     void Timer::stopTimer(int id) {
         std::lock_guard<std::recursive_mutex> lock(timersLock);
-        auto it = std::find_if(timers.begin(), timers.end(), [id](const auto& timer) {
-            return timer.id == id;
-        });
-        if (it != timers.end()) {
-            TimerProps modifiedTimer = *it;  // 复制元素
-            modifiedTimer.active = false;    // 修改副本
-            timers.erase(it);               // 移除原元素
-            timers.emplace(std::move(modifiedTimer));   // 插入修改后的元素
+        if(id == 0) return;
+        
+        auto it = timers.begin();
+        while (it != timers.end()) {
+            if (it->id == id) 
+                it = timers.erase(it); 
+            else ++it;
         }
-        FreeIds.push(id);
+
+        FreeIds.insert(id);
         //FS_INFO("Done!, stopped the thread:{0}", id);
         conditionV.notify_one();        // 通知工作线程
     }
@@ -64,7 +62,7 @@ namespace FISH {
     void Timer::modifyTimer(int id, int interval, TimerFUN fun, TimerMode mode) {
         std::lock_guard<std::recursive_mutex> lock(timersLock);
         auto it = std::find_if(timers.begin(), timers.end(), [id](const auto& timer) {
-            return timer.id == id;
+            return timer.id == id && timer.active;
         });
         if (it != timers.end()) {
             TimerProps modifiedTimer = *it;  // 复制元素
@@ -117,11 +115,11 @@ namespace FISH {
 
             //需要运行的调用函数
             for (auto& timer : needRun) {
-                timer.usingFun();
+                if (timer.usingFun) timer.usingFun();
             }
 
             //需要重复执行的重新添加回计时器中
-            for (auto& x : repTimer) {
+            for (auto& x : repTimer) if (!FreeIds.contains(x.id)){
                 timers.emplace(std::move(x));
             }
 

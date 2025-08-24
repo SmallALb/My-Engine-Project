@@ -105,9 +105,9 @@ namespace FISH {
     CollisionInfo AABB::getCollisionInfo(const ColliderPtr &other) const {
         switch (other->getType()) {
             case ColliderType::AABB:
-                return CollisionWithAABB(PtrCastTo<AABB>(other));
+                return CollisionWithAABB(Static_PtrCastTo<AABB>(other));
             case ColliderType::OBB:
-                return CollisionWithOBB(PtrCastTo<OBB>(other));
+                return CollisionWithOBB(Static_PtrCastTo<OBB>(other));
         }
         return CollisionInfo();
     }
@@ -143,6 +143,14 @@ namespace FISH {
                 info.Depth = overlap.z;
                 info.collisionNormal = glm::vec3(0.0f, 0.0f, (minA.z < minB.z) ? -1.0f : 1.0f);
             }
+
+               // 计算主要碰撞点（两个AABB的中心点连线与表面的交点）
+            glm::vec3 centerA = (minA + maxA) * 0.5f;
+            glm::vec3 centerB = (minB + maxB) * 0.5f;
+            glm::vec3 direction = glm::normalize(centerB - centerA);
+            info.collisionPoint = centerA + direction * (glm::length(maxA - minA) * 0.5f);
+
+
             info.collisionFace = Collider::determineCollisionFace(info.collisionNormal);
         }
         
@@ -185,28 +193,29 @@ namespace FISH {
     }
 
     CollisionFace Collider::determineCollisionFace(const glm::vec3 &normal, const glm::vec3 &Upvec) {
-        const float faceThreshold = glm::cos(glm::radians(35.5));
-
+        const float faceThreshold = glm::cos(glm::radians(45.0));
         glm::vec3 nor = glm::normalize(normal);
-        if (glm::dot(nor, Upvec) > faceThreshold) return CollisionFace::Top;
 
-        if (glm::dot(nor, -Upvec) > faceThreshold) return CollisionFace::Bottom;
+        float upDot = glm::dot(nor, Upvec);
+        if (upDot > faceThreshold) return CollisionFace::Top;
+        if (upDot < -faceThreshold) return CollisionFace::Bottom;
 
-        auto right = glm::vec3{1, 0, 0}, forward = glm::vec3{0, 0, 1};
-
-        if (std::abs(glm::dot(nor, right)) > faceThreshold) 
-            return (glm::dot(nor, right) > 0.0) ? CollisionFace::Right : CollisionFace::Left;
+        auto right = glm::vec3{1, 0, 0};
+        float rightDot = glm::dot(nor, right);
+        if (std::abs(rightDot) > faceThreshold) 
+            return (rightDot > 0.0) ? CollisionFace::Right : CollisionFace::Left;
         
-        
-        if (std::abs(glm::dot(nor, forward)) > faceThreshold) 
-            return (glm::dot(nor, right) > 0.0) ? CollisionFace::Right : CollisionFace::Left;
+        auto forward = glm::vec3{0, 0, 1};
+        float forwardDot = glm::dot(nor, forward);
+        if (std::abs(forwardDot) > faceThreshold) 
+            return (forwardDot > 0.0) ? CollisionFace::Right : CollisionFace::Left;
         
         return CollisionFace::None; 
      }
 
     bool Collider::intersectsAABBAABB(const ColliderPtr &a, const ColliderPtr &b) {
-        auto aPos = PtrCastTo<AABB>(a)->getBoundingPos(); 
-        auto bPos = PtrCastTo<AABB>(b)->getBoundingPos(); 
+        auto aPos = Static_PtrCastTo<AABB>(a)->getBoundingPos(); 
+        auto bPos = Static_PtrCastTo<AABB>(b)->getBoundingPos(); 
 
         return (aPos.first.x <= bPos.second.x && aPos.second.x >= bPos.first.x) &&
             (aPos.first.y <= bPos.second.y && aPos.second.y >= bPos.first.y) &&
@@ -214,8 +223,8 @@ namespace FISH {
     }
 
     bool Collider::intersectsAABBOBB(const ColliderPtr &a, const ColliderPtr &b) {
-        auto aabb = PtrCastTo<AABB>(a);
-        auto obb = PtrCastTo<OBB>(b);
+        auto aabb = Static_PtrCastTo<AABB>(a);
+        auto obb = Static_PtrCastTo<OBB>(b);
 
         glm::vec3 halfSize = (aabb->Max - aabb->Min) * 0.5f;
 
@@ -240,8 +249,8 @@ namespace FISH {
                     (std::hash<float>()(v.z) << 2);
         })> testAxes;
 
-        auto boxA =  PtrCastTo<OBB>(a);
-        auto boxB =  PtrCastTo<OBB>(b);
+        auto boxA =  Static_PtrCastTo<OBB>(a);
+        auto boxB =  Static_PtrCastTo<OBB>(b);
 
 
         // 填充boxA的3个轴向
@@ -369,9 +378,9 @@ namespace FISH {
     CollisionInfo OBB::getCollisionInfo(const ColliderPtr &other) const {
         switch (other->getType()) {
             case ColliderType::AABB:
-                return CollisionWithAABB(PtrCastTo<AABB>(other));
+                return CollisionWithAABB(Static_PtrCastTo<AABB>(other));
             case ColliderType::OBB:
-                return CollisionWithOBB(PtrCastTo<OBB>(other));
+                return CollisionWithOBB(Static_PtrCastTo<OBB>(other));
         }
         return CollisionInfo();
     }
@@ -395,7 +404,7 @@ namespace FISH {
     CollisionInfo OBB::CollisionWithOBB(const OBBPtr &other) const {
         CollisionInfo info;
         info.IsColliding = false;
-        info.Depth = (std::numeric_limits<float>::min)();
+        info.Depth = (std::numeric_limits<float>::max)();
          //使用无序set来去重
         std::unordered_set<glm::vec3, decltype([](const glm::vec3& v){
             return std::hash<float>()(v.x) ^ 
@@ -447,7 +456,7 @@ namespace FISH {
                 return info;
             }; 
 
-            if (overlap > info.Depth) {
+            if (overlap < info.Depth) {
                 info.Depth = overlap;
                 info.collisionNormal = normAxis * (dis < 0 ? -1.0f : 1.0f); 
             }
@@ -455,7 +464,13 @@ namespace FISH {
         }
 
         info.IsColliding = 1;
-        glm::vec3 localNormal = glm::transpose(Rotation) * info.collisionNormal;
+
+        if (info.IsColliding) {
+            glm::vec3 direction = glm::normalize(other->getPosition() - getPosition());
+            info.collisionPoint = getPosition() + direction * (glm::length(HalfExtents));
+        }
+
+        glm::vec3 localNormal = glm::transpose(glm::orthonormalize(Rotation)) * info.collisionNormal;
         info.collisionFace = Collider::determineCollisionFace(localNormal);
         info.colliderType = "OBS - OBS";
 

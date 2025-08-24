@@ -12,7 +12,7 @@ namespace FISH {
             FS_INFO("XInput Controller connected: {0}", mName);
             ConnectTag = 1;
         } else {
-            if (!WARNTag) FS_WARN("Xbox Controller not connected!"), WARNTag = 1;
+            if (!WARNTag) {FS_WARN("Xbox Controller not connected!"); WARNTag = 1;}
         }
     #endif
     }

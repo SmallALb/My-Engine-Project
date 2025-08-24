@@ -7,24 +7,16 @@
 
 
 namespace FISH {
-    //帧计时器
-    static std::unique_ptr<Timer>  mAnimationTimer{nullptr};
+    Timer * mAnimationTimer() {
+        static Timer timer;
+        return &timer;
+    }
 
     SpriteAnimation::SpriteAnimation() {
 
     }
 
     SpriteAnimation::SpriteAnimation(string path, string name, int size, int beginIndex, int duration, AnimationMode Mode) {
-        mFrameIncreaseFunc = [&]() {
-            if (PauseTag || FishTag) return;
-            if (mCurrentFrame == 0) mFrameBeginFunc();
-            mCurrentFrame++;
-            if (mCurrentFrame >= FrameSize) {
-                mCurrentFrame = 0;
-                mFrameEndFunc();
-                FishTag = playMode == AnimationMode::Once;
-            }
-        };
         
 
         mFrameCallFunc = [&]() {};
@@ -32,15 +24,15 @@ namespace FISH {
         mFrameEndFunc = [&]() {};
 
         playMode = Mode;
-
+        mName = name;
+        mBeginIndex = beginIndex;
         mFrames.resize(size);
         FrameSize = size;
-        path += "/" + name;
         mPath = path;
+        path += "/" + name;
         int count = beginIndex;
         //新建帧
         for (auto& frame : mFrames) {
-            FS_INFO("frame({0})", count);
             AnimationFrame nFrame(Texture::CreateTextureFromPath(path + "(" + std::to_string(count) + ").png"),duration);
             frame = std::move(nFrame);
             count++;
@@ -51,24 +43,27 @@ namespace FISH {
     }   
 
     SpriteAnimation::~SpriteAnimation() {
-        if (TimerId) mAnimationTimer->stopTimer(TimerId);
+        //std::lock_guard<std::recursive_mutex> lock(mTimerMutex);
+        if (TimerId) mAnimationTimer()->stopTimer(TimerId);
     }
 
     void SpriteAnimation::play(AnimationMode mode) {
-        PauseTag = 0;
-        //防止多次启动计时器
-        if (!TimerId || FishTag){
-            initTimer();
-            //启动计时器
-            TimerId =  mAnimationTimer->createTimer(int(mDuration*mSpeed), 
-                [this]() {
-                    this->mFrameIncreaseFunc();
-                    this->mFrameCallFunc();
-                }, 
-            mode == AnimationMode::Loop ? TimerMode::REPEATING : TimerMode::SINGLE);
-            FishTag = 0;
-        }
+        //std::lock_guard<std::recursive_mutex> lock(mTimerMutex);
+        if (TimerId) stop();
+        reset();
+        PauseTag = false;
+        FishTag = false;
         playMode = mode;
+
+        TimerId =  mAnimationTimer()->createTimer(
+            int(mDuration/mSpeed), 
+            [this]() {
+                if (PauseTag || FishTag) return;
+                increseToNextFrame();
+            }, 
+            TimerMode::REPEATING
+        );
+
     }
 
     void SpriteAnimation::reset() {
@@ -80,13 +75,15 @@ namespace FISH {
     }
 
     void SpriteAnimation::stop() {
-        mAnimationTimer->stopTimer(TimerId);
+        std::lock_guard<std::recursive_mutex> lock(mTimerMutex);
+        mAnimationTimer()->stopTimer(TimerId);
+        //reset();
         TimerId = 0;
+        FishTag = 1;
     }
 
-    bool SpriteAnimation::IsFinsh()
-    {
-        return FishTag;
+    bool SpriteAnimation::IsFinsh() {
+        return FishTag.load();
     }
 
     bool SpriteAnimation::IsPause() {
@@ -98,15 +95,25 @@ namespace FISH {
     }
 
     std::shared_ptr<Texture> SpriteAnimation::getCurrentFrame() {
-        return mFrames[mCurrentFrame].texture;
+        return mFrames[mCurrentFrame.load()].texture;
     }
 
     void SpriteAnimation::setSpeed(float speed) {
+        //std::lock_guard<std::recursive_mutex> lock(mTimerMutex);
+        if (speed <= 0) return;
         mSpeed = speed;
+        if (TimerId) 
+            mAnimationTimer()->modifyTimer(
+                TimerId,
+                ((int)(mDuration / mSpeed)),
+                [this]() {increseToNextFrame(); },
+                TimerMode::REPEATING
+            );
+        
     }
 
     unsigned long long SpriteAnimation::getHandle() const {
-        int cf = mCurrentFrame;
+        int cf = mCurrentFrame.load();
         if (cf >= mFrames.size()) cf = mFrames.size() - 1;
         return mFrames[cf].texture->getHandle();
     }
@@ -129,8 +136,28 @@ namespace FISH {
         mFrameEndFunc = func;
     }
 
-    void SpriteAnimation::initTimer() {
-        if (mAnimationTimer != nullptr) return;
-        mAnimationTimer.reset(new Timer());
+    void SpriteAnimation::increseToNextFrame() {
+
+        bool isFirstFrame = (mCurrentFrame == 0);
+        if (isFirstFrame && mFrameBeginFunc) mFrameBeginFunc();
+
+        if (mFrameCallFunc) mFrameCallFunc();
+        mCurrentFrame++;
+        if (mCurrentFrame >= FrameSize) {
+            if (mFrameEndFunc) mFrameEndFunc();
+            FishTag = (playMode == AnimationMode::Once && mCurrentFrame >= FrameSize);
+            if (FishTag) stop();
+            else if(mCurrentFrame >= FrameSize) reset();
+        }
+    }
+
+    void SpriteAnimation::reduceToLastFrame()
+    {
+    }
+    
+    TextureInfo SpriteAnimation::getTextureInfo() const {
+        int cf = mCurrentFrame;
+        if (cf >= mFrames.size()) cf = mFrames.size() - 1;
+        return mFrames[cf].texture->getTextureInfo();
     }
 }

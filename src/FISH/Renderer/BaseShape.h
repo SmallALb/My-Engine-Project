@@ -75,6 +75,19 @@ namespace FISH {
         //获取纹理路径
         string getTexturePath() const {return mTexture->getPath();}
 
+        TextureHandleType getType() const {return mTexture->getType();}
+        
+        string getAnimationName() const;
+
+        std::shared_ptr<TextureHandle> getTexutreHandle();
+        
+
+        int getAnimationBeginIndex() const;
+
+        int getAnimationDuration() const;
+
+        int Animationsize() const;
+
     private:
         std::unique_ptr<VertexArray>    mVao{nullptr};
         std::shared_ptr<TextureHandle>        mTexture{nullptr};

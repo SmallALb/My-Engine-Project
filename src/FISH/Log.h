@@ -31,7 +31,7 @@ namespace FISH {
 
 
 
-// #ifdef DEBUG
+#ifdef DEBUG
     //CORE
     #define FS_CORE_ERROR(...)  ::FISH::Log::GetCoreLogger()->error(__VA_ARGS__)
     #define FS_CORE_WARN(...)   ::FISH::Log::GetCoreLogger()->warn(__VA_ARGS__)
@@ -45,12 +45,22 @@ namespace FISH {
     #define FS_INFO(...)   ::FISH::Log::GetClientLogger()->info(__VA_ARGS__)
     #define FS_TRACE(...)  ::FISH::Log::GetClientLogger()->trace(__VA_ARGS__)
     #define FS_FATAL(...)  ::FISH::Log::GetClientLogger()->fatal(__VA_ARGS__)
-#ifdef DEBUG
     #define FS_ASSERT(x, ...) if (!x) {FS_ERROR("Get Fail!: {0}", __VA_ARGS__); ; }
     #define FS_CORE_ASSERT(x, ...) if (!x) {FS_CORE_ERROR("Get Fail!: {0}", __VA_ARGS__); ; }
 #else
-    #define FS_ASSERT
-    #define FS_CORE_ASSERT
+    #define FS_CORE_ERROR(...)
+    #define FS_CORE_WARN(...)
+    #define FS_CORE_INFO(...)
+    #define FS_CORE_TRACE(...)
+    #define FS_CORE_FATAL(...)
+
+    #define FS_ERROR(...)
+    #define FS_WARN(...)
+    #define FS_INFO(...)
+    #define FS_TRACE(...)
+    #define FS_FATAL(...)
+    #define FS_ASSERT(x, ...)
+    #define FS_CORE_ASSERT(x, ...)
 #endif
 // #else
 //     #define FS_CORE_ERROR

@@ -122,6 +122,44 @@ namespace FISH {
         return mTextureHandle;
     }
 
+    TextureInfo GLTexture::getTextureInfo() const {
+        TextureInfo info;
+        info.width = mWidth;
+        info.height = mHeight;
+        info.aspectRatio = mHeight > 0 ? (float)mWidth/(float)(mHeight) : 0.0f;
+        info.pixelCount = mWidth * mHeight;
+        info.channelType = mEnumChannel;
+
+        auto pixelData = readTextureData();
+        info.pixels.reserve(info.pixelCount);
+
+        for (uint32_t i = 0; i < info.pixelCount; ++i) {
+        uint32_t index = i * getBytesPerPixel();
+            PixelInfo color;
+            
+            switch (mEnumChannel) {
+                case ChannelType::Red:
+                    color = PixelInfo(pixelData[index], 0, 0, 255);
+                    break;
+                case ChannelType::RGB:
+                    if (index + 2 < pixelData.size()) {
+                        color = PixelInfo(pixelData[index], pixelData[index + 1], pixelData[index + 2], 255);
+                    }
+                    break;
+                case ChannelType::RGBA:
+                    if (index + 3 < pixelData.size()) {
+                        color = PixelInfo(pixelData[index], pixelData[index + 1], pixelData[index + 2], pixelData[index + 3]);
+                    }
+                    break;
+            }
+            
+            info.pixels.push_back(color);
+        }
+    
+
+        return info;
+    }
+
     void GLTexture::updateSubTex(int x, int y, int width, int height, unsigned char *data) {
         stbi_set_flip_vertically_on_load(true);
 
@@ -218,6 +256,58 @@ namespace FISH {
                 return 0;
         }
         
+    }
+    PixelInfo GLTexture::getPixelInfo(uint32_t x, uint32_t y) const {
+        if (x >= mWidth || y >= mHeight) return PixelInfo();
+        auto pixelData = readTextureData();
+        uint32_t index = (y * mWidth + x) * getBytesPerPixel();
+
+        if (index >= pixelData.size()) 
+            return PixelInfo();
+
+        PixelInfo color;
+        switch (mEnumChannel) {
+            case ChannelType::Red:
+                color = PixelInfo(pixelData[index], 0, 0, 255);
+                break;
+            case ChannelType::RGB:
+                if (index + 2 < pixelData.size()) {
+                    color = PixelInfo(pixelData[index], pixelData[index + 1], pixelData[index + 2], 255);
+                }
+                break;
+            case ChannelType::RGBA:
+                if (index + 3 < pixelData.size()) {
+                    color = PixelInfo(pixelData[index], pixelData[index + 1], pixelData[index + 2], pixelData[index + 3]);
+                }
+                break;
+        }
+        return color;   
+    }
+
+    std::vector<uint8_t> GLTexture::readTextureData() const {
+        std::vector<uint8_t> data(mWidth * mHeight * getBytesPerPixel());
+        int currentfbo;
+        glGetIntegerv(GL_FRAMEBUFFER_BINDING, &currentfbo);
+
+        unsigned int fbo;
+        glGenFramebuffers(1, &fbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mTexture, 0);
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE)
+            glReadPixels(0, 0, mWidth, mHeight, mTextureChannel, GL_UNSIGNED_BYTE, data.data());
+        glBindFramebuffer(GL_FRAMEBUFFER, currentfbo);
+        glDeleteFramebuffers(1, &fbo);
+
+        return data;
+        
+    }
+    int GLTexture::getBytesPerPixel() const {
+        switch (mEnumChannel) {
+            case ChannelType::Red: return 1;
+            case ChannelType::RGB: return 3;
+            case ChannelType::RGBA: return 4;
+            default: return 4;
+        }
     }
 }
     

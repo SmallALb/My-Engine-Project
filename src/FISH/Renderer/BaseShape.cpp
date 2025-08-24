@@ -1,8 +1,10 @@
 #include "fspcs.h"
 #include "FISH/Renderer/Buffer.h"
+#include "FISH/Timer.h"
 #include "FISH/Renderer/VertexArray.h"
 #include "FISH/Renderer/RenderElement.h"
 #include "FISH/Renderer/Texture.h"
+#include "FISH/Renderer/Animation.h"
 #include "BaseShape.h"
 
 namespace FISH
@@ -25,6 +27,35 @@ namespace FISH
 
     void Shape::setTexture(const std::shared_ptr<TextureHandle>& texture) {
         mTexture = texture;
+    }
+
+    string Shape::getAnimationName() const {
+        if (getType() == TextureHandleType::Dynamic)
+            return Static_PtrCastTo<SpriteAnimation>(mTexture)->getName();
+        return "";
+    }
+
+    std::shared_ptr<TextureHandle> Shape::getTexutreHandle()
+    {
+        return mTexture;
+    }
+
+    int Shape::getAnimationBeginIndex() const {
+        if (getType() == TextureHandleType::Dynamic)
+            return Static_PtrCastTo<SpriteAnimation>(mTexture)->getAnimationIndex();
+        return -1; 
+    }
+
+    int Shape::getAnimationDuration() const {
+            if (getType() == TextureHandleType::Dynamic)
+                return Static_PtrCastTo<SpriteAnimation>(mTexture)->getDuration();
+            return -1;
+    }
+
+    int Shape::Animationsize() const {
+             if (getType() == TextureHandleType::Dynamic)
+                return Static_PtrCastTo<SpriteAnimation>(mTexture)->Size();
+            return -1;
     }
 
     Shape* Shape::CreateBox(float size) {

@@ -27,11 +27,11 @@
 #include "FISH/Renderer/VertexArray.h"
 #include "FISH/Renderer/Shader.h"
 #include "FISH/Renderer/Texture.h"
+#include "FISH/Renderer/Animation.h"
 #include "FISH/Renderer/BaseShape.h"
 
 //渲染扩展
 #include "FISH/Renderer/Font.h"
-#include "FISH/Renderer/Animation.h"
 
 //物体基类
 #include "FISH/Object/Object.h"
@@ -45,6 +45,7 @@
 #include "FISH/Object/SpotLight.h"
 #include "FISH/Object/Camera.h"
 #include "FISH/Object/perspectiveCamera.h"
+#include "FISH/Object/orthographicCamera.h"
 //物理和游戏基本
 #include "FISH/physics/ObjectCast.h"
 #include "FISH/physics/Movement.h"
@@ -63,6 +64,10 @@
 
 //文件管理系统
 #include "FISH/FileManger.h"
+//性能分析库
+#ifdef DEBUG
+    #include <tracy/Tracy.hpp>
+#endif
 
 //入口
 #include "FISH/Events/Application.h"

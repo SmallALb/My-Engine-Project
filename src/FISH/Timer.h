@@ -67,6 +67,11 @@ namespace FISH {
         std::atomic<bool>               runTag{false};
         //主线程，用于控制所有计时器的线程
         std::thread                     mainThread;
+        //停止ID
+        std::set<int>                   FreeIds;
+        //ID计数器
+        int                             idCounter{0};
+
     };
 
 }

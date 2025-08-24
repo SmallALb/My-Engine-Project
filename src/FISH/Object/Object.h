@@ -65,6 +65,9 @@ namespace FISH {
         //缩放物体
         virtual void setScale(const glm::vec3& scale) { mScale = scale; }
 
+        //获取物体缩放信息
+        virtual glm::vec3 getScale() const {return mScale;}
+
         //添加孩子节点
         virtual void addChild(const std::shared_ptr<Object3D>& obj);
         //删除节点

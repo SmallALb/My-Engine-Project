@@ -3,6 +3,8 @@
 #include "FISH/Core.h"
 
 namespace FISH {
+    Timer* mAnimationTimer();
+
     using FrameCallFUN = std::function<void()>;
     enum class AnimationMode {
         Loop,
@@ -45,8 +47,18 @@ namespace FISH {
         void reset();
         //设置从第几帧开始
         void setBeginInTexture(int idx);
+
+        AnimationMode getCurrentPlayMode() const {return playMode;}
         //获取当前帧
         std::shared_ptr<Texture> getCurrentFrame();
+        //获取当前帧编号
+        inline int getCurrentFrameIndex() const {
+            return mCurrentFrame.load();
+        }
+        //获取帧总数
+        inline int getFramesCount() const {
+           return mFrames.size();
+        }
         //设置播放速度
         void setSpeed(float speed);
         //获取当前帧
@@ -59,9 +71,22 @@ namespace FISH {
         void setFrameBeginFunc(const FrameCallFUN& func);
         //设动画结束函数
         void setFrameEndFunc(const FrameCallFUN& func);
-    private:
-        //初始化计时器
-        void initTimer();
+        //帧自增
+        void increseToNextFrame();
+        //帧自减
+        void reduceToLastFrame();   
+
+        TextureInfo getTextureInfo() const;
+
+        virtual TextureHandleType getType() const {return TextureHandleType::Dynamic;}
+
+        string getName() const {return mName;}
+
+        int getAnimationIndex() const {return mBeginIndex;}
+
+        int getDuration() const {return mDuration;}
+
+        int Size() const {return FrameSize;}
     private:
         //当前帧
         std::atomic_int                 mCurrentFrame{0};
@@ -83,12 +108,16 @@ namespace FISH {
         int                             TimerId{0};
         //帧回调函数
         FrameCallFUN                    mFrameCallFunc;
-        //帧自增函数
-        FrameCallFUN                    mFrameIncreaseFunc;
         //设置帧启动函数
         FrameCallFUN                    mFrameBeginFunc;
         //设置帧结束函数        
         FrameCallFUN                    mFrameEndFunc;
+        //动画的名称
+        string                          mName;
+        //
+        int                             mBeginIndex{-1};
+        //锁
+        mutable std::recursive_mutex      mTimerMutex;
     };
 
 }

@@ -1,6 +1,7 @@
 #include "fspcs.h"
 #include "FISH/FileManger.h"
 #include "FISH/Time.h"
+#include "FISH/Timer.h"
 #include "FISH/MouseButtonCodes.h"
 #include "FISH/Events/MouseEvent.h"
 #include "FISH/Log.h"
@@ -9,6 +10,7 @@
 #include "FISH/Renderer/VertexArray.h"
 #include "FISH/Renderer/RenderElement.h"
 #include "FISH/Renderer/Texture.h"
+#include "FISH/Renderer/Animation.h"
 #include "FISH/Renderer/BaseShape.h"
 #include "FISH/Object/Object.h"
 #include "FISH/Object/SpotLight.h"
@@ -58,6 +60,7 @@ namespace FISH {
     }
     
     void ColliderEditor::OnUpdate(float dt) {
+        
         if (enableTag == 0) {
             FreeControl = 0;
             return;
@@ -183,12 +186,12 @@ namespace FISH {
                 BeenChoices.clear();
             } 
         }
+        
     }
 
     void ColliderEditor::OnImGuiRender() {
+        
         if (enableTag == 0) return;
-
-
         if (needSave) {
             if (currentFileName.empty() || newFileTag) {
                 ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x * 0.5f, 
@@ -415,6 +418,15 @@ namespace FISH {
                     
                 }
                 /////////////////////////////////////////////////////////////////////
+                //渲染体是否翻转
+                bool fliptag =selectObj->getMesh()->getflip();
+                ImGui::Text("Filp Tag:");
+                if (ImGui::Button(fliptag ? "Flip" : "Normal")) {
+                    Json preInfo = serializeBox(selectObj);
+                    PushModifyCommand(selectObj, preInfo);
+                    fliptag = !fliptag;
+                    selectObj->getMesh()->setflip(fliptag);
+                }
 
                 //渲染体位置
                 tmp = "Mesh Position(" + std::to_string(count) + ")";
@@ -434,20 +446,96 @@ namespace FISH {
                 }
                 /////////////////////////////////
 
-                bool isDrag = ImGui::IsItemActivated();
-                
-                //渲染体材质
+                //渲染体缩放
+                tmp = "Mesh Scale(" + std::to_string(count) + ")";
+                auto MeshScale = selectObj->getMesh()->getScale();
+                ImGui::Text((tmp + " :").c_str());
+                ImGui::SameLine();
+                if (ImGui::DragFloat3(("##" + tmp).c_str(), &MeshScale.x, 0.01)) {
+                    selectObj->getMesh()->setScale(MeshScale);
+                }
+                if (ImGui::IsItemActivated() && !tag) {
+                    FS_INFO("Setting Mesh Scale");
+                    file = serializeBox(selectObj);
+                    tag = 1;
+                }
+                if (ImGui::IsItemDeactivatedAfterEdit() && tag)  {
+                    PushModifyCommand(selectObj, file), tag = 0;
+                }
+                ////////////////////////////////
+                //渲染体纹理
+                const char* textypes[] = {"None", "Statid", "Dynamic"};
+                int currentTextype = (int)(Texturetype);
+                if (ImGui::Combo(("##Texture Type"+ std::to_string(count)).c_str(), &currentTextype, textypes, IM_ARRAYSIZE(textypes))) {
+                    Texturetype = (TextureHandleType)(currentTextype);
+                }
                 tmp = "Mesh Texture(" + std::to_string(count) + ")";
-                string path = selectObj->getMesh()->getShape()->getTexturePath();
+                if (!selectObj->getMesh()->getShape()->getTexturePath().empty() && currentTexturepath.empty())
+                    currentTexturepath = selectObj->getMesh()->getShape()->getTexturePath();
                 ImGui::Text((tmp + ":").c_str());
                 ImGui::SameLine();
-                if (ImGui::InputText(("##" + tmp).c_str(), &path, ImGuiInputTextFlags_EnterReturnsTrue)) {
-                    std::replace(path.begin(), path.end(), '\\', '/');
-                    Json preInfo = serializeBox(selectObj);
-                    std::shared_ptr<Texture> tex; tex = (Texture::CreateTextureFromPath(path));
-                    if (tex != nullptr) selectObj->getMesh()->getShape()->setTexture(tex);
-                    PushModifyCommand(selectObj, preInfo);
+                std::shared_ptr<TextureHandle> tex;
+                if (ImGui::InputText(("##" + tmp).c_str(), &currentTexturepath, ImGuiInputTextFlags_EnterReturnsTrue)) {
+                    std::replace(currentTexturepath.begin(), currentTexturepath.end(), '\\', '/');
                 }
+                if (Texturetype == TextureHandleType::Static) {
+                    if (ImGui::Button("Apply")) {
+                        tex = (Texture::CreateTextureFromPath(currentTexturepath));
+                        if (tex){
+                            Json preInfo = serializeBox(selectObj);
+                            PushModifyCommand(selectObj, preInfo);             
+                            selectObj->getMesh()->getShape()->setTexture(tex), currentTexturepath = "";
+                        }
+                    }
+                }
+
+                if (Texturetype == TextureHandleType::Dynamic) {
+                    //动画名字
+                    ImGui::Text("Ani Name:");
+                    ImGui::SameLine();
+                    if (!selectObj->getMesh()->getShape()->getAnimationName().empty() && currentAniname.empty())
+                        currentAniname = selectObj->getMesh()->getShape()->getAnimationName();
+                    ImGui::InputText(("##name" + tmp).c_str(), &currentAniname, ImGuiInputTextFlags_EnterReturnsTrue);
+                    
+                    //动画启动帧
+                    ImGui::Text("Ani BeginIndex:");
+                    ImGui::SameLine();
+                    if (selectObj->getMesh()->getShape()->getAnimationBeginIndex() != -1 && currentAnibeginidx == -1)
+                        currentAnibeginidx = selectObj->getMesh()->getShape()->getAnimationBeginIndex();
+                    ImGui::InputInt(("##indx" + tmp).c_str(), &currentAnibeginidx, ImGuiInputTextFlags_EnterReturnsTrue);
+                    
+                    //动画size
+                    ImGui::Text("Ani Size:");
+                    ImGui::SameLine();
+                    if (selectObj->getMesh()->getShape()->Animationsize() != -1 && currentAnisize == -1)
+                        currentAnisize = selectObj->getMesh()->getShape()->Animationsize();
+                    ImGui::InputInt(("##size" + tmp).c_str(), &currentAnisize, ImGuiInputTextFlags_EnterReturnsTrue);
+                    
+                    //帧间隔时间
+                    ImGui::Text("Ani Duration:");
+                    ImGui::SameLine();
+                    if (selectObj->getMesh()->getShape()->getAnimationDuration() != -1 && currentAniduration == -1)
+                        currentAniduration = selectObj->getMesh()->getShape()->getAnimationDuration();
+                    ImGui::InputInt(("##duration" + tmp).c_str(), &currentAniduration, ImGuiInputTextFlags_EnterReturnsTrue);
+                    
+                    if (ImGui::Button("Apply") && currentAniduration != -1 && currentAnibeginidx != -1 && currentAnisize != -1 && !currentAniname.empty()) {
+                        Json preInfo = serializeBox(selectObj);
+                        PushModifyCommand(selectObj, preInfo);
+                        
+                        tex.reset(new SpriteAnimation(currentTexturepath, currentAniname, currentAnisize, currentAnibeginidx, currentAniduration));
+                        if (tex != nullptr) {
+                            selectObj->getMesh()->getShape()->setTexture(tex);
+                            Static_PtrCastTo<SpriteAnimation>(tex)->play(AnimationMode::Loop);
+                        }
+                        
+                        currentTexturepath = "";
+                        currentAniname = "";
+                        currentAnibeginidx = -1;
+                        currentAnisize = -1;
+                        currentAniduration = -1;
+                    }
+                }
+                
                 ImGui::Image(static_cast<ImTextureID>(selectObj->getMesh()->getShape()->getTextureID()), ImVec2(100, 100));
 
 
@@ -464,8 +552,9 @@ namespace FISH {
             }
         }
         ImGui::End();
+        
     }
-
+    
     void ColliderEditor::OnEvent(Event &event) {
         if (enableTag == 0) return;
         
@@ -633,7 +722,6 @@ namespace FISH {
         if (!box) return;
         eraseInternal(box, true);
     }
-
     Json ColliderEditor::toJson() const {
         Json data;
         data["GameBoxs"] = Json::array();
@@ -642,12 +730,14 @@ namespace FISH {
         }
         return data;
     }
+    
 
     void ColliderEditor::fromJson(const Json &data) {
         GameBoxs.clear();
         Colliders.clear();
+        
         BeenChoices.clear();
-
+        
         if (!data.contains("GameBoxs")) return;
 
         for (const auto& boxinfo : data["GameBoxs"]) {
@@ -658,6 +748,7 @@ namespace FISH {
         }
     }
 
+    
     void ColliderEditor::PushAddCommand(const GameBoxPtr &box) {
         RedoStack.clear();
         if (UndoStack.size() > limSize) UndoStack.pop_front();
@@ -700,6 +791,7 @@ namespace FISH {
         boxinfo["name"] = box->getName();
         boxinfo["world_position"] = box->getPosition();
         boxinfo["mesh_position"] = box->getMesh()->getPosition();
+        boxinfo["mesh_scale"] = box->getMesh()->getScale();
         boxinfo["mesh_type"] = (int)box->getMesh()->getShape()->getShapeType();
         switch (box->getBounds()->getType()) {   
             case ColliderType::AABB :{               
@@ -715,8 +807,15 @@ namespace FISH {
             //预留..
         }
         boxinfo["Texture_path"] = box->getMesh()->getShape()->getTexturePath();
+        boxinfo["Texture_type"] = (int)box->getMesh()->getShape()->getType();
+        boxinfo["Animation_name"] =  box->getMesh()->getShape()->getAnimationName();
+        boxinfo["BeginIndex"] = box->getMesh()->getShape()->getAnimationBeginIndex(); 
+        boxinfo["Duration"]  = box->getMesh()->getShape()->getAnimationDuration();
+        boxinfo["Size"] = box->getMesh()->getShape()->Animationsize();
+        boxinfo["Flip"] = box->getMesh()->getflip();
         return boxinfo;
     }
+    
 
     void ColliderEditor::applyBoxState(GameBoxPtr &box, const Json &boxinfo) {
         ColliderPtr collider;
@@ -738,7 +837,8 @@ namespace FISH {
             //直接原地修改
             auto scale = collider->size();
             if ((ShapeType)boxinfo["mesh_type"] == ShapeType::Plan) scale.z = 0.0f;
-            box->setRenderMeshFromType((ShapeType)boxinfo["mesh_type"], scale);
+            box->setRenderMeshFromType((ShapeType)boxinfo["mesh_type"], boxinfo["mesh_scale"]);
+            box->getMesh()->setScale(boxinfo["mesh_scale"]); 
             box->setPosition(boxinfo["world_position"]);
             box->getMesh()->setPosition(boxinfo["mesh_position"]);
             box->getBounds()->setPosition(boxinfo["bounds"]["position"]);
@@ -763,6 +863,7 @@ namespace FISH {
             auto scale = collider->size();
             if ((ShapeType)boxinfo["mesh_type"] == ShapeType::Plan) scale.z = 0.0f;
             box->setRenderMeshFromType((ShapeType)boxinfo["mesh_type"], scale);
+            box->getMesh()->setScale(boxinfo["mesh_scale"]);
             box->setPosition(boxinfo["world_position"]);
             box->getMesh()->setPosition(boxinfo["mesh_position"]);
             box->getBounds()->setPosition(boxinfo["bounds"]["position"]);
@@ -772,12 +873,34 @@ namespace FISH {
 
         if (boxinfo.contains("Texture_path") && boxinfo["Texture_path"] != box->getMesh()->getShape()->getTexturePath()) {
             string path = boxinfo["Texture_path"];
+            TextureHandleType type = (TextureHandleType)(boxinfo["Texture_type"]);
+                        std::shared_ptr<TextureHandle> textureptr;
+
+            switch (type) {
+                case TextureHandleType::Static: {
+                        textureptr= Texture::CreateTextureFromPath(path);
+                        break;
+                }
+                case TextureHandleType::Dynamic: {   
+                    string Animation_name = boxinfo["Animation_name"];
+                    int beginIndex = boxinfo["BeginIndex"]; 
+                    int duration = boxinfo["Duration"];
+                    int size = boxinfo["Size"]; 
+                    textureptr.reset(new SpriteAnimation(
+                        path, Animation_name,
+                    size, beginIndex, duration)); 
+                    Static_PtrCastTo<SpriteAnimation>(textureptr)->play(AnimationMode::Loop);
+                    break;
+                }
+            }
+
             std::replace(path.begin(), path.end(), '\\', '/');
-            box->getMesh()->getShape()->setTexture(Texture::CreateTextureFromPath(path));
+            box->getMesh()->getShape()->setTexture(textureptr);
+            if (boxinfo.contains("Flip")) box->getMesh()->setflip(boxinfo["Flip"]);
         }
 
     }
-
+    
     void ColliderEditor::eraseInternal(const GameBoxPtr &box, bool recordUndo) {
         if (recordUndo) {
             PushRemoveCommand(box);
@@ -906,7 +1029,7 @@ namespace FISH {
         for (const auto& info : mClipBoard) {
             GameBoxPtr nBox;
             applyBoxState(nBox, info);
-            nBox->setPosition(nBox->getPosition() + glm::vec3(1.0, 1.0, 0.0));
+            //nBox->setPosition(nBox->getPosition() + glm::vec3(1.0, 1.0, 0.0));
 
             GameBoxs.push_back(nBox);
             Colliders.push_back(Static_PtrCastTo<AABB>(nBox->getBounds()));
@@ -922,6 +1045,7 @@ namespace FISH {
         JsonFileStorage storage("GameBoxData");
         return storage.save(filename, toJson());
     }
+    
 
     bool ColliderEditor::loadFromFile(const string &filename) {
         JsonFileStorage storage("GameBoxData");

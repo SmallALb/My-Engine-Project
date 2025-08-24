@@ -4,9 +4,9 @@
 #include "Camera.h"
 
 namespace FISH {
-    class OrthographicCamera : public Camera {
+    class orthographicCamera : public Camera {
     public:    
-        OrthographicCamera(const string& name);
+        orthographicCamera(const string& name);
                 //设置视角缩放
         virtual void scale(float deltaScale) override;
 

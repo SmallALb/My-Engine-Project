@@ -10,9 +10,9 @@ namespace FISH {
 
         ~SkyBox() {}
 
-        void setTexture(const std::shared_ptr<Texture>& mTexture);
+        void setTexture(const std::shared_ptr<TextureHandle>& mTexture);
 
-        void setTexture(Texture* mTexture);
+        void setTexture(TextureHandle* mTexture);
 
         void renderSkyBox();
 

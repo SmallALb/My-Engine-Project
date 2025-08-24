@@ -28,7 +28,7 @@ namespace FISH {
         bool mergeNodes();
         inline bool IsLeave() const {return LeaveTag;}
     private:
-        std::list<std::shared_ptr<GameObject>>          mObjs{};
+        std::vector<std::shared_ptr<GameObject>>          mObjs{};
         std::vector<std::unique_ptr<ONode>>             mChilds{};
         bool                                            LeaveTag{1};
         bool                                            LazyTag{0};
@@ -54,6 +54,12 @@ namespace FISH {
         void remove(const std::shared_ptr<GameObject>& obj);
         //查询当前obj
         bool query(const std::shared_ptr<GameObject>& obj);
+        //清除所有
+        void clean();
+        //获取所有游戏对象
+        std::set<GameObjPtr> getAll() const;
+        //包含
+        bool contains(const GameObjPtr& obj) const;
         //检测
         void check();
         //清除
@@ -62,6 +68,8 @@ namespace FISH {
         void enableRenderBox() {renderBoxTag = 1;}
         //取消渲染碰撞盒
         void disableRenderBox() {renderBoxTag = 0;}
+        //渲染盒体
+        void renderTestCollider();
     private:
         //是否能够被合并
         bool IsCanMerge(ONode* node) const;

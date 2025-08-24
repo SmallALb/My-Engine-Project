@@ -132,6 +132,8 @@ namespace FISH {
                 if (node->mObjs.size() > MaxObjsPreNode && depth < Maxdepth) {
                     node->subDivideNode();
                     //重分配对象
+                    auto objs = std::move(node->mObjs);
+                    node->mObjs.clear();
                     for (auto& childObj : node->mObjs) for (auto& child : node->mChilds) { 
                         self(child.get(), childObj, childObj->getBounds(), depth+1, self);
                     }
@@ -144,6 +146,7 @@ namespace FISH {
     }
     
     void CollisionTest::remove(const std::shared_ptr<GameObject> &obj) {
+        if (!contains(obj)) return;
         auto func = [&](ONode* node, std::shared_ptr<GameObject> obj, auto&& self)->bool {
             bool removed = 0;
             //没有与盒体相交不需要去除
@@ -151,8 +154,11 @@ namespace FISH {
             //是叶子直接删除
             if (node->IsLeave()) {
                 auto it = std::find(node->mObjs.begin(), node->mObjs.end(), obj);
-                if (it != node->mObjs.end())
-                    node->mObjs.erase(it), removed = 1;
+                if (it != node->mObjs.end()) {
+                    std::swap(*it, node->mObjs.back());
+                    node->mObjs.pop_back();
+                    removed = 1;
+                }
             }
             //不是叶子继续递归
             else {
@@ -167,12 +173,13 @@ namespace FISH {
     }
 
     bool CollisionTest::query(const std::shared_ptr<GameObject> &obj) {
+        if (renderBoxTag) Renderer::renderColliderBox(obj->getBounds(), {0.0, 1.0, 0.0});
         auto func = [&](ONode* node, auto&& self)->bool {
             if (!Collider::intersects(node->mBounds, obj->getBounds())) return false;
             bool tag = false;
             if (node->IsLeave()) {
                 for (const auto& nobj : node->mObjs) if (Collider::intersects(nobj->getBounds(), obj->getBounds())) 
-                    obj->onCollision(nobj), tag = true;
+                    obj->onCollision(nobj), nobj->onCollision(obj), tag = true;
             }
             else for (auto& child : node->mChilds)
                 tag = self(child.get(), self);
@@ -180,6 +187,59 @@ namespace FISH {
         };
 
         return func(root.get(), func);
+    }
+
+    void CollisionTest::clean() {
+        auto func = [&](ONode* node, auto&& self)->void {
+            if (node == nullptr) return;
+            
+            if (node->IsLeave()) {
+                // 清除叶子节点中的所有对象
+                node->mObjs.clear();
+            } else {
+                // 递归清除子节点
+                for (auto& child : node->mChilds) {
+                    self(child.get(), self);
+                }
+                // 清除后尝试合并节点
+                if (node->mergeNodes()) {
+                    // 成功合并后，子节点列表应该为空
+                    node->mChilds.clear();
+                    node->LeaveTag = true;
+                }
+            }
+        };
+        
+        func(root.get(), func);
+        
+        // 确保根节点也被清理
+        if (root->IsLeave()) {
+            root->mObjs.clear();
+        } else {
+            // 如果根节点不是叶子，重新创建根节点
+            auto worldBounds = root->mBounds;
+            root = std::make_unique<ONode>(worldBounds);
+        }
+        
+        // 可选：强制清理一次
+        cleanUp(true);
+    }
+
+    std::set<GameObjPtr> CollisionTest::getAll() const {
+        std::set<GameObjPtr> res;
+        auto func = [&](ONode* node, auto&& self) {
+            if (node == nullptr) return;
+            if (node->IsLeave()) {
+                for (auto& nobj: node->mObjs) res.insert(nobj);
+            }
+            else for (auto& child : node->mChilds) self(child.get(), self);
+        };
+        func(root.get(), func);
+        return res;
+    }
+
+    bool CollisionTest::contains(const GameObjPtr& obj) const {
+        return std::find(root->mObjs.begin(), root->mObjs.end(), obj) != root->mObjs.end();
     }
 
     void CollisionTest::check() {
@@ -220,13 +280,32 @@ namespace FISH {
         func(root.get(), func);
     }
 
-    bool CollisionTest::IsCanMerge(ONode *node) const {
+    void CollisionTest::renderTestCollider() {
+        if(!renderBoxTag) return;
+        
+        auto func = [&] (ONode* node, auto&& self) {
+            if (node == nullptr) return;
+            //是叶子，取出所有的盒内物体进行检测
+            if (node->IsLeave()) {
+                Renderer::renderColliderBox(node->mBounds, {1.0, 0.0, 0.0});
+                for (auto& obj : node->mObjs)  Renderer::renderColliderBox(obj->getBounds(), {0.0, 0.0, 1.0});
+            }
+            else {
+                Renderer::renderColliderBox(node->mBounds, {0.0, 1.0, 0.0});
+                for (auto& child : node->mChilds)
+                    self(child.get(), self); 
+            }
+
+        };
+        func(root.get(), func);
+    }
+
+    bool CollisionTest::IsCanMerge(ONode *node) const
+    {
         if (node->IsLeave()) return false;
 
         for (auto& child : node->mChilds) if (!child->IsLeave() || !child->mObjs.empty()) return false;
 
         return true;
     }
-
-
 }

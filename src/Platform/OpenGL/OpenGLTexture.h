@@ -23,6 +23,8 @@ namespace FISH {
 
         inline virtual unsigned long long getHandle() const;
 
+        TextureInfo getTextureInfo() const override;
+
         virtual void updateSubTex(int x, int y, int width, int height, unsigned char* data);
 
         virtual bool isValid() const override { return !mTexture; }
@@ -37,6 +39,12 @@ namespace FISH {
         void CreateBindLessHandle();
         //计算数据大小
         size_t accumulateDataSize(int width, int height) const;
+        //获取像素信息
+        PixelInfo getPixelInfo(uint32_t x, uint32_t y) const;
+        //获取像素信息
+        std::vector<uint8_t> readTextureData() const;
+        //获取单个像素的大小
+        int getBytesPerPixel() const;
     private:
         uint32_t                mTexture{0};
         unsigned long long      mTextureHandle{0};

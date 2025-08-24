@@ -46,10 +46,12 @@ namespace FISH {
         }
         bool IsColliding;           //是否被碰撞
         float Depth;                //碰撞深度
+        float penetrationDepth;     //穿透深度
         CollisionFace collisionFace{CollisionFace::None};
-        glm::vec3 collisionNormal;  //碰撞法线
-        glm::vec3 contactPoints[4];
-        string  colliderType;
+        glm::vec3 collisionNormal;     //碰撞法线
+        glm::vec3 contactPoints[4];    //触点
+        glm::vec3 collisionPoint;      //主要触点
+        string  colliderType;          //碰撞类型 
     };
 
     //盒体接口
@@ -89,6 +91,7 @@ namespace FISH {
         virtual CollisionInfo CollisionWithOBB(const OBBPtr& other) const {
             return CollisionInfo();
         }
+
     protected:
         //位置
         glm::vec3 mPosition{0.0};

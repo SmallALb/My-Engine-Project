@@ -3,7 +3,7 @@
 #include "FISH/Renderer/Buffer.h"
 #include "FISH/Renderer/VertexArray.h"
 #include "FISH/Renderer/RenderElement.h"
-#include "FISH/Renderer/Texture.h"
+#include "FISH/Renderer/TextureHandle.h"
 #include "FISH/Renderer/BaseShape.h"
 #include "SkyBox.h"
 
@@ -15,12 +15,12 @@ namespace FISH{
         mType = ObjType::SkyBox;
     }
 
-    void SkyBox::setTexture(const std::shared_ptr<Texture>& mTexture) {
+    void SkyBox::setTexture(const std::shared_ptr<TextureHandle>& mTexture) {
         mBall->setTexture(mTexture);
     }
 
-    void SkyBox::setTexture(Texture *mTexture) {
-        std::shared_ptr<Texture> ptr(mTexture);
+    void SkyBox::setTexture(TextureHandle *mTexture) {
+        std::shared_ptr<TextureHandle> ptr(mTexture);
         mBall->setTexture(ptr);
     }
 

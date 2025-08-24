@@ -13,6 +13,9 @@ add_requires("openal-soft", {configs = {shared = true}})
 add_requires("libsndfile")
 --json读取库
 add_requires("nlohmann_json")
+--性能分析库
+add_requires("tracy")
+
 --禁用字符集警告
 print("Done to add Attachment...")
 
@@ -70,6 +73,9 @@ function add_engineAtt()
     add_packages("openal-soft")
     add_packages("libsndfile")
     add_packages("nlohmann_json")
+    if is_mode("debug") then
+        add_packages("tracy")
+    end
 end
 --------------------------------------
 -----------模式匹配设置-------------------

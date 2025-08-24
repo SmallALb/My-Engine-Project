@@ -30,6 +30,7 @@
 #define GLM_ENABLE_EXPERIMENTAL 
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
+#include <glm/gtx/orthonormalize.hpp>
 
 using string = std::string;
 
@@ -41,6 +42,10 @@ glm::vec2 ToProportCoord(const glm::vec2& src, float width, float height);
 
 glm::vec2 ToNDC(const glm::vec2& src, float width, float height);
 
-
+//不会执行内存析构的临时共享指针
+template<class T>
+std::shared_ptr<T> MakeTempPtr(T* rawPtr) {
+    return std::shared_ptr<T>(rawPtr, [](T*){});
+}
 
 

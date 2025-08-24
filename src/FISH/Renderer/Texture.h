@@ -28,6 +28,7 @@ namespace FISH {
         //设置unit(Opengl)
         virtual void setUnit(uint32_t unit) {};
 
+        virtual TextureHandleType getType() const {return TextureHandleType::Static;}
 
         //从内存中读取
         static TexturePtr CreateTextureFromMemory(

@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <ranges>
 #include "FISH/Editor/ColliderEditor.h"
+
 //继承GameObject生成的AObj
 class AObj : public FISH::GameObject {
 public:
@@ -91,7 +92,9 @@ public:
     }
 
     void OnAttach() override {
+        #ifdef DEBUG
         FISH::ColliderEditor::get()->openColliderEditor();
+        #endif
         mStorage.reset(new FISH::JsonFileStorage("TestData"));
         mStorage->load("Test", mGameData);
         shader.reset(FISH::Shader::CreateShader());
@@ -201,8 +204,14 @@ public:
         CTest->insert(mGameObj3);
 
        // mCamera->setAllowedControl(1);
-        FISH::ColliderEditor::get();
+
+        #ifdef DEBUG
         FISH::ColliderEditor::get()->setViewer(mCamera);
+        #else
+        if (!FISH::ColliderEditor::get()->loadFromFile("Pick")) {
+            FS_INFO("Fali!");
+        }
+        #endif
     }
 
     void OnUpdate(float dt) override {
