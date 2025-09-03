@@ -36,7 +36,7 @@ function init_engine()
     end
     --启用23
     set_optimize("fast") 
-    set_languages("c++23", "cxxlatest")
+    set_languages("c++26", "cxxlatest")
 
     --文件复制
     after_build(function (target)

@@ -36,11 +36,15 @@ namespace FISH {
 
         void renderMesh(int typ);
 
+        void setVisable(bool tag) {isVisable = tag;}
+
+        bool getVisable() const {return isVisable;}
         OBJ_CLASS_TYPE(Mesh)
     private:
         std::shared_ptr<Shape> mShape{nullptr};
         bool                   flip{0};
         bool                   hightLightTag{0};
+        bool                   isVisable{1};
     };
 
     using MeshPtr = std::shared_ptr<Mesh>;

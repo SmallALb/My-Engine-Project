@@ -2,9 +2,10 @@
 #include "RenderElement.h"
 #include "Texture.h"
 #include "FISH/Log.h"
+#include "TextureManger.h"
 #include "FISH/Timer.h"
 #include "Animation.h"
-
+#include "FISH/Debugger.h"
 
 namespace FISH {
     Timer * mAnimationTimer() {
@@ -31,12 +32,39 @@ namespace FISH {
         mPath = path;
         path += "/" + name;
         int count = beginIndex;
+        int idx = 0;
         //新建帧
-        for (auto& frame : mFrames) {
-            AnimationFrame nFrame(Texture::CreateTextureFromPath(path + "(" + std::to_string(count) + ").png"),duration);
-            frame = std::move(nFrame);
-            count++;
-        }
+        for (int i = 0; i < size; i++) {
+            int frameIndex = beginIndex + i;
+            string texturePath = path + "(" + std::to_string(frameIndex) + ").png";
+            
+            mFrames[i].duration = duration;
+        // 使用值捕获，避免悬空引用
+            FISH::TextureManager::get().loadTextureAsync(
+                texturePath,
+                ChannelType::RGBA, 
+                [this, i, size](TexturePtr ptr) {
+                    FS_PROFILE_SCOPE("TextureLoadCallback");
+                    if (ptr && ptr->isValid()) {
+                        mFrames[i].setTexture(ptr);
+                        mLoadedCount++;
+                        FS_INFO("Load Count: {0}", mLoadedCount.load());
+                        // 检查是否所有纹理都已加载完成
+                        if (mLoadedCount.load() == size) {
+                            FS_INFO("All the Frames were Loaded!");
+                            mAllTexturesLoaded = true;
+                            if (needPlayTag) {
+                                FS_INFO("Ani Need To Play!!");
+                                play(playMode);
+                            }
+                            FS_INFO("Animation '{}' all textures loaded successfully", mName);
+                        }
+                    } else {
+                        FS_ERROR("Failed to load texture for animation frame {}", i);
+                    }
+            }
+        );
+    }
 
         mDuration = duration;
         
@@ -49,6 +77,11 @@ namespace FISH {
 
     void SpriteAnimation::play(AnimationMode mode) {
         //std::lock_guard<std::recursive_mutex> lock(mTimerMutex);
+        if (!mAllTexturesLoaded) {
+            needPlayTag = 1;    
+            return;
+        }
+        needPlayTag = 0;    
         if (TimerId) stop();
         reset();
         PauseTag = false;
@@ -63,6 +96,7 @@ namespace FISH {
             }, 
             TimerMode::REPEATING
         );
+        FS_INFO("Begin Play Ani: {0}", mName);
 
     }
 
@@ -95,7 +129,7 @@ namespace FISH {
     }
 
     std::shared_ptr<Texture> SpriteAnimation::getCurrentFrame() {
-        return mFrames[mCurrentFrame.load()].texture;
+        return mFrames[mCurrentFrame.load()].getTexture();
     }
 
     void SpriteAnimation::setSpeed(float speed) {
@@ -115,13 +149,13 @@ namespace FISH {
     unsigned long long SpriteAnimation::getHandle() const {
         int cf = mCurrentFrame.load();
         if (cf >= mFrames.size()) cf = mFrames.size() - 1;
-        return mFrames[cf].texture->getHandle();
+        return  mFrames[cf].getTexture()->getHandle();
     }
 
     unsigned long long SpriteAnimation::getTextureID() const {
         int cf = mCurrentFrame;
         if (cf >= mFrames.size()) cf = mFrames.size() - 1;
-        return mFrames[cf].texture->getTextureID();
+        return mFrames[cf].getTexture()->getTextureID();
     }
 
     void SpriteAnimation::setFrameCallBackFunc(const FrameCallFUN &func) {
@@ -137,7 +171,8 @@ namespace FISH {
     }
 
     void SpriteAnimation::increseToNextFrame() {
-
+        FS_PROFILE_SCOPE("FrameBeginCallback");
+        if (!mAllTexturesLoaded) return;
         bool isFirstFrame = (mCurrentFrame == 0);
         if (isFirstFrame && mFrameBeginFunc) mFrameBeginFunc();
 
@@ -158,6 +193,6 @@ namespace FISH {
     TextureInfo SpriteAnimation::getTextureInfo() const {
         int cf = mCurrentFrame;
         if (cf >= mFrames.size()) cf = mFrames.size() - 1;
-        return mFrames[cf].texture->getTextureInfo();
+        return mFrames[cf].getTexture()->getTextureInfo();
     }
 }

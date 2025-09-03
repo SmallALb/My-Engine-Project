@@ -1,7 +1,7 @@
 #include <FISH.h>
 #include <vector> 
 #include <memory>
-
+#include "FISH/Renderer/TextureManger.h"
 
 
 class MainLayer : public FISH::Layer {
@@ -19,9 +19,10 @@ public:
         // mSound->setPosition({0, 0, 0});
         // mSound->setRolloffFactor(35.0f);
         // mSound->setVolume(0.5);
+        auto& manager = FISH::TextureManager::get();
 
         shader.reset(FISH::Shader::CreateShader());
-        mAni.reset(new FISH::SpriteAnimation("picture/sprite", "cat ", 23, 1, 80));
+        mAni.reset(new FISH::SpriteAnimation("picture/sprite", "cat ", 21, 1, 80));
         shader->readVertexShader("sharders/EnginRenderShader/2Dvertex.glsl");
         shader->readFragmentShader("sharders/EnginRenderShader/OnlyColor.glsl");
         shader->CompileLink();
@@ -80,7 +81,8 @@ public:
         mesh2->setPosition({0.0, 4.0, -3.0});
         
 
-        auto shape = std::shared_ptr<FISH::Shape>(FISH::Shape::CreateBox(1.0));;
+        auto shape = std::shared_ptr<FISH::Shape>(FISH::Shape::CreateBox(1.0));
+        shape->setTexture(mAni);
         auto mesh = std::make_shared<FISH::Mesh>();
         auto mesh2 = std::make_shared<FISH::Mesh>();
         auto mesh3 = std::make_shared<FISH::Mesh>();
@@ -88,7 +90,7 @@ public:
         mesh->getShape() = shape;
         mesh2->getShape() = shape;
         mesh3->getShape() = shape;
-
+        mesh2->setPosition({0.0, 1.0, 0.0});
 
         objs.push_back(mMesh);
         objs.push_back(point);
@@ -96,7 +98,11 @@ public:
         objs.push_back(mBox);
         objs.push_back(mesh2);
         //objs.push_back(spot);
-        mBox->setTexture(FISH::Texture::CreateTextureFromPath("picture/Sky.png"));
+        auto texture = std::shared_ptr<FISH::SpriteAnimation>(
+            new FISH::SpriteAnimation("picture/Fire", "Fire ", 121, 1, 56)
+        );
+        texture->play(FISH::AnimationMode::Loop);
+        mBox->setTexture(texture);
 
         FISH::Renderer::setUseAmbientLight(light);  
         //FISH::Renderer::setUseShader(shader);
@@ -148,6 +154,7 @@ public:
     }
 
     void OnUpdate(float dt) override {
+        FISH::TextureManager::get().processAsyncUploads();
         
         cameras[0]->update();
         dynamic_cast<FISH::perspectiveCamera*>(cameras[0].get())->setAspect((float)(APP.GetWindow().GetWidth()/APP.GetWindow().GetHeight()));
@@ -184,8 +191,8 @@ public:
 
         mFont->RenderText(std::to_string(co), -0.2, 0, 0.004f, {1.0, 1.0, 1.0});
 
-        //bool currntpress = FISH::Input::IsKeyPressed(FS_KEY_C);
-        if (FISH::Input::IsKeyPressedOnce(FS_KEY_C)) {
+        bool currntpress = FISH::Input::IsKeyPressed(FS_KEY_C);
+        if (!lstpress && currntpress) {
             if (!islock) APP.LockCursor(), islock = 1,cameras[0]->setAllowedControl(1);
             else APP.UnLockCursor(), islock = 0,cameras[0]->setAllowedControl(0);
             // if (mAni->IsPause() || mAni->IsFinsh()) mAni->play(FISH::AnimationMode::Loop);
@@ -199,7 +206,7 @@ public:
         auto [mx, my] = FISH::Input::GetMousePos();
         auto ndc = ToNDC({mx, my}, APP.GetWindow().GetWidth(), APP.GetWindow().GetHeight());
         mBotton->update(ndc.x, ndc.y);
-        //lstpress = currntpress;
+        lstpress = currntpress;
     }
 
     std::vector<std::shared_ptr<FISH::Object3D>> objs;

@@ -27,7 +27,7 @@ namespace FISH {
 
         virtual void updateSubTex(int x, int y, int width, int height, unsigned char* data);
 
-        virtual bool isValid() const override { return !mTexture; }
+        virtual bool isValid() const override { return mTexture; }
 
         virtual void destory() override;
     private:

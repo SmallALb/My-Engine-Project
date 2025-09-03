@@ -1,4 +1,6 @@
 #pragma once
+#include <string_view>
+
 
 #define FS_KEY_SPACE              32
 #define FS_KEY_APOSTROPHE         39  
@@ -255,5 +257,139 @@ namespace FISH {
         RightSuper = 347,
         Menu = 348
     };
+
+    #define KEYCODE_TO_STRING_CASE(code) case KeyCode::code: return #code
+
+    constexpr std::string_view KeyCodeToString(KeyCode key)
+    {
+        switch (key)
+        {
+            KEYCODE_TO_STRING_CASE(None);
+            KEYCODE_TO_STRING_CASE(Space);
+            KEYCODE_TO_STRING_CASE(Apostrophe);
+            KEYCODE_TO_STRING_CASE(Comma);
+            KEYCODE_TO_STRING_CASE(Minus);
+            KEYCODE_TO_STRING_CASE(Period);
+            KEYCODE_TO_STRING_CASE(Slash);
+            KEYCODE_TO_STRING_CASE(Num0);
+            KEYCODE_TO_STRING_CASE(Num1);
+            KEYCODE_TO_STRING_CASE(Num2);
+            KEYCODE_TO_STRING_CASE(Num3);
+            KEYCODE_TO_STRING_CASE(Num4);
+            KEYCODE_TO_STRING_CASE(Num5);
+            KEYCODE_TO_STRING_CASE(Num6);
+            KEYCODE_TO_STRING_CASE(Num7);
+            KEYCODE_TO_STRING_CASE(Num8);
+            KEYCODE_TO_STRING_CASE(Num9);
+            KEYCODE_TO_STRING_CASE(Semicolon);
+            KEYCODE_TO_STRING_CASE(Equal);
+            KEYCODE_TO_STRING_CASE(A);
+            KEYCODE_TO_STRING_CASE(B);
+            KEYCODE_TO_STRING_CASE(C);
+            KEYCODE_TO_STRING_CASE(D);
+            KEYCODE_TO_STRING_CASE(E);
+            KEYCODE_TO_STRING_CASE(F);
+            KEYCODE_TO_STRING_CASE(G);
+            KEYCODE_TO_STRING_CASE(H);
+            KEYCODE_TO_STRING_CASE(I);
+            KEYCODE_TO_STRING_CASE(J);
+            KEYCODE_TO_STRING_CASE(K);
+            KEYCODE_TO_STRING_CASE(L);
+            KEYCODE_TO_STRING_CASE(M);
+            KEYCODE_TO_STRING_CASE(N);
+            KEYCODE_TO_STRING_CASE(O);
+            KEYCODE_TO_STRING_CASE(P);
+            KEYCODE_TO_STRING_CASE(Q);
+            KEYCODE_TO_STRING_CASE(R);
+            KEYCODE_TO_STRING_CASE(S);
+            KEYCODE_TO_STRING_CASE(T);
+            KEYCODE_TO_STRING_CASE(U);
+            KEYCODE_TO_STRING_CASE(V);
+            KEYCODE_TO_STRING_CASE(W);
+            KEYCODE_TO_STRING_CASE(X);
+            KEYCODE_TO_STRING_CASE(Y);
+            KEYCODE_TO_STRING_CASE(Z);
+            KEYCODE_TO_STRING_CASE(LeftBracket);
+            KEYCODE_TO_STRING_CASE(Backslash);
+            KEYCODE_TO_STRING_CASE(RightBracket);
+            KEYCODE_TO_STRING_CASE(GraveAccent);
+            KEYCODE_TO_STRING_CASE(World1);
+            KEYCODE_TO_STRING_CASE(World2);
+            KEYCODE_TO_STRING_CASE(Escape);
+            KEYCODE_TO_STRING_CASE(Enter);
+            KEYCODE_TO_STRING_CASE(Tab);
+            KEYCODE_TO_STRING_CASE(Backspace);
+            KEYCODE_TO_STRING_CASE(Insert);
+            KEYCODE_TO_STRING_CASE(Delete);
+            KEYCODE_TO_STRING_CASE(Right);
+            KEYCODE_TO_STRING_CASE(Left);
+            KEYCODE_TO_STRING_CASE(Down);
+            KEYCODE_TO_STRING_CASE(Up);
+            KEYCODE_TO_STRING_CASE(PageUp);
+            KEYCODE_TO_STRING_CASE(PageDown);
+            KEYCODE_TO_STRING_CASE(Home);
+            KEYCODE_TO_STRING_CASE(End);
+            KEYCODE_TO_STRING_CASE(CapsLock);
+            KEYCODE_TO_STRING_CASE(ScrollLock);
+            KEYCODE_TO_STRING_CASE(NumLock);
+            KEYCODE_TO_STRING_CASE(PrintScreen);
+            KEYCODE_TO_STRING_CASE(Pause);
+            KEYCODE_TO_STRING_CASE(F1);
+            KEYCODE_TO_STRING_CASE(F2);
+            KEYCODE_TO_STRING_CASE(F3);
+            KEYCODE_TO_STRING_CASE(F4);
+            KEYCODE_TO_STRING_CASE(F5);
+            KEYCODE_TO_STRING_CASE(F6);
+            KEYCODE_TO_STRING_CASE(F7);
+            KEYCODE_TO_STRING_CASE(F8);
+            KEYCODE_TO_STRING_CASE(F9);
+            KEYCODE_TO_STRING_CASE(F10);
+            KEYCODE_TO_STRING_CASE(F11);
+            KEYCODE_TO_STRING_CASE(F12);
+            KEYCODE_TO_STRING_CASE(F13);
+            KEYCODE_TO_STRING_CASE(F14);
+            KEYCODE_TO_STRING_CASE(F15);
+            KEYCODE_TO_STRING_CASE(F16);
+            KEYCODE_TO_STRING_CASE(F17);
+            KEYCODE_TO_STRING_CASE(F18);
+            KEYCODE_TO_STRING_CASE(F19);
+            KEYCODE_TO_STRING_CASE(F20);
+            KEYCODE_TO_STRING_CASE(F21);
+            KEYCODE_TO_STRING_CASE(F22);
+            KEYCODE_TO_STRING_CASE(F23);
+            KEYCODE_TO_STRING_CASE(F24);
+            KEYCODE_TO_STRING_CASE(F25);
+            KEYCODE_TO_STRING_CASE(KP0);
+            KEYCODE_TO_STRING_CASE(KP1);
+            KEYCODE_TO_STRING_CASE(KP2);
+            KEYCODE_TO_STRING_CASE(KP3);
+            KEYCODE_TO_STRING_CASE(KP4);
+            KEYCODE_TO_STRING_CASE(KP5);
+            KEYCODE_TO_STRING_CASE(KP6);
+            KEYCODE_TO_STRING_CASE(KP7);
+            KEYCODE_TO_STRING_CASE(KP8);
+            KEYCODE_TO_STRING_CASE(KP9);
+            KEYCODE_TO_STRING_CASE(KPDecimal);
+            KEYCODE_TO_STRING_CASE(KPDivide);
+            KEYCODE_TO_STRING_CASE(KPMultiply);
+            KEYCODE_TO_STRING_CASE(KPSubtract);
+            KEYCODE_TO_STRING_CASE(KPAdd);
+            KEYCODE_TO_STRING_CASE(KPEnter);
+            KEYCODE_TO_STRING_CASE(KPEqual);
+            KEYCODE_TO_STRING_CASE(LeftShift);
+            KEYCODE_TO_STRING_CASE(LeftControl);
+            KEYCODE_TO_STRING_CASE(LeftAlt);
+            KEYCODE_TO_STRING_CASE(LeftSuper);
+            KEYCODE_TO_STRING_CASE(RightShift);
+            KEYCODE_TO_STRING_CASE(RightControl);
+            KEYCODE_TO_STRING_CASE(RightAlt);
+            KEYCODE_TO_STRING_CASE(RightSuper);
+            KEYCODE_TO_STRING_CASE(Menu);
+            
+            default: return "Unknown";
+        }
+    }
+
+
 
 } // namespace FISH

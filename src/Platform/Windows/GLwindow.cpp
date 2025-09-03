@@ -115,17 +115,17 @@ namespace FISH {
             auto& ptr =  *(WindowData*)glfwGetWindowUserPointer(window);
             switch(action) {
                 case GLFW_PRESS:{
-                    KeyPressedEvent event(key, 0);
+                    KeyPressedEvent event((KeyCode)key, 0);
                     ptr.eventcallback(event);
                     break;
                 }
                 case GLFW_RELEASE:{
-                    KeyReleasedEvent event(key);
+                    KeyReleasedEvent event((KeyCode)key);
                     ptr.eventcallback(event);
                     break;
                 }
                 case GLFW_REPEAT:{
-                    KeyPressedEvent event(key, 1);
+                    KeyPressedEvent event((KeyCode)key, 1);
                     ptr.eventcallback(event);
                     break;
                 }
@@ -136,12 +136,12 @@ namespace FISH {
             auto& ptr =  *(WindowData*)glfwGetWindowUserPointer(window);
             switch(action) {
                 case GLFW_PRESS:{
-                    MouseButtonPressedEvent event(botton);
+                    MouseButtonPressedEvent event((MouseCode)botton);
                     ptr.eventcallback(event);
                     break;
                 }
                 case GLFW_RELEASE:{
-                    MouseButtonReleasedEvent event(botton);
+                    MouseButtonReleasedEvent event((MouseCode)botton);
                     ptr.eventcallback(event);
                     break;
                 }
@@ -164,7 +164,7 @@ namespace FISH {
 
         glfwSetCharCallback(mWindow, [](GLFWwindow* window, unsigned int character) {
             auto& ptr =  *(WindowData*)glfwGetWindowUserPointer(window);
-            KeyTypedEvent event(character);
+            KeyTypedEvent event((KeyCode)character);
             ptr.eventcallback(event);
         });
     }

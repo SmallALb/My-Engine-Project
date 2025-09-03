@@ -8,6 +8,7 @@ namespace FISH {
 
     //纹理接口
     class Texture : public TextureHandle {
+        friend class TextureManager;
     public:
         virtual ~Texture() = default;
 

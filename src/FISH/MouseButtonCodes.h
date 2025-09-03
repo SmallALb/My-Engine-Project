@@ -1,4 +1,5 @@
 #pragma once
+#include <string_view>
 
 #define FS_MOUSE_BUTTON_1         0
 #define FS_MOUSE_BUTTON_2         1
@@ -34,5 +35,25 @@ namespace FISH {
         Right   = Button2,
         Middle  = Button3
     };
+
+    #define MOUSECODE_TO_STRING_CASE(code) case MouseCode::code: return #code
+
+
+  constexpr std::string_view MouseCodeToString(MouseCode button)
+    {
+        switch (button)
+        {
+            MOUSECODE_TO_STRING_CASE(Button1);
+            MOUSECODE_TO_STRING_CASE(Button2);
+            MOUSECODE_TO_STRING_CASE(Button3);
+            MOUSECODE_TO_STRING_CASE(Button4);
+            MOUSECODE_TO_STRING_CASE(Button5);
+            MOUSECODE_TO_STRING_CASE(Button6);
+            MOUSECODE_TO_STRING_CASE(Button7);
+            MOUSECODE_TO_STRING_CASE(Button8);
+            
+            default: return "Unknown";
+        }
+    }
 
 } // namespace FISH

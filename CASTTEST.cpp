@@ -1,7 +1,7 @@
 #include "FISH.h"
 #include <algorithm>
 #include <ranges>
-#include "FISH/Editor/ColliderEditor.h"
+
 
 //继承GameObject生成的AObj
 class AObj : public FISH::GameObject {
@@ -92,9 +92,7 @@ public:
     }
 
     void OnAttach() override {
-        #ifdef DEBUG
-        FISH::ColliderEditor::get()->openColliderEditor();
-        #endif
+
         mStorage.reset(new FISH::JsonFileStorage("TestData"));
         mStorage->load("Test", mGameData);
         shader.reset(FISH::Shader::CreateShader());
@@ -205,13 +203,6 @@ public:
 
        // mCamera->setAllowedControl(1);
 
-        #ifdef DEBUG
-        FISH::ColliderEditor::get()->setViewer(mCamera);
-        #else
-        if (!FISH::ColliderEditor::get()->loadFromFile("Pick")) {
-            FS_INFO("Fali!");
-        }
-        #endif
     }
 
     void OnUpdate(float dt) override {
@@ -219,8 +210,6 @@ public:
         mCamera->update();
         CTest->update();
         CTest->check();
-        const auto& vec = FISH::ColliderEditor::get()->outputGameBoxData(); 
-        for (auto& box : vec) objs.push_back(box->getMesh());
         
         //FISH::Renderer::renderColliderBox(mGameObj->getBounds());
 
@@ -248,7 +237,6 @@ public:
 
         FISH::Renderer::render(objs);
 
-        for (int i=0; i<vec.size(); i++) objs.pop_back();
 
         //CTest->cleanUp(0);
     }
@@ -279,7 +267,6 @@ public:
         FISH::Texture::initDefaultTexture();
         FISH::Renderer::initDefaultShader();
         PushLayer(new MainLayer());
-        PushLayer(FISH::ColliderEditor::get());
     }
 
     ~Sandbox() {}

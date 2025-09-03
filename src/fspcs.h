@@ -9,6 +9,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <nlohmann/json.hpp>
+#include <atomic>
 
 #include <string>
 #include <sstream>

@@ -18,11 +18,23 @@ namespace FISH {
         //持续时间
         int duration;
 
-        AnimationFrame() {};
+        AnimationFrame(): texture(Texture::NoneTexture) {
+        };
 
-        AnimationFrame(const std::shared_ptr<Texture>& tx, int dura):
-            texture(tx), duration(dura)
-        {}
+
+        AnimationFrame(const TexturePtr& tx, int dura):
+             duration(dura)
+        {texture = tx;}
+
+
+        void setTexture(const TexturePtr& newTexture) {
+            texture = newTexture;
+        }
+
+        // 线程安全的纹理获取
+        TexturePtr getTexture() const {
+            return texture;
+        }
     };
 
     class API_ SpriteAnimation : public TextureHandle {
@@ -87,6 +99,8 @@ namespace FISH {
         int getDuration() const {return mDuration;}
 
         int Size() const {return FrameSize;}
+
+        bool IsAllTextureLoaded() const {return mAllTexturesLoaded;}
     private:
         //当前帧
         std::atomic_int                 mCurrentFrame{0};
@@ -118,6 +132,9 @@ namespace FISH {
         int                             mBeginIndex{-1};
         //锁
         mutable std::recursive_mutex      mTimerMutex;
+        std::atomic_int                               mLoadedCount{0};
+        std::atomic_bool                              mAllTexturesLoaded{0};
+        bool                            needPlayTag{0};
     };
 
 }

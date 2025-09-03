@@ -28,6 +28,7 @@ namespace FISH {
             virtual void setVector3(const std::string& name, float x, float y, float z) = 0;
             virtual void setVector3(const std::string& name, const float* values) = 0;
             virtual void setVector3(const std::string& name, const glm::vec3& vector) = 0;
+            virtual void setVector2(const std::string& name, const glm::vec2& vector) = 0;
             virtual void setInt(const std::string& name, int value) = 0;
             virtual void setBool(const std::string& name, bool value) = 0;
             virtual void setMat4(const std::string& name, glm::mat4 mat) = 0;

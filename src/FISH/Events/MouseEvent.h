@@ -1,5 +1,5 @@
 #pragma once
-
+#include "FISH/MouseButtonCodes.h"
 #include "Events.h"
 
 namespace FISH {
@@ -42,22 +42,22 @@ namespace FISH {
     //鼠标按键事件
     class MouseButtonEvent : public Event {
     public:
-        int GetMouseBUtton() const { return mButton;}
+        MouseCode GetMouseBUtton() const { return mButton;}
 
         EVENT_CLASS_CATEGORY(EventCategoryInput | EventCategoryMouse | EventCategoryMouseButton)
     protected:
-        MouseButtonEvent(const int button) : mButton(button) {}
+        MouseButtonEvent(MouseCode button) : mButton(button) {}
 
-        int mButton;
+        MouseCode mButton;
     };
 
     //鼠标按下事件
     class MouseButtonPressedEvent : public MouseButtonEvent {
     public:
-        MouseButtonPressedEvent(const int button): MouseButtonEvent(button) {}
+        MouseButtonPressedEvent(MouseCode button): MouseButtonEvent(button) {}
 
         string ToString() const override {
-            return "MouseButtonPressedEvent: " + std::to_string(mButton);
+            return "MouseButtonPressedEvent: " + std::string(MouseCodeToString(mButton));
         }
 
         EVENT_CLASS_TYPE(MouseButtonPressed)
@@ -65,10 +65,10 @@ namespace FISH {
     //鼠标释放事件
     class MouseButtonReleasedEvent : public MouseButtonEvent {
         public:
-            MouseButtonReleasedEvent(const int button): MouseButtonEvent(button) {}
+            MouseButtonReleasedEvent(MouseCode button): MouseButtonEvent(button) {}
     
             string ToString() const override {
-                return "MouseButtonReleasedEvent: " + std::to_string(mButton);
+                return "MouseButtonReleasedEvent: " + std::string(MouseCodeToString(mButton));
             }
     
             EVENT_CLASS_TYPE(MouseButtonReleased)

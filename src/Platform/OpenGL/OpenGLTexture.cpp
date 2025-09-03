@@ -43,51 +43,73 @@ namespace FISH {
     }
 
     GLTexture::GLTexture(uint32_t unit, ChannelType channel, unsigned char *dataIn, uint32_t widthIn, uint32_t heightIn) {
+        FS_CORE_INFO("Creating GLTexture: {}x{}, channel: {}", widthIn, heightIn, static_cast<int>(channel));
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        stbi_set_flip_vertically_on_load(true);
 
         mUnit = unit;
-
-        int channels;
-        //枚举通道
+        mWidth = widthIn;
+        mHeight = heightIn;
         mEnumChannel = channel;
-        //选择对应的GL类型
         mTextureChannel = ChoiceChannel(channel);
-        int internalFormat = ChoiceInternal(channel);
-        //计算size
-        size_t dataInsize = 0;
-        if (!heightIn) dataInsize = widthIn;
-        else dataInsize = accumulateDataSize(widthIn, heightIn);
-        unsigned char* data;
-        if (channel != ChannelType::Red) {
-            data =  stbi_load_from_memory(dataIn, dataInsize, &mWidth, &mHeight, &channels, choiceStbChannel(channel));
-        }
-        else {
-            mWidth = widthIn, mHeight = heightIn;
-            data = dataIn;
-        }
+        GLint internalFormat = ChoiceInternal(channel);
 
+        // 直接使用传入的原始数据，不要用stbi_load_from_memory
+        unsigned char* data = dataIn;
+
+        // 创建纹理
         GL_ERRORCALL(glCreateTextures(GL_TEXTURE_2D, 1, &mTexture));
         
-        // 分配存储并设置参数
+        if (mTexture == 0) {
+            FS_CORE_ERROR("Failed to create OpenGL texture object");
+            return;
+        }
+
+        // 分配存储空间
         GL_ERRORCALL(glTextureStorage2D(mTexture, 1, internalFormat, mWidth, mHeight));
+        
+        // 检查是否分配成功
+        GLenum error = glGetError();
+        if (error != GL_NO_ERROR) {
+            FS_CORE_ERROR("glTextureStorage2D failed with error: {}", error);
+            glDeleteTextures(1, &mTexture);
+            mTexture = 0;
+            return;
+        }
+
+        // 上传纹理数据
         GL_ERRORCALL(glTextureSubImage2D(mTexture, 0, 0, 0, mWidth, mHeight, 
                                         mTextureChannel, GL_UNSIGNED_BYTE, data));
-        
-        
 
-        if (channel != ChannelType::Red) stbi_image_free(data);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        // 检查上传是否成功
+        error = glGetError();
+        if (error != GL_NO_ERROR) {
+            FS_CORE_ERROR("glTextureSubImage2D failed with error: {}", error);
+            glDeleteTextures(1, &mTexture);
+            mTexture = 0;
+            return;
+        }
 
-        GL_ERRORCALL(glGenerateMipmap(GL_TEXTURE_2D));
+        // 设置纹理参数
+        glTextureParameteri(mTexture, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTextureParameteri(mTexture, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTextureParameteri(mTexture, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTextureParameteri(mTexture, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-        CreateBindLessHandle();
+        // 生成mipmap
+        GL_ERRORCALL(glGenerateTextureMipmap(mTexture));
+
+        // 只有纹理创建成功后才创建bindless handle
+        if (mTexture != 0) {
+            CreateBindLessHandle();
+        } else {
+            FS_CORE_ERROR("Cannot create bindless handle for invalid texture");
+            return;
+        }
+        FS_CORE_INFO("Successed Build Texture!");
     }
 
     GLTexture::GLTexture(const string &path, uint32_t widthIn, int32_t heightIn, ChannelType channel, uint32_t unit) {
+        FS_CORE_INFO("Creating GLTexture: {}, {}x{}, channel: {}", path, widthIn, heightIn, static_cast<int>(channel));
         mWidth = widthIn, mHeight = heightIn;
         mTextureChannel = ChoiceChannel(channel);
         GLint internalFormat = ChoiceInternal(channel);
