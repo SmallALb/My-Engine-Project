@@ -51,11 +51,6 @@ namespace FISH {
             mVao->bind();
         }
 
-        //使用此模型的纹理贴图
-        inline uint64_t useTexture() {
-            return mTexture->getHandle();
-        }
-
         inline void unuseShape() {
             mVao->unbind();
         }
@@ -67,30 +62,10 @@ namespace FISH {
             unuseShape();
         }
 
-        //设置使用纹理
-        void setTexture(const std::shared_ptr<TextureHandle>& texture);
         inline ShapeType getShapeType() const {return mType;}
-        //获取ID
-        unsigned long long getTextureID() const {return mTexture->getTextureID();}
-        //获取纹理路径
-        string getTexturePath() const {return mTexture->getPath();}
-
-        TextureHandleType getType() const {return mTexture->getType();}
-        
-        string getAnimationName() const;
-
-        std::shared_ptr<TextureHandle> getTexutreHandle();
-        
-
-        int getAnimationBeginIndex() const;
-
-        int getAnimationDuration() const;
-
-        int Animationsize() const;
 
     private:
         std::unique_ptr<VertexArray>    mVao{nullptr};
-        std::shared_ptr<TextureHandle>        mTexture{nullptr};
         ShapeType                       mType{ShapeType::Unknown};
     };
 

@@ -49,4 +49,15 @@ std::shared_ptr<T> MakeTempPtr(T* rawPtr) {
     return std::shared_ptr<T>(rawPtr, [](T*){});
 }
 
+template<class T>
+std::shared_ptr<T> MakeTempPtr(T&& obj) {
+    return std::shared_ptr<T>(&obj, [](T*){});
+}
+
+
+template<class T>
+std::shared_ptr<T> MakeTempPtr(T& obj) {
+    return std::shared_ptr<T>(&obj, [](T*){});
+}
+
 

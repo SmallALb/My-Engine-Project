@@ -20,6 +20,7 @@
 #include "../Object/PointLight.h"
 #include "../Object/DirectionLight.h"
 #include "../Object/Camera.h"
+#include "FISH/Renderer/Material.h"
 #include "../Object/Mesh.h"
 #include "../Object/SkyBox.h"
 #include "../physics/ObjectCast.h"

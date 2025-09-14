@@ -33,10 +33,14 @@ namespace FISH {
         //  4.纯色着色(2D)
         static void initDefaultShader();
 
+        static void getAllNeedBlendColor();
+
+
         //渲染(2D)
         static void render(const std::vector<std::shared_ptr<Object2D>>& objs);
         //渲染碰撞盒体
         static void renderColliderBox(const ColliderPtr& box, const glm::vec3& color);
+    
     private:
         static void RenderObj(const std::shared_ptr<Object3D>& obj,
         const std::vector<std::shared_ptr<SpotLight>> &spotlights, 
@@ -51,6 +55,12 @@ namespace FISH {
         static bool IsLightRender() { return renderLight; }
         //设置灯光位置是否渲染
         static void SetLightRender(bool tag) { renderLight = tag;}
+
+        static void getLights(
+            const Object3DPtr& objs,
+            std::vector<std::shared_ptr<SpotLight>>& spots,
+            std::vector<std::shared_ptr<PointLight>>& points
+        );
     private:
         //static RendererAPI mAPI;
         //临时存储一个静态的着色器指针，到时这里将改为一个map存储使用的着色器

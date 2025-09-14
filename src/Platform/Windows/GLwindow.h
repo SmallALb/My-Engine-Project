@@ -35,7 +35,12 @@ namespace FISH {
         //清理缓冲
         inline void CleanBuffer(int cleanState) override;
         //鼠标居中
-        virtual void SetCursorOnMid() const override;
+        void SetCursorOnMid() const override;
+
+        inline void SetCleanColor(float r, float g, float b, float a) override;
+
+        virtual void SetWindowTitle(const string& title) override;
+
     private:
         //初始化
         virtual void Init(const WindowProps& props);

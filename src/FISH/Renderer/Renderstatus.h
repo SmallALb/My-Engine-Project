@@ -28,7 +28,9 @@ namespace FISH {
         DepthOffset,          //深度偏移
         StencilFunc,        //模板测试条件
         StencilOperation,   //模板测试操作
-        StencilMask         //模板标记
+        StencilMask,         //模板标记
+        BlendFuncSeparate,  //RGB & A 通道分别设置
+        BlendEquation       //设置混合颜色的计算方式
     };
 
     //渲染函数设置类型
@@ -64,7 +66,10 @@ namespace FISH {
         MinusDstColor,  //目标色反相
         MinusSrcAlpha,  //源透明度反相
         MinusDstAlpha,  //目标透明度反向
-        DepthOffsetData //偏移信息传入
+        DepthOffsetData, //偏移信息传入
+        Add,              //加法
+        Subtract,        //减法
+        ReverseSubtract  //反向相减           
     }; 
 
     //渲染状态接口
@@ -81,4 +86,6 @@ namespace FISH {
 
         static Renderstatus* CreateRenderstatus();
     };
+
+    
 }

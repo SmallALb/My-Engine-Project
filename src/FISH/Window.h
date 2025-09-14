@@ -51,6 +51,10 @@ namespace FISH {
         virtual void* GetNativeWindow() const = 0;
         //鼠标居中
         virtual void SetCursorOnMid() const = 0;
+
+        virtual void SetCleanColor(float r, float g, float b, float a) = 0;
+
+        virtual void SetWindowTitle(const string& title) = 0;
         //唯一指定创建窗口的类内静态函数
         static Window* Create(const WindowProps& props = WindowProps());
 

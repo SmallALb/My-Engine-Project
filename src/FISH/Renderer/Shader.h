@@ -40,4 +40,6 @@ namespace FISH {
 
         }; 
 
+        using ShaderPtr = std::shared_ptr<Shader>;
+
 }

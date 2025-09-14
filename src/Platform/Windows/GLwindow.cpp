@@ -66,6 +66,15 @@ namespace FISH {
         glfwSetCursorPos(mWindow, mData.Width/2.0f, mData.Height/2.0f);
     }
 
+    inline void GLwindow::SetCleanColor(float r, float g, float b, float a) {
+        glClearColor(r, g, b, a);
+    }
+
+    void GLwindow::SetWindowTitle(const string &title) {
+        mData.Title = title;
+        glfwSetWindowTitle(mWindow, title.c_str());
+    }
+
     void GLwindow::Init(const WindowProps &props)
     {
         mData.Title = props.Title;
@@ -167,6 +176,7 @@ namespace FISH {
             KeyTypedEvent event((KeyCode)character);
             ptr.eventcallback(event);
         });
+
     }
     void GLwindow::Shutdown() {
         //FS_INFO("�����Ѿ��ر�");

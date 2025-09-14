@@ -47,4 +47,6 @@ namespace FISH {
         string                  mPath;
     };
 
+
+    using TextureHandlePtr = std::shared_ptr<TextureHandle>;
 }

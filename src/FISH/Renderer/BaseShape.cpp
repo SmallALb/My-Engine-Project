@@ -10,7 +10,6 @@
 namespace FISH
 {
     Shape::Shape() {
-        mTexture = Texture::NoneTexture;
     }
 
     Shape::~Shape() {
@@ -25,38 +24,7 @@ namespace FISH
 
     uint32_t Shape::GetIndexCounts() const {return mVao->GetIndexCounts(); }
 
-    void Shape::setTexture(const std::shared_ptr<TextureHandle>& texture) {
-        mTexture = texture;
-    }
 
-    string Shape::getAnimationName() const {
-        if (getType() == TextureHandleType::Dynamic)
-            return Static_PtrCastTo<SpriteAnimation>(mTexture)->getName();
-        return "";
-    }
-
-    std::shared_ptr<TextureHandle> Shape::getTexutreHandle()
-    {
-        return mTexture;
-    }
-
-    int Shape::getAnimationBeginIndex() const {
-        if (getType() == TextureHandleType::Dynamic)
-            return Static_PtrCastTo<SpriteAnimation>(mTexture)->getAnimationIndex();
-        return -1; 
-    }
-
-    int Shape::getAnimationDuration() const {
-            if (getType() == TextureHandleType::Dynamic)
-                return Static_PtrCastTo<SpriteAnimation>(mTexture)->getDuration();
-            return -1;
-    }
-
-    int Shape::Animationsize() const {
-             if (getType() == TextureHandleType::Dynamic)
-                return Static_PtrCastTo<SpriteAnimation>(mTexture)->Size();
-            return -1;
-    }
 
     Shape* Shape::CreateBox(float size) {
         Shape* shape = new Shape();

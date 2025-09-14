@@ -22,14 +22,16 @@
 
 
 //渲染基本
+#include "FISH/Renderer/Renderstatus.h"
 #include "FISH/REnderer/TextureHandle.h"
 #include "FISH/Renderer/RenderElement.h"
 #include "FISH/Renderer/VertexArray.h"
+#include "FISH/Renderer/Material.h"
 #include "FISH/Renderer/Shader.h"
 #include "FISH/Renderer/Texture.h"
 #include "FISH/Renderer/Animation.h"
 #include "FISH/Renderer/BaseShape.h"
-
+#include "FISH/Renderer/TextureManger.h"
 //渲染扩展
 #include "FISH/Renderer/Font.h"
 
@@ -51,7 +53,6 @@
 #include "FISH/physics/Movement.h"
 #include "FISH/Game/GameObject.h"
 //渲染
-#include "FISH/Renderer/Renderstatus.h"
 #include "FISH/Renderer/Renderer.h"
 //物理检测
 #include "FISH/physics/RayTest.h"

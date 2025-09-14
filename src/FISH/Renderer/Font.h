@@ -40,13 +40,13 @@ namespace FISH{
         static void RenderTextFromVaoTextstd(const std::shared_ptr<VertexArray>& Vao, const std::shared_ptr<Texture>& tex, const glm::vec3 &color);
     private:
         //初始化字体库
-        void InitFTlibrary();
+        static void InitFTlibrary();
         //加载字体
         void loadCharacter(wchar_t c);
         //初始化字体渲染着色器
-        void InitFontShader();
+        static void InitFontShader();
         //初始化字体状态器
-        void InitFontStatus();
+        static void InitFontStatus();
     private:
         //字体编码内存映射
         std::map<wchar_t, CharacterInfo> Characters;
@@ -56,6 +56,13 @@ namespace FISH{
         std::shared_ptr<Texture> mFontTexture;
         //字体大小
         int mFontSize{64};
+
+        //计数类型
+        static int Fontcounts;
+        //字体着色器
+        static std::unique_ptr<Shader>  FontShader;
+
+        static std::unique_ptr<Renderstatus>  Fontstatus;
     };
 
 

@@ -14,11 +14,11 @@
 
 namespace FISH {
     //计数类型
-    static int Fontcounts = 0;
+    int Font::Fontcounts = 0;
     //字体着色器
-    static std::unique_ptr<Shader>  FontShader = nullptr;
+    std::unique_ptr<Shader>  Font::FontShader = nullptr;
 
-    static std::unique_ptr<Renderstatus>  Fontstatus = nullptr;
+    std::unique_ptr<Renderstatus>  Font::Fontstatus = nullptr;
 
 
     const int ATLAS_WIDTH = 1024*2;
@@ -33,9 +33,9 @@ namespace FISH {
     static int maxRowHeight = 0;
     
     Font::Font(const string &fontpath) {
-        InitFTlibrary();
-        InitFontShader();
-        InitFontStatus();
+        Font::InitFTlibrary();
+        Font::InitFontShader();
+        Font::InitFontStatus();
         if (FT_New_Face(ft, fontpath.c_str(), 0, &mFace)) {
             FS_ERROR("Falied to load font!");
         }
@@ -49,15 +49,15 @@ namespace FISH {
             loadCharacter(commonChars[i]);
         }
 
-        Fontcounts++;
+        Font::Fontcounts++;
     }
 
     Font::~Font() {
-        Fontcounts--;
+        Font::Fontcounts--;
         if (mFace) {
             FT_Done_Face(mFace);
         }
-        if (!Fontcounts && ft) {
+        if (!Font::Fontcounts && ft) {
             FT_Done_FreeType(ft);
             ft = nullptr;
         }

@@ -96,6 +96,27 @@ namespace FISH {
                 va_end(args);
                 return;
             }
+            case SetType::BlendFuncSeparate: {
+                va_list args;
+                va_start(args, typ);
+                FuncType sc = typ;
+                FuncType dc = va_arg(args, FuncType);
+                FuncType sa = va_arg(args, FuncType);
+                FuncType da = va_arg(args, FuncType);
+                glBlendFuncSeparate(
+                    choiceFuncTypeToGL(sc),
+                    choiceFuncTypeToGL(dc),
+                    choiceFuncTypeToGL(sa),
+                    choiceFuncTypeToGL(da)
+                );
+                va_end(args);
+                return;
+            }
+
+            case SetType::BlendEquation: {
+                glBlendEquation(choiceFuncTypeToGL(typ));
+                return;
+            }
         }
     }
     

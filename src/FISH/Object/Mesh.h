@@ -27,7 +27,7 @@ namespace FISH {
         bool getflip() const {return flip;}
         
         //得到该模型的形状和材质
-        std::shared_ptr<Shape>& getShape();
+        ShapePtr& getShape();
         
         //标记高亮
         inline void allowHightLight(bool tag) {hightLightTag = tag;}
@@ -39,12 +39,16 @@ namespace FISH {
         void setVisable(bool tag) {isVisable = tag;}
 
         bool getVisable() const {return isVisable;}
+
+        MaterialPtr& getMaterial();
+        
         OBJ_CLASS_TYPE(Mesh)
     private:
-        std::shared_ptr<Shape> mShape{nullptr};
-        bool                   flip{0};
-        bool                   hightLightTag{0};
-        bool                   isVisable{1};
+        ShapePtr                mShape{nullptr};
+        MaterialPtr             mMaterial{nullptr};
+        bool                    flip{0};
+        bool                    hightLightTag{0};
+        bool                    isVisable{1};
     };
 
     using MeshPtr = std::shared_ptr<Mesh>;

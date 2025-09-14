@@ -6,13 +6,15 @@ namespace FISH {
     class ICollider;
     class AABB;
     class OBB;
+    class Sphere;
         //碰撞体指针对象
     using ColliderPtr = std::shared_ptr<ICollider>;
     //AABB碰撞体指针
     using AABBPtr = std::shared_ptr<AABB>;
     //OBB碰撞体指针
     using OBBPtr = std::shared_ptr<OBB>;
-
+    //球形碰撞体指针
+    using SpherePtr = std::shared_ptr<Sphere>;
 
     //类型
     enum class ColliderType {
@@ -92,6 +94,10 @@ namespace FISH {
             return CollisionInfo();
         }
 
+        virtual CollisionInfo CollisionWithSphere(const std::shared_ptr<Sphere>& other) const {
+            return CollisionInfo();
+        }
+
     protected:
         //位置
         glm::vec3 mPosition{0.0};
@@ -137,6 +143,9 @@ namespace FISH {
         CollisionInfo CollisionWithAABB(const AABBPtr& other) const override;
         
         CollisionInfo CollisionWithOBB(const OBBPtr& other) const override;
+
+        CollisionInfo CollisionWithSphere(const SpherePtr& other) const override;
+
     private:
         //包围盒
         glm::vec3 Min;
@@ -165,6 +174,10 @@ namespace FISH {
 
         void setRotation(const glm::mat3& rotation);
 
+        const glm::mat3& getRotation() const {return Rotation;}
+
+        const glm::vec3& getHalfExtens() const {return HalfExtents;}
+
         //轴向量获取
         inline glm::vec3 getAxisX() const { return glm::normalize(Rotation[0]); }
         inline glm::vec3 getAxisY() const { return glm::normalize(Rotation[1]); }
@@ -178,11 +191,47 @@ namespace FISH {
         CollisionInfo CollisionWithAABB(const AABBPtr& other) const override;
         
         CollisionInfo CollisionWithOBB(const OBBPtr& other) const override;
+
+        CollisionInfo CollisionWithSphere(const SpherePtr& other) const override;
+
     private:
         // 半长宽高
         glm::vec3 HalfExtents{1.0}; 
         // 旋转矩阵
         glm::mat3 Rotation{1.0};    
+    };
+
+    class Sphere : public ICollider {
+    public:
+        friend class Collider;
+
+        Sphere(): Radius(1.0) {}
+
+        Sphere(float r): Radius(r) {}
+
+        ColliderType getType() const override {return ColliderType::Sphere;}
+
+        float volume() const override;
+
+        glm::vec3 size() const override;
+
+        void transform(const glm::mat4& transform) override;
+
+        std::shared_ptr<VertexArray> getVertices() const override;
+
+        CollisionInfo getCollisionInfo(const ColliderPtr& other) const override;
+
+        inline float getRadius() const {return Radius;}
+        inline float setRadius(float r) { Radius = r;}
+    public:
+        CollisionInfo CollisionWithAABB(const AABBPtr& other) const override;
+        CollisionInfo CollisionWithOBB(const OBBPtr& other) const override;
+        CollisionInfo CollisionWithSphere(const SpherePtr& other) const override;
+
+
+    private:
+        //球体半径
+        float Radius;
     };
 
 
@@ -201,6 +250,12 @@ namespace FISH {
         
         // OBB与OBB碰撞检测
         static bool intersectsOBBOBB(const ColliderPtr& a, const ColliderPtr& b);
+
+        static bool intersectsSphereAABB(const ColliderPtr& a, const ColliderPtr& b);
+
+        static bool intersectsSphereOBB(const ColliderPtr& a, const ColliderPtr& b);
+
+        static bool intersectsSphereSphere(const ColliderPtr& a, const ColliderPtr& b);
     };
 
 }

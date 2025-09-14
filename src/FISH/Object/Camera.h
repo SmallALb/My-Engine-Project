@@ -22,7 +22,7 @@ namespace  FISH {
         virtual void scale(float deltaScale) = 0;
 
         //获取看向方向
-        virtual glm::vec3 getFront() const = 0;
+        virtual glm::vec3 getFront() const {return mFront;};
         
         //获取up方向
         virtual glm::vec3 getUp() const {return mUp;}
@@ -30,8 +30,8 @@ namespace  FISH {
         //相机创建
         static Camera* CreateCamera(CameraType cameratype = CameraType::PERSPECTIVE, const std::string& name = "Camera");
 
-        //获取相机的right向量
-        virtual const glm::vec3& getRight() const {return mRight;}
+        //获取相机的left向量
+        virtual const glm::vec3& getLeft() const {return mLeft;}
 
         //更新相机
         virtual void update() = 0;
@@ -47,16 +47,21 @@ namespace  FISH {
         //设置摄像机坐标系y向量
         virtual void setUp(const glm::vec3& upVec) {mUp = upVec;}
         //获取看向的点
-        virtual glm::vec3 getLookAtPoint() const; 
+        virtual glm::vec3 getLookAtPoint() const {return mLookAtpoint;}
+
+        virtual void setPosition(const glm::vec3& position) override;
         //获取相机类型
         CameraType getCameraType() const { return mCameraType; } 
 
         OBJ_CLASS_TYPE(Camera)
-
+    protected:
+        virtual void updateVectors();
 
     protected:
         glm::vec3 mUp{0.0, 1.0, 0.0};
-        glm::vec3 mRight{1.0, 0.0, 0.0};
+        glm::vec3 mLeft{1.0, 0.0, 0.0};
+        glm::vec3 mLookAtpoint{0.0};
+        glm::vec3 mFront{0.0};
         float mNear = 0.0f;
         float mFar = 0.0f;
         CameraType mCameraType;

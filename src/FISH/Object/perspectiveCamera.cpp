@@ -17,6 +17,7 @@ namespace FISH {
 	        mAspect = a;
 	        mNear = n;
 	        mFar = far_;
+            updateVectors();
     }
 
     void perspectiveCamera::scale(float deltaScale) {
@@ -25,8 +26,6 @@ namespace FISH {
             if (mFovy < 1.0f) mFovy = 1.0f;
             if (mFovy > 90.0f) mFovy = 90.0f;
     }
-
-    glm::vec3 perspectiveCamera::getFront() const{ return glm::normalize(glm::cross(mRight, mUp)); }
 
     void perspectiveCamera::setLookAtFromMousePosition(const std::pair<float, float> &pos) {
         auto& [xpos, ypos] = pos;
@@ -37,7 +36,10 @@ namespace FISH {
         pitch(dY);
         mCurrentX = xpos;
         mCurrentY = ypos;
+
+        mLookAtpoint = mPosition + mFront;
     }
+
 
     void perspectiveCamera::update() {
         if (!IsControl) return;
@@ -48,20 +50,22 @@ namespace FISH {
             setLookAtFromMousePosition(Input::GetMousePos());
       
             //键盘响应
-            auto front = glm::cross(mRight, mUp);
+
             glm::vec3 dir(0.0);
             if (Input::IsKeyPressed(FS_KEY_W) || Input::IsKeyPressed(FS_KEY_UP))
-                dir += front;
+                dir += mFront;
             if (Input::IsKeyPressed(FS_KEY_S) || Input::IsKeyPressed(FS_KEY_DOWN))
-                dir -= front;
+                dir -= mFront;
             if (Input::IsKeyPressed(FS_KEY_D) || Input::IsKeyPressed(FS_KEY_RIGHT))
-                dir -= mRight;
+                dir -= mLeft;
             if (Input::IsKeyPressed(FS_KEY_A) || Input::IsKeyPressed(FS_KEY_LEFT))
-                dir += mRight;
+                dir += mLeft;
             
             if (glm::length(dir) != 0) {
                 auto locaDir = glm::inverse(glm::mat3(getModelMatrix())) * dir;
                 mPosition += glm::normalize(locaDir) * mSpeed;
+                mLookAtpoint = mPosition + mFront;
+                updateVectors();
             }
 
             mAccumulatedTime -= Time::Step;
@@ -72,21 +76,26 @@ namespace FISH {
 
 
 
-    void perspectiveCamera::pitch(float angle)
-    {
+    void perspectiveCamera::pitch(float angle) {
         mPitch += angle;
-        if (mPitch > 89.5 || mPitch < -89.5) {
+        if (mPitch > 89.5f || mPitch < -89.5f) {
             mPitch -= angle;
             return;
         }
-        auto mat = glm::rotate(glm::mat4(1.0f), glm::radians(angle), mRight);
-        mUp = mat * glm::vec4(mUp, 0.0f);
+        
+        // 围绕左向量旋转前向向量
+        glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(angle), mLeft);
+        mFront = glm::normalize(rotation * glm::vec4(mFront, 0.0f));
+        
+        // 更新上向量以确保正交
+        mUp = glm::normalize(glm::cross(mFront, mLeft));
     }
 
     void perspectiveCamera::yaw(float angle) {
         auto mat = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(0.0, 1.0, 0.0));
-	    mRight = mat * glm::vec4(mRight, 0.0);
-	    mUp = mat * glm::vec4(mUp, 0.0);
+	    mLeft = glm::normalize(mat * glm::vec4(mLeft, 0.0f));
+        mFront = glm::normalize(mat * glm::vec4(mFront, 0.0f));
+        mUp = glm::normalize(glm::cross(mFront, mLeft));
     }
 
     glm::mat4 perspectiveCamera::getProjectMatrix() {

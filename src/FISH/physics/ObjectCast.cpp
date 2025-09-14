@@ -171,6 +171,10 @@ namespace FISH {
         return info;
     }
 
+    CollisionInfo AABB::CollisionWithSphere(const SpherePtr &other) const {
+        return CollisionInfo();
+    }
+
     bool Collider::intersects(const ColliderPtr &A, const ColliderPtr &B) {
         auto TyA = A->getType(), TyB = B->getType();
 
@@ -187,7 +191,22 @@ namespace FISH {
         else if (TyA == ColliderType::OBB && TyB == ColliderType::OBB) {
             return intersectsOBBOBB(A, B);
         }
-        
+        else if (TyA == ColliderType::Sphere && TyB == ColliderType::AABB) {
+            return intersectsSphereAABB(A, B);
+        }
+        else if (TyA == ColliderType::AABB && TyB == ColliderType::Sphere) {
+            return intersectsSphereAABB(B, A);
+        }
+        else if (TyA == ColliderType::Sphere && TyB == ColliderType::OBB) {
+            return intersectsSphereOBB(A, B);
+        }
+        else if (TyA == ColliderType::OBB && TyB == ColliderType::Sphere) {
+            return intersectsSphereOBB(B, A);
+        }
+        else if (TyA == ColliderType::Sphere && TyB == ColliderType::Sphere) {
+            return intersectsSphereSphere(A, B);
+        }
+            
         FS_INFO("Unkonwn CastBox Type!");
         return false;
     }
@@ -298,6 +317,38 @@ namespace FISH {
         return true;
     }
 
+    bool Collider::intersectsSphereAABB(const ColliderPtr &a, const ColliderPtr &b) {
+        auto sphere = Static_PtrCastTo<Sphere>(a);
+        auto aabb = Static_PtrCastTo<AABB>(b);
+        
+        auto [minB, maxB] = aabb->getBoundingPos();
+        glm::vec3 closestPoint = glm::clamp(sphere->getPosition(), minB, maxB);
+        
+        return glm::length(sphere->getPosition() - closestPoint) <= sphere->getRadius();
+    }
+
+    bool Collider::intersectsSphereOBB(const ColliderPtr &a, const ColliderPtr &b) {
+        auto sphere = Static_PtrCastTo<Sphere>(a);
+        auto obb = Static_PtrCastTo<OBB>(b);
+        
+        // 转换到OBB局部空间
+        glm::vec3 localSpherePos = glm::transpose(obb->Rotation) * (sphere->getPosition() - obb->getPosition());
+        
+        // 在局部空间中找最近点
+        glm::vec3 closestPointLocal = glm::clamp(localSpherePos, -obb->HalfExtents, obb->HalfExtents);
+        
+        // 计算距离
+        glm::vec3 closestPointWorld = obb->getPosition() + obb->Rotation * closestPointLocal;
+        return glm::length(sphere->getPosition() - closestPointWorld) <= sphere->getRadius();
+    }
+
+    bool Collider::intersectsSphereSphere(const ColliderPtr &a, const ColliderPtr &b) {
+        auto sphereA = Static_PtrCastTo<Sphere>(a);
+        auto sphereB = Static_PtrCastTo<Sphere>(b);
+        
+        float distance = glm::length(sphereA->getPosition() - sphereB->getPosition());
+        return distance <= (sphereA->getRadius() + sphereB->getRadius());
+    }
 
     float OBB::volume() const {
         return 8.0f * HalfExtents.x * HalfExtents.y * HalfExtents.z;
@@ -474,6 +525,159 @@ namespace FISH {
         info.collisionFace = Collider::determineCollisionFace(localNormal);
         info.colliderType = "OBS - OBS";
 
+        return info;
+    }
+
+    CollisionInfo OBB::CollisionWithSphere(const SpherePtr &other) const
+    {
+        return CollisionInfo();
+    }
+
+    float Sphere::volume() const {
+        return (4.0f / 3.0f) * glm::pi<float>() * Radius * Radius * Radius;
+    }
+    glm::vec3 Sphere::size() const {
+        return glm::vec3(Radius * 2.0f);
+    }
+
+    void Sphere::transform(const glm::mat4 &transform) {
+        mPosition = glm::vec3(transform * glm::vec4(mPosition, 1.0f));
+        glm::vec3 scale = glm::vec3(transform[0][0], transform[1][1], transform[2][2]);
+        float avgScale = (scale.x + scale.y + scale.z) / 3.0f;
+        Radius *= avgScale;
+    }
+    std::shared_ptr<VertexArray> Sphere::getVertices() const {
+        const int segments = 16;
+        const int rings = 16;
+        
+        std::vector<float> vertices;
+        std::vector<unsigned int> indices;
+        
+        // 生成顶点
+        for (int i = 0; i <= rings; ++i) {
+            float phi = glm::pi<float>() * i / rings;
+            for (int j = 0; j <= segments; ++j) {
+                float theta = 2.0f * glm::pi<float>() * j / segments;
+                
+                float x = Radius * sin(phi) * cos(theta);
+                float y = Radius * cos(phi);
+                float z = Radius * sin(phi) * sin(theta);
+                
+                vertices.push_back(mPosition.x + x);
+                vertices.push_back(mPosition.y + y);
+                vertices.push_back(mPosition.z + z);
+            }
+        }
+        
+        // 生成索引
+        for (int i = 0; i < rings; ++i) {
+            for (int j = 0; j < segments; ++j) {
+                int first = (i * (segments + 1)) + j;
+                int second = first + segments + 1;
+                
+                indices.push_back(first);
+                indices.push_back(second);
+                indices.push_back(first + 1);
+                
+                indices.push_back(second);
+                indices.push_back(second + 1);
+                indices.push_back(first + 1);
+            }
+        }
+        
+        // 创建顶点缓冲区和索引缓冲区
+        std::shared_ptr<VertexBuffer> vbo;
+        vbo.reset(VertexBuffer::Create(vertices.data(), vertices.size() * sizeof(float)));
+        
+        std::shared_ptr<IndexBuffer> ibo;
+        ibo.reset(IndexBuffer::Create(indices.data(), indices.size()));
+        
+        vbo->SetLayout({
+            {ShaderDataType::Float3, VertexType::Position, "pos"}
+        });
+        
+        std::shared_ptr<VertexArray> vao;
+        vao.reset(VertexArray::Create());
+        vao->AddVertexBuffer(vbo);
+        vao->SetIndexBuffer(ibo);
+        
+        return vao;
+    }
+    CollisionInfo Sphere::getCollisionInfo(const ColliderPtr &other) const {
+        switch (other->getType()) {
+            case ColliderType::AABB:
+                return CollisionWithAABB(Static_PtrCastTo<AABB>(other));
+            case ColliderType::OBB:
+                return CollisionWithOBB(Static_PtrCastTo<OBB>(other));
+            case ColliderType::Sphere:
+                return CollisionWithSphere(Static_PtrCastTo<Sphere>(other));
+            default:
+                return CollisionInfo();
+        }
+    }
+    CollisionInfo Sphere::CollisionWithAABB(const AABBPtr &other) const  {
+        CollisionInfo info;
+        auto [minB, maxB] = other->getBoundingPos();
+        
+        // 找到AABB上距离球心最近的点
+        glm::vec3 closestPoint = glm::clamp(mPosition, minB, maxB);
+        
+        // 计算距离
+        float distance = glm::length(mPosition - closestPoint);
+        info.IsColliding = distance <= Radius;
+        
+        if (info.IsColliding) {
+            info.Depth = Radius - distance;
+            info.collisionNormal = glm::normalize(mPosition - closestPoint);
+            info.collisionPoint = closestPoint;
+            info.collisionFace = Collider::determineCollisionFace(info.collisionNormal);
+        }
+        
+        info.colliderType = "Sphere - AABB";
+        return info;
+    }
+    CollisionInfo Sphere::CollisionWithOBB(const OBBPtr &other) const {
+        CollisionInfo info;
+        
+        // 将球心转换到OBB的局部空间
+        glm::vec3 localSpherePos = glm::transpose(other->getRotation()) * (mPosition - other->getPosition());
+        
+        // 在局部空间中找到最近点（类似于AABB）
+        glm::vec3 closestPointLocal = glm::clamp(localSpherePos, -other->getHalfExtens(), other->getHalfExtens());
+        
+        // 转换回世界空间
+        glm::vec3 closestPointWorld = other->getPosition() + other->getRotation() * closestPointLocal;
+        
+        // 计算距离
+        float distance = glm::length(mPosition - closestPointWorld);
+        info.IsColliding = distance <= Radius;
+        
+        if (info.IsColliding) {
+            info.Depth = Radius - distance;
+            info.collisionNormal = glm::normalize(mPosition - closestPointWorld);
+            info.collisionPoint = closestPointWorld;
+            info.collisionFace = Collider::determineCollisionFace(info.collisionNormal);
+        }
+        
+        info.colliderType = "Sphere - OBB";
+        return info;
+    }
+    CollisionInfo Sphere::CollisionWithSphere(const SpherePtr &other) const {
+        CollisionInfo info;
+    
+        float distance = glm::length(mPosition - other->mPosition);
+        float totalRadius = Radius + other->Radius;
+        
+        info.IsColliding = distance <= totalRadius;
+        
+        if (info.IsColliding) {
+            info.Depth = totalRadius - distance;
+            info.collisionNormal = glm::normalize(mPosition - other->mPosition);
+            info.collisionPoint = mPosition - info.collisionNormal * Radius;
+            info.collisionFace = Collider::determineCollisionFace(info.collisionNormal);
+        }
+        
+        info.colliderType = "Sphere - Sphere";
         return info;
     }
 }

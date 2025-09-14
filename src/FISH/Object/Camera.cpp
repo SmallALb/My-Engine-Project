@@ -6,16 +6,12 @@
 namespace FISH {
     Camera::Camera() {
         mType = ObjType::Camera;
+        updateVectors();
     }
 
     glm::mat4 Camera::getViewMatrix() {
         auto pos = getPosition();
-        glm::vec3 front = glm::cross(mRight, mUp);
-        auto Wfront = glm::normalize(glm::vec3(getModelMatrix() * glm::vec4(front, 0.0)));
-        auto Wup = glm::normalize(glm::vec3(getModelMatrix() * glm::vec4(mUp, 0.0)));
-        glm::vec3 center = pos + Wfront;
-
-        return glm::lookAt(pos, center, Wup);
+        return glm::lookAt(pos, mLookAtpoint, mUp);
     }
 
 
@@ -28,17 +24,18 @@ namespace FISH {
     }
 
     void Camera::setLookAt(const glm::vec3 &pos) {
-        auto newFront = glm::normalize(pos - mPosition);
-
-        mRight = glm::normalize(glm::cross(mUp, newFront));
-        mUp = glm::normalize(glm::cross(newFront, mRight));
+        mLookAtpoint = pos;
+        updateVectors();
     }
 
-    glm::vec3 Camera::getLookAtPoint() const {
-        glm::vec3 front = glm::cross(mRight, mUp);
-        glm::vec3 center = mPosition + front;
-        //FS_INFO("center :({0}, {1}, {2})", center[0], center[1], center[2]);
+    void Camera::setPosition(const glm::vec3 &position) {
+        mPosition = position;
+        updateVectors();
+    }
 
-        return center;
+    void Camera::updateVectors() {
+        mFront = glm::normalize(mLookAtpoint - mPosition);
+        mLeft = glm::normalize(glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), mFront));
+        mUp = glm::normalize(glm::cross(mFront, mLeft));
     }
 }

@@ -46,8 +46,6 @@ namespace FISH {
         //获取当前相机在2D视口中的位置y
         inline void setCurrentY(double y) {mCurrentY = y;}
 
-        //获取朝向
-        virtual glm::vec3 getFront() const override;
 
         //从指定位置中设置相机看向视角
         void setLookAtFromMousePosition(const std::pair<float, float>& pos);

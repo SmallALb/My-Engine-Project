@@ -7,6 +7,7 @@
 #include "VertexArray.h"
 #include "Texture.h"
 #include "BaseShape.h"
+#include "Material.h"
 #include "../Object/Object.h"
 #include "../Object/SpotLight.h"
 #include "../Object/PointLight.h"
@@ -26,6 +27,8 @@ namespace FISH {
     std::map<string, std::shared_ptr<Shader>> Renderer::ShaderLib {};
     std::unique_ptr<Shape> Renderer::ball = nullptr;
     std::unique_ptr<Renderstatus> Renderer::mstatuss = nullptr;
+
+
     bool Renderer::renderLight = 1;
 
     void Renderer::render(
@@ -41,19 +44,51 @@ namespace FISH {
     void Renderer::render(const std::vector<std::shared_ptr<Object3D>> &objs) {
         std::vector<std::shared_ptr<SpotLight>> spotlights;
         std::vector<std::shared_ptr<PointLight>> pointlights;
+        std::vector<FISH::MeshPtr>  Blends;
+        std::vector<FISH::MeshPtr>  NoBlends;
 
-        for (auto obj : objs) {
-            if (obj->GetObjType() == ObjType::Light) {
-                auto lightobj = dynamic_pointer_cast<Light>(obj);
-                if (lightobj->getLightType() == LightType::Point) {
-                    pointlights.push_back(dynamic_pointer_cast<PointLight>(lightobj));
+        auto getlights = [&](Object3DPtr obj, auto&& self)->void {
+            if (obj->GetObjType() == FISH::ObjType::Light) {
+                if (Static_PtrCastTo<Light>(obj)->getLightType() == LightType::Point) {
+                    pointlights.push_back(Static_PtrCastTo<PointLight>(obj));
                 }
-                else {
-                    spotlights.push_back(dynamic_pointer_cast<SpotLight>(lightobj));
+                else if (Static_PtrCastTo<Light>(obj)->getLightType() == LightType::Spot) {
+                    spotlights.push_back(Static_PtrCastTo<SpotLight>(obj));
                 }
+            }       
+
+            for (auto& child : obj->getChilds()) self(child, self);
+        };
+        for (auto& obj : objs) getlights(obj, getlights);
+
+        auto diviedBlend = [&](Object3DPtr obj, auto&& self)->void {
+            if (obj->GetObjType() != ObjType::Mesh) return;
+            auto ptr = Static_PtrCastTo<Mesh>(obj);
+            auto material = ptr->getMaterial();
+            if (material->isBlendColorEnable()) {
+                Blends.push_back(ptr);
             }
-        }
-        for (auto& obj : objs) if (obj->getParent() == nullptr || obj->getParent()->GetObjType() == ObjType::Camera) 
+            else {
+                NoBlends.push_back(ptr);
+            }
+            for (auto& child : obj->getChilds()) self(child, self);
+        };
+        for (auto& obj : objs) diviedBlend(obj, diviedBlend);
+
+        std::sort(Blends.begin(), Blends.end(), [&](auto& a, auto& b) {
+            auto cameraPos = UseCamera->getPosition();
+            auto front = UseCamera->getFront();
+            auto vecA = a->getPosition() - cameraPos;
+            auto vecB = b->getPosition() - cameraPos;
+            float lenA = (glm::dot(vecA, front) / glm::dot(front, front));
+            float lenB = (glm::dot(vecB, front) / glm::dot(front, front));
+            return lenA < lenB;
+        });
+
+        for (auto& obj : NoBlends) if (obj->getParent() == nullptr || obj->getParent()->GetObjType() == ObjType::Camera) 
+            RenderObj(obj, spotlights, pointlights);
+
+        for (auto& obj : Blends) if (obj->getParent() == nullptr || obj->getParent()->GetObjType() == ObjType::Camera) 
             RenderObj(obj, spotlights, pointlights);
     }
 
@@ -78,6 +113,7 @@ namespace FISH {
 
     void Renderer::renderColliderBox(const ColliderPtr &box, const glm::vec3& color) {
         mstatuss->disablestatus(StatusType::DepthTest);
+        mstatuss->disablestatus(StatusType::Blend);
         ShaderLib["OnlyColor"]->Begin();
         ShaderLib["OnlyColor"]->setMat4("projection", UseCamera->getProjectMatrix());
         ShaderLib["OnlyColor"]->setMat4("view", UseCamera->getViewMatrix());
@@ -87,6 +123,7 @@ namespace FISH {
         box->getVertices()->renderIndex(0, LINES);
         ShaderLib["OnlyColor"]->End();
         mstatuss->enablestatus(StatusType::DepthTest);
+        mstatuss->enablestatus(StatusType::Blend);
     }
 
     void Renderer::initDefaultShader() {
@@ -137,6 +174,20 @@ namespace FISH {
                 mstatuss->setstatusFunc(SetType::CullFaceFunc, FuncType::Back);
                 mstatuss->setstatusFunc(SetType::FrontFaceDIR, FuncType::FaceCW);
                 auto ptr = Static_PtrCastTo<Mesh>(obj);
+                auto shape = ptr->getShape();
+                auto material = ptr->getMaterial();
+                if (!material->isDepthWriteEnable())  {
+                    mstatuss->setstatusFunc(SetType::DepthFunc, material->getDepthTestMode());
+                    mstatuss->setstatusFunc(SetType::DepthMask, FuncType::FALSETyp);
+                }
+                else mstatuss->setstatusFunc(SetType::DepthFunc, material->getDepthTestMode());
+
+                if (material->isBlendColorEnable()) {
+                    mstatuss->disablestatus(StatusType::CullFace);
+                    mstatuss->enablestatus(StatusType::Blend);
+                    mstatuss->setstatusFunc(SetType::BlendFunc, material->getSrcAlpthaBlendMode(), material->getDstAlpthBlendMode());
+                    
+                }
                 //渲染被标记时的边缘
                 if (ptr && ptr->isHightLight()){       
                     mstatuss->setstatusFunc(SetType::StencilFunc, FuncType::Always, 1, 0xff);
@@ -147,8 +198,8 @@ namespace FISH {
                 ShaderLib["Phong"]->setMat4("projection", UseCamera->getProjectMatrix());
                 ShaderLib["Phong"]->setMat4("view", UseCamera->getViewMatrix());
                 caculateLight(spotlights, pointlights);
-                auto shape = ptr->getShape();   
-                ShaderLib["Phong"]->setTextureHandle("sampler", shape->useTexture());
+
+                ShaderLib["Phong"]->setTextureHandle("sampler", material->getTextureHandle(TextureType::None));
                 ShaderLib["Phong"]->setMat4("model", obj->getModelMatrix());
                 ShaderLib["Phong"]->setMat4("normat", obj->getNormalMatrix());
                 shape->render(TRIANGLES); 
@@ -200,10 +251,9 @@ namespace FISH {
         mstatuss->setstatusFunc(FISH::SetType::DepthFunc, FISH::FuncType::DepthLess);
         mstatuss->setstatusFunc(FISH::SetType::StencilOperation, FISH::FuncType::Keep, FISH::FuncType::Keep, FISH::FuncType::Keep);
         mstatuss->setstatusFunc(FISH::SetType::StencilMask, FISH::FuncType::ZERO, 0xff);
-        //渲染子节点
-        for (auto &child : obj->getChilds()) {
-            RenderObj(child, spotlights, pointlights);
-        }
+        mstatuss->setstatusFunc(FISH::SetType::DepthMask, FISH::FuncType::TRUETyp);
+        mstatuss->enablestatus(FISH::StatusType::DepthTest);
+        mstatuss->disablestatus(FISH::StatusType::Blend);
     }
 
     void Renderer::RenderObj(const std::shared_ptr<Object2D> &obj) {
@@ -257,6 +307,11 @@ namespace FISH {
         ShaderLib["Phong"]->setFloat("shiness", 64.0f);
 
 
+
+    }
+    void Renderer::getLights(const Object3DPtr& objs, 
+            std::vector<std::shared_ptr<SpotLight>> &spots, 
+            std::vector<std::shared_ptr<PointLight>> &points) {
 
     }
 }

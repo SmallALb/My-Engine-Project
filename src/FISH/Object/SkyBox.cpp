@@ -16,19 +16,19 @@ namespace FISH{
     }
 
     void SkyBox::setTexture(const std::shared_ptr<TextureHandle>& mTexture) {
-        mBall->setTexture(mTexture);
+        mtexture = mTexture;
     }
 
     void SkyBox::setTexture(TextureHandle *mTexture) {
         std::shared_ptr<TextureHandle> ptr(mTexture);
-        mBall->setTexture(ptr);
+        mtexture = ptr;
     }
 
     void SkyBox::renderSkyBox() {
-        mBall->useTexture();
+        //mBall->useTexture();
         mBall->render(TRIANGLES);
     }
     uint64_t SkyBox::useTexture() const {
-        return mBall->useTexture();
+        return mtexture->getHandle();
     }
 }

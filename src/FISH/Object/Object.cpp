@@ -6,6 +6,10 @@
 #include "PointLight.h"
 #include "SpotLight.h"
 #include "DirectionLight.h"
+#include "FISH/Renderer/Buffer.h"
+#include "FISH/Renderer/VertexArray.h"
+#include "FISH/Renderer/BaseShape.h"
+#include "FISH/Renderer/Material.h"
 #include "Mesh.h"
 #include "Scene.h"
 #include "Object.h"
@@ -59,7 +63,7 @@ namespace FISH {
         }
     }
 
-    glm::vec3 Object3D::getPosition() const{
+    glm::vec3 Object3D:: getPosition() const{
         return glm::vec3(getModelMatrix()[3]);
     }
 

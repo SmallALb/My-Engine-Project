@@ -33,21 +33,9 @@ target("FISH")
         add_linkdirs("$(buildir)/windows/x64/release")
     end
 
---Èë¿Úº¯Êý
-target("ENTRY")
+target("TESTRENDER")
     set_kind("binary")
-    add_files("ENTRY.cpp")
-    add_deps("FISH")
-    add_links("FISH")
-    add_opengl()
-    add_engineAtt()
-    add_includedirs("src")
-    mode_choice()
-
---²âÊÔÅö×²
-target("TESTCAST")
-    set_kind("binary")
-    add_files("CASTTEST.cpp")
+    add_files("RenderTest.cpp")
     add_deps("FISH")
     add_links("FISH")
     add_opengl()
