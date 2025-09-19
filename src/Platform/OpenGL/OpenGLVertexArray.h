@@ -27,6 +27,21 @@ namespace FISH {
 
             virtual void renderIndex(int beginId, int ElementType) override;
 
+                    // 顶点编辑功能
+            virtual bool UpdateVertexPosition(uint32_t vertexIndex, const glm::vec3& newPosition) override;
+            virtual bool UpdateVertexColor(uint32_t vertexIndex, const glm::vec4& newColor) override;
+            virtual bool UpdateVertexUV(uint32_t vertexIndex, const glm::vec2& newUV) override;
+            virtual bool UpdateVertexNormal(uint32_t vertexIndex, const glm::vec3& newNormal) override;
+
+            // 获取顶点信息
+            virtual glm::vec3 GetVertexPosition(uint32_t vertexIndex) const override;
+            virtual glm::vec4 GetVertexColor(uint32_t vertexIndex) const override;
+            virtual glm::vec2 GetVertexUV(uint32_t vertexIndex) const override;
+            virtual glm::vec3 GetVertexNormal(uint32_t vertexIndex) const override;
+
+        private:
+            std::shared_ptr<VertexBuffer> FindVertexBufferByType(VertexType type) const;
+            uint32_t GetVertexOffsetInBuffer(VertexType type, uint32_t vertexIndex) const;
         private:
             std::vector<std::shared_ptr<VertexBuffer>> mVertexBuffers;
             std::shared_ptr<IndexBuffer> mIndexBuffer;

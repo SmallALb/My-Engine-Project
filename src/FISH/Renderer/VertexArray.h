@@ -26,6 +26,17 @@ namespace FISH {
         //按顶点下标绘制图形
         virtual void renderIndex(int beginId, int ElementType) = 0;
         
+
+        // 顶点编辑功能
+        virtual bool UpdateVertexPosition(uint32_t vertexIndex, const glm::vec3& newPosition) = 0;
+        virtual bool UpdateVertexColor(uint32_t vertexIndex, const glm::vec4& newColor) = 0;
+        virtual bool UpdateVertexUV(uint32_t vertexIndex, const glm::vec2& newUV) = 0;
+        virtual bool UpdateVertexNormal(uint32_t vertexIndex, const glm::vec3& newNormal) = 0;
+        // 获取顶点信息
+        virtual glm::vec3 GetVertexPosition(uint32_t vertexIndex) const = 0;
+        virtual glm::vec3 GetVertexNormal(uint32_t vertexIndex) const = 0;
+        virtual glm::vec4 GetVertexColor(uint32_t vertexIndex) const = 0;
+        virtual glm::vec2 GetVertexUV(uint32_t vertexIndex) const = 0;
         //创建Vao
         static VertexArray* Create();
     };

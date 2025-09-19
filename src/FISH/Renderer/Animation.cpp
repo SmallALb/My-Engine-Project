@@ -30,16 +30,16 @@ namespace FISH {
         mFrames.resize(size);
         FrameSize = size;
         mPath = path;
-        path += "/" + name;
         int count = beginIndex;
         int idx = 0;
         //新建帧
         for (int i = 0; i < size; i++) {
             int frameIndex = beginIndex + i;
-            string texturePath = path + "(" + std::to_string(frameIndex) + ").png";
+            string currentName = std::vformat(name, std::make_format_args(frameIndex));
+            string texturePath = path + "/" + currentName;
             
             mFrames[i].duration = duration;
-        // 使用值捕获，避免悬空引用
+
             FISH::TextureManager::get().loadTextureAsync(
                 texturePath,
                 ChannelType::RGBA, 

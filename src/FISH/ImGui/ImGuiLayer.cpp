@@ -1,8 +1,7 @@
 #include "fspcs.h"
 #include "Platform/OpenGL/glad/glad.h"
 #include <glfw/glfw3.h>
-#include <imgui.h>
-#include <imgui_internal.h>
+
 #include "FISH/Application.h" 
 #include "Platform/OpenGL/imgui_impl_glfw.h"
 #include "Platform/OpenGL/imgui_impl_opengl3.h"

@@ -134,6 +134,17 @@ namespace FISH {
         virtual const BufferLayout& GetLayout() const = 0;
         //创建顶点buffer
         static VertexBuffer* Create(float* vertices, uint32_t size);
+        //更新整个buffer数据
+        virtual void UpdateData(float* vertices, uint32_t size, uint32_t offset = 0) = 0;
+        //更新buffer中第i个数据
+        virtual void UpdateVertexData(uint32_t vertexIndex, const void* data, uint32_t dataSize) = 0;
+        //映射到Buffer指针中
+        virtual void* MapBuffer() = 0;
+        //取消映射
+        virtual void UnmapBuffer() = 0;
+
+        virtual uint32_t GetVertexCount() const = 0;
+        virtual uint32_t GetVertexSize() const = 0;
     };
 
     //绘制下标缓冲区
@@ -146,7 +157,32 @@ namespace FISH {
 
         virtual unsigned int GetCount() const = 0;
 
+        virtual void UpdateData(unsigned int* indices, uint32_t count, uint32_t offset = 0) = 0;
+
         static IndexBuffer* Create(unsigned int* indices, uint32_t size);
+    };
+
+    class API_ FrameBuffer {
+    public:
+        virtual void bind() const = 0;
+
+        virtual void unbind() const = 0;
+
+        virtual uint32_t GetColorAttachmentID() const = 0;
+
+        virtual uint32_t GetDepthAttachmentID() const = 0;
+
+        virtual void resize(uint32_t width, uint32_t height) = 0;
+        
+        virtual bool isCompllete() const = 0;
+
+        virtual uint32_t GetWidth() const = 0;
+        virtual uint32_t GetHeight() const = 0;
+
+        virtual void updateCleanStatus(int status) = 0;
+
+        static FrameBuffer* Create(uint32_t width, uint32_t height);
+
     };
 
      

@@ -106,6 +106,21 @@ namespace FISH {
         ShaderLib["OnlyColor"]->End();
     }
 
+    void Renderer::RenderShapeEdge(const ShapePtr &shape, const glm::vec3 &color) {
+        mstatuss->disablestatus(StatusType::DepthTest);
+        mstatuss->disablestatus(StatusType::Blend);
+        ShaderLib["OnlyColor"]->Begin();
+        ShaderLib["OnlyColor"]->setMat4("projection", UseCamera->getProjectMatrix());
+        ShaderLib["OnlyColor"]->setMat4("view", UseCamera->getViewMatrix());
+        ShaderLib["OnlyColor"]->setMat4("model", glm::mat4(1.0f));
+        ShaderLib["OnlyColor"]->setMat4("normat", {1.0});  
+        ShaderLib["OnlyColor"]->setVector3("InColor", color);
+        shape->render(LINES);
+        ShaderLib["OnlyColor"]->End();
+        mstatuss->enablestatus(StatusType::DepthTest);
+        mstatuss->enablestatus(StatusType::Blend);
+    }
+
     void Renderer::render(const std::vector<std::shared_ptr<Object2D>>& objs) {
         for (auto& obj : objs) if (obj->getParent() == nullptr)
             RenderObj(obj);

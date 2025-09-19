@@ -24,7 +24,9 @@ namespace FISH
 
     uint32_t Shape::GetIndexCounts() const {return mVao->GetIndexCounts(); }
 
-
+    std::unique_ptr<VertexArray> &Shape::getVertexArrary() {
+        return mVao;
+    }
 
     Shape* Shape::CreateBox(float size) {
         Shape* shape = new Shape();

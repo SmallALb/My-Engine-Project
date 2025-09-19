@@ -9,7 +9,7 @@ namespace FISH {
     public:
         Layer(const string& name = "Layer");
 
-        virtual ~Layer();
+        virtual ~Layer() noexcept;
         //初始化
         virtual void OnAttach() {}
         //销毁

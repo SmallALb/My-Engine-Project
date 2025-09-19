@@ -26,6 +26,8 @@ namespace FISH {
         
         static void RenderMeshEdge(const MeshPtr& mesh);
 
+        static void RenderShapeEdge(const ShapePtr& shape, const glm::vec3& color);
+
         //初始化基本渲染着色器
         //  1.基本冯氏光照(带纹理)
         //  2.纯色着色(3D)

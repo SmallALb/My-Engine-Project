@@ -22,4 +22,12 @@ namespace FISH{
             }
             return nullptr;
         }
+        FrameBuffer *FrameBuffer::Create(uint32_t width, uint32_t height) {
+            switch (GetAPI())
+            {
+                case RendererAPI::None: return nullptr;
+                case RendererAPI::OpenGL: return new GLFrameBuffer(width, height);
+            }
+            return nullptr;
+        }
 }

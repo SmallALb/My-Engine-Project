@@ -1,4 +1,5 @@
 #include "FISH.h"
+#include "FISH/Editor/VertexEditor.h"
 
 class MainLayer : public FISH::Layer {
         //初始化
@@ -23,16 +24,16 @@ class MainLayer : public FISH::Layer {
         auto mesh1 = std::make_shared<FISH::Mesh>();
         auto shape1 = std::shared_ptr<FISH::Shape>(FISH::Shape::CreateBox(1.0));
         auto material = std::make_shared<FISH::Material>();
-        material->setBlendColorTag(1);
-        material->setDepthWriteTag(0);
+        //material->setBlendColorTag(1);
+        //material->setDepthWriteTag(0);
         //尝试上纹理
-        FISH::TextureManager::get().loadTextureAsync("picture/window2.png", ChannelType::RGBA,
-        [material](FISH::TexturePtr texture) {
-            material->setTexture(FISH::TextureType::None, texture);
-        });
+        // FISH::TextureManager::get().loadTextureAsync("picture/window2.png", ChannelType::RGBA,
+        // [material](FISH::TexturePtr texture) {
+        //     material->setTexture(FISH::TextureType::None, texture);
+        // });
 
-        //尝试上动画
-        // auto mAni = std::make_shared<FISH::SpriteAnimation>("picture/sprite", "cat ", 21, 1, 56);
+        // //尝试上动画
+        // auto mAni = std::make_shared<FISH::SpriteAnimation>("picture/sprite", "cat ({}).png", 21, 1, 56);
         // mAni->play(FISH::AnimationMode::Loop);
 
         //material->setTexture(FISH::TextureType::None, mAni);
@@ -48,8 +49,10 @@ class MainLayer : public FISH::Layer {
             APP.GetWindow().CleanBuffer(mStatus->getCleanstatuss());
         });
 
+        shape1->getVertexArrary()->UpdateVertexPosition(0, {-0.7, -0.7, -0.7});
+
         APP.GetWindow().SetCleanColor(0.3, 0.25, 0.25, 1.0);
-        camera->setAllowedControl(1);
+        //camera->setAllowedControl(1);
     }
     //销毁
     void OnDetach() override {}
@@ -82,6 +85,7 @@ public:
         FISH::Texture::initDefaultTexture();
         FISH::Renderer::initDefaultShader();
         PushLayer(new MainLayer());
+        PushLayer(FISH::GeomtryEditor::get());
     }
 
     ~Sandbox() {}

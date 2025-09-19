@@ -1,5 +1,6 @@
 #pragma once
-
+#include <imgui.h>
+#include <imgui_internal.h>
 #include "../Core.h"
 #include "../Layer.h"
 #include "../Events/MouseEvent.h"

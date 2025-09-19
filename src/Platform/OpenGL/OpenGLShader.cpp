@@ -167,11 +167,7 @@ namespace FISH {
 
     void GLShader::setTextureHandle(const std::string &name, uint64_t handle) {
         if (!GLAD_GL_ARB_bindless_texture) {
-            static bool warned = false;
-            if (!warned) {
-                FS_CORE_ERROR("GL_ARB_bindless_texture not supported!");
-                warned = true;
-            }
+            FS_CORE_ERROR("GL_ARB_bindless_texture not supported!");
             return;
         }
         unsigned int location = glGetUniformLocation(mProgram, name.c_str());

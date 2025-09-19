@@ -64,6 +64,8 @@ namespace FISH {
 
         inline ShapeType getShapeType() const {return mType;}
 
+        std::unique_ptr<VertexArray>& getVertexArrary();
+
     private:
         std::unique_ptr<VertexArray>    mVao{nullptr};
         ShapeType                       mType{ShapeType::Unknown};
