@@ -116,11 +116,11 @@ namespace FISH {
 
     glm::vec4 GLVertexArray::GetVertexColor(uint32_t vertexIndex) const {
         glm::vec4 color(0.0f);
-        auto colorBuffer = FindVertexBufferByType(VertexType::Position);
+        auto colorBuffer = FindVertexBufferByType(VertexType::Color);
         if (colorBuffer) {
             void* data = colorBuffer->MapBuffer();
             if (data) {
-                uint32_t offset = GetVertexOffsetInBuffer(VertexType::Position, vertexIndex);
+                uint32_t offset = GetVertexOffsetInBuffer(VertexType::Color, vertexIndex);
                 color = *reinterpret_cast<glm::vec4*>(static_cast<char*>(data) + offset);
                 colorBuffer->UnmapBuffer();
             }
@@ -130,11 +130,11 @@ namespace FISH {
 
     glm::vec2 GLVertexArray::GetVertexUV(uint32_t vertexIndex) const {
         glm::vec2 uv(0.0f);
-        auto uvBuffer = FindVertexBufferByType(VertexType::Position);
+        auto uvBuffer = FindVertexBufferByType(VertexType::UV);
         if (uvBuffer) {
             void* data = uvBuffer->MapBuffer();
             if (data) {
-                uint32_t offset = GetVertexOffsetInBuffer(VertexType::Position, vertexIndex);
+                uint32_t offset = GetVertexOffsetInBuffer(VertexType::UV, vertexIndex);
                 uv = *reinterpret_cast<glm::vec4*>(static_cast<char*>(data) + offset);
                 uvBuffer->UnmapBuffer();
             }

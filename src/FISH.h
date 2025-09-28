@@ -4,6 +4,7 @@
 #include <freetype/freetype.h>
 #include <imgui.h>
 //基本
+#include "FISH/Base/HashTable.h"
 #include "FISH/Time.h"
 #include "FISH/FISHMemory.h"
 #include "FISH/Keycodes.h"

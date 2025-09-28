@@ -47,6 +47,7 @@ namespace FISH {
     #define FS_FATAL(...)  ::FISH::Log::GetClientLogger()->fatal(__VA_ARGS__)
     #define FS_ASSERT(x, ...) if (!x) {FS_ERROR("Get Fail!: {0}", __VA_ARGS__); ; }
     #define FS_CORE_ASSERT(x, ...) if (!x) {FS_CORE_ERROR("Get Fail!: {0}", __VA_ARGS__); ; }
+    #define FS_CONDITION_INFO(x, ...) if ((x)) FISH::Log::GetCoreLogger()->info(__VA_ARGS__)
 #else
     #define FS_CORE_ERROR(...)
     #define FS_CORE_WARN(...)
@@ -61,6 +62,7 @@ namespace FISH {
     #define FS_FATAL(...)
     #define FS_ASSERT(x, ...)
     #define FS_CORE_ASSERT(x, ...)
+    #define FS_CONDITION_INFO(x, ...)
 #endif
 // #else
 //     #define FS_CORE_ERROR

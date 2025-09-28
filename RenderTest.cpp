@@ -22,10 +22,10 @@ class MainLayer : public FISH::Layer {
 
         //模型1
         auto mesh1 = std::make_shared<FISH::Mesh>();
-        auto shape1 = std::shared_ptr<FISH::Shape>(FISH::Shape::CreateBox(1.0));
+        auto shape1 = std::shared_ptr<FISH::Shape>(FISH::Shape::CreateBox(1.0, 32));
         auto material = std::make_shared<FISH::Material>();
         //material->setBlendColorTag(1);
-        //material->setDepthWriteTag(0);
+        material->setDepthWriteTag(1);
         //尝试上纹理
         // FISH::TextureManager::get().loadTextureAsync("picture/window2.png", ChannelType::RGBA,
         // [material](FISH::TexturePtr texture) {
@@ -49,7 +49,6 @@ class MainLayer : public FISH::Layer {
             APP.GetWindow().CleanBuffer(mStatus->getCleanstatuss());
         });
 
-        shape1->getVertexArrary()->UpdateVertexPosition(0, {-0.7, -0.7, -0.7});
 
         APP.GetWindow().SetCleanColor(0.3, 0.25, 0.25, 1.0);
         //camera->setAllowedControl(1);
@@ -58,7 +57,8 @@ class MainLayer : public FISH::Layer {
     void OnDetach() override {}
     //更新
     void OnUpdate(float dt) override {
-        camera->update();
+        FISH::Renderer::setUseCamera(camera);
+        //camera->update();
         if (FISH::Input::IsKeyPressedOnce(FS_KEY_1)) camera->setPosition({1.0, 1.0, -1.0});
         else if (FISH::Input::IsKeyPressedOnce(FS_KEY_2)) camera->setPosition({-1.0, 1.0, -1.0});
         else if (FISH::Input::IsKeyPressedOnce(FS_KEY_3)) camera->setPosition({1.0, 1.0, 1.0});

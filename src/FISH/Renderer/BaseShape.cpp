@@ -28,250 +28,98 @@ namespace FISH
         return mVao;
     }
 
-    Shape* Shape::CreateBox(float size) {
+    Shape* Shape::CreateBox(float size, int subdivisions) {
         Shape* shape = new Shape();
         shape->mType = ShapeType::Box;
         float halfSize = size / 2.0f;
-        //位置
-        float vertices[] = {
-            // 前面（-Z）
-
-            -halfSize, -halfSize, -halfSize,   // v0
-            halfSize, -halfSize, -halfSize,    // v1
-            halfSize,  halfSize, -halfSize,     // v2
-            -halfSize, -halfSize, -halfSize,    // v0 (重复)
-            halfSize,  halfSize, -halfSize,     // v2 (重复)
-            -halfSize,  halfSize, -halfSize,    // v3
-
-            // 后面（+Z）
-
-            -halfSize, -halfSize,  halfSize,   // v4
-            -halfSize,  halfSize,  halfSize,   // v5
-            halfSize,  halfSize,  halfSize,    // v6
-            -halfSize, -halfSize,  halfSize,   // v4 (重复)
-            halfSize,  halfSize,  halfSize,    // v6 (重复)
-            halfSize, -halfSize,  halfSize,    // v7
-
-            // 左面（-X）
-
-            -halfSize,  halfSize,  halfSize,   // v8
-            -halfSize, -halfSize,  halfSize,   // v9
-            -halfSize, -halfSize, -halfSize,   // v10
-            -halfSize,  halfSize,  halfSize,   // v8 (重复)
-            -halfSize, -halfSize, -halfSize,   // v10 (重复)
-            -halfSize,  halfSize, -halfSize,   // v11
-
-            // 右面（+X）
-
-            halfSize,  halfSize, -halfSize,    // v12
-            halfSize, -halfSize, -halfSize,    // v13
-            halfSize, -halfSize,  halfSize,    // v14
-            halfSize,  halfSize, -halfSize,    // v12 (重复)
-            halfSize, -halfSize,  halfSize,    // v14 (重复)
-            halfSize,  halfSize,  halfSize,    // v15
-
-            // 上面（+Y）
-
-            -halfSize,  halfSize, -halfSize,   // v16
-            halfSize,  halfSize, -halfSize,    // v17
-            halfSize,  halfSize,  halfSize,    // v18
-            -halfSize,  halfSize, -halfSize,   // v16 (重复)
-            halfSize,  halfSize,  halfSize,    // v18 (重复)
-            -halfSize,  halfSize,  halfSize,   // v19
-
-            // 下面（-Y）
-
-            -halfSize, -halfSize, -halfSize,   // v20
-            -halfSize, -halfSize,  halfSize,   // v21
-            halfSize, -halfSize,  halfSize,    // v22
-            -halfSize, -halfSize, -halfSize,   // v20 (重复)
-            halfSize, -halfSize,  halfSize,    // v22 (重复)
-            halfSize, -halfSize, -halfSize,    // v23             
-        };
-
-        // 定义uv坐标数组
-        float uvs[] = {
-       // 前面
-
-            0.0f, 0.0f,   // v0
-            1.0f, 0.0f,   // v1
-            1.0f, 1.0f,   // v2
-            0.0f, 0.0f,   // v0
-            1.0f, 1.0f,   // v2
-            0.0f, 1.0f,   // v3
-
-            // 后面
-
-            0.0f, 0.0f,   // v4
-            0.0f, 1.0f,   // v5
-            1.0f, 1.0f,   // v6
-            0.0f, 0.0f,   // v4
-            1.0f, 1.0f,   // v6
-            1.0f, 0.0f,   // v7
-
-            // 左面
-
-            1.0f, 0.0f,   // v8
-            0.0f, 0.0f,   // v9
-            0.0f, 1.0f,   // v10
-            1.0f, 0.0f,   // v8
-            0.0f, 1.0f,   // v10
-            1.0f, 1.0f,   // v11
-
-            // 右面
-
-            1.0f, 0.0f,   // v12
-            0.0f, 0.0f,   // v13
-            0.0f, 1.0f,   // v14
-            1.0f, 0.0f,   // v12
-            0.0f, 1.0f,   // v14
-            1.0f, 1.0f,   // v15
-
-            // 上面
-
-            0.0f, 1.0f,   // v16
-            1.0f, 1.0f,   // v17
-            1.0f, 0.0f,   // v18
-            0.0f, 1.0f,   // v16
-            1.0f, 0.0f,   // v18
-            0.0f, 0.0f,   // v19
-
-            // 下面
-
-            0.0f, 1.0f,   // v20
-            0.0f, 0.0f,   // v21
-            1.0f, 0.0f,   // v22
-            0.0f, 1.0f,   // v20
-            1.0f, 0.0f, 
-            1.0f, 1.0f,   // v23
-        };
-
-        //法线
-        float normals[] = {
-            // 前面（-Z）
-
-            0.0f, 0.0f, -1.0f,
-            0.0f, 0.0f, -1.0f,
-            0.0f, 0.0f, -1.0f,
-            0.0f, 0.0f, -1.0f,
-            0.0f, 0.0f, -1.0f,
-            0.0f, 0.0f, -1.0f,
-
-            // 后面（+Z）
-
-            0.0f, 0.0f, 1.0f,
-            0.0f, 0.0f, 1.0f,
-            0.0f, 0.0f, 1.0f,
-            0.0f, 0.0f, 1.0f,
-            0.0f, 0.0f, 1.0f,
-            0.0f, 0.0f, 1.0f,
-
-            // 左面（-X）
-
-            -1.0f, 0.0f, 0.0f,
-            -1.0f, 0.0f, 0.0f,
-            -1.0f, 0.0f, 0.0f,
-            -1.0f, 0.0f, 0.0f,
-            -1.0f, 0.0f, 0.0f,
-            -1.0f, 0.0f, 0.0f,
-
-            // 右面（+X）
-
-            1.0f, 0.0f, 0.0f,
-            1.0f, 0.0f, 0.0f,
-            1.0f, 0.0f, 0.0f,
-            1.0f, 0.0f, 0.0f,
-            1.0f, 0.0f, 0.0f,
-            1.0f, 0.0f, 0.0f,
-
-            // 上面（+Y）
-
-            0.0f, 1.0f, 0.0f,
-            0.0f, 1.0f, 0.0f,
-            0.0f, 1.0f, 0.0f,
-            0.0f, 1.0f, 0.0f,
-            0.0f, 1.0f, 0.0f,
-            0.0f, 1.0f, 0.0f,
-
-            // 下面（-Y）
-
-            0.0f, -1.0f, 0.0f,
-            0.0f, -1.0f, 0.0f,
-            0.0f, -1.0f, 0.0f,
-            0.0f, -1.0f, 0.0f,
-            0.0f, -1.0f, 0.0f,
-            0.0f, -1.0f, 0.0f,
-        };
-
-        // 定义索引数组（每面4个顶点，每个三角形的索引是连续的）
-        unsigned int indices[] = {
-            0, 1, 2, 3, 4, 5,
-            6, 7, 8, 9, 10, 11,
-            12,13,14,15,16,17,
-            18,19,20,21,22,23,
-            24,25,26,27,28,29,
-            30,31,32,33,34,35
-        };
-
-        //颜色
-        float colors[] = {
-            // 第一面（红色，完全不透明）
-            1.0, 0.1, 0.0, 1.0,
-            1.0, 0.1, 0.0, 1.0,
-            1.0, 0.1, 0.0, 1.0,
-            1.0, 0.1, 0.0, 1.0,
-            1.0, 0.1, 0.0, 1.0,
-            1.0, 0.1, 0.0, 1.0,
         
-            // 第二面（红色，稍微透明）
-            1.0, 0.3, 0.0, 0.8,
-            1.0, 0.3, 0.0, 0.8,
-            1.0, 0.3, 0.0, 0.8,
-            1.0, 0.3, 0.0, 0.8,
-            1.0, 0.3, 0.0, 0.8,
-            1.0, 0.3, 0.0, 0.8,
-        
-            // 第三面（红色，透明度降低）
-            1.0, 0.5, 0.0, 0.6,
-            1.0, 0.5, 0.0, 0.6,
-            1.0, 0.5, 0.0, 0.6,
-            1.0, 0.5, 0.0, 0.6,
-            1.0, 0.5, 0.0, 0.6,
-            1.0, 0.5, 0.0, 0.6,
-        
-            // 第四面（红色，更加透明）
-            1.0, 0.7, 0.0, 0.4,
-            1.0, 0.7, 0.0, 0.4,
-            1.0, 0.7, 0.0, 0.4,
-            1.0, 0.7, 0.0, 0.4,
-            1.0, 0.7, 0.0, 0.4,
-            1.0, 0.7, 0.0, 0.4,
-        
-            // 第五面（红色，接近完全透明）
-            1.0, 0.9, 0.0, 0.2,
-            1.0, 0.9, 0.0, 0.2,
-            1.0, 0.9, 0.0, 0.2,
-            1.0, 0.9, 0.0, 0.2,
-            1.0, 0.9, 0.0, 0.2,
-            1.0, 0.9, 0.0, 0.2,
-        
-            // 第六面（红色，完全透明）
-            1.0, 1.0, 0.0, 0.1,
-            1.0, 1.0, 0.0, 0.1,
-            1.0, 1.0, 0.0, 0.1,
-            1.0, 1.0, 0.0, 0.1,
-            1.0, 1.0, 0.0, 0.1,
-            1.0, 1.0, 0.0, 0.1,
-        };
+        subdivisions = (std::max)(subdivisions, 1);
+
+        std::vector<float> vertices;
+        std::vector<float> colors;
+        std::vector<float> uvs;
+        std::vector<float> normals;
+        std::vector<unsigned int> indices;
+
+        int countInPreFace = (subdivisions + 1) * (subdivisions + 1);
+        int currentVertices = countInPreFace * 6;
+        int currentIndices = subdivisions * subdivisions * 6 * 6;
+
+        for (int face = 0; face < 6; face++) {
+            glm::vec3 normal, tangent, bitangent;
+            bool reverseOrd = 0;
+            switch (face) {
+                case 0: normal = glm::vec3(0, 0, -1); tangent = glm::vec3(1, 0, 0); bitangent = glm::vec3(0, 1, 0); break; // 前
+                case 1: normal = glm::vec3(0, 0, 1);  tangent = glm::vec3(-1, 0, 0); bitangent = glm::vec3(0, 1, 0); reverseOrd = 1; break; // 后
+                case 2: normal = glm::vec3(-1, 0, 0); tangent = glm::vec3(0, 0, 1); bitangent = glm::vec3(0, 1, 0); break; // 左
+                case 3: normal = glm::vec3(1, 0, 0);  tangent = glm::vec3(0, 0, -1); bitangent = glm::vec3(0, 1, 0); reverseOrd = 1; break; // 右
+                case 4: normal = glm::vec3(0, 1, 0);  tangent = glm::vec3(1, 0, 0); bitangent = glm::vec3(0, 0, 1); break; // 上
+                case 5: normal = glm::vec3(0, -1, 0); tangent = glm::vec3(1, 0, 0); bitangent = glm::vec3(0, 0, -1); reverseOrd = 1; break; // 下
+            }
+            for (int i=0; i<= subdivisions; i++) for (int j = 0; j<= subdivisions; j++) {
+                float u = (float)j / subdivisions;
+                float v = (float)i / subdivisions;
+
+                glm::vec3 pos = -halfSize * normal 
+                    + (u * 2.0f -1.0f) * halfSize * tangent
+                    + (v * 2.0f -1.0f) * halfSize * bitangent;
+                vertices.push_back(pos.x);
+                vertices.push_back(pos.y);
+                vertices.push_back(pos.z);
+
+                uvs.push_back(u);
+                uvs.push_back(v);
+
+
+                colors.push_back(1.0f - (float)face / 6.0f);
+                colors.push_back(0.1f + (float)face / 6.0f);
+                colors.push_back(0.0f);
+                colors.push_back(1.0f);
+
+                normals.push_back(normal.x);
+                normals.push_back(normal.y);
+                normals.push_back(normal.z);
+
+            }
+
+            int baseIndex = face * countInPreFace;
+            for (int i=0; i< subdivisions; i++) for (int j=0; j<subdivisions; j++) {
+                int i0 = baseIndex + i * (subdivisions + 1) + j; //0
+                int i1 = i0 + 1; //1
+                int i2 = i0 + (subdivisions + 1); //3
+                int i3 = i2 + 1; //4 
+
+                if (!reverseOrd) {
+                    // 标准顺时针顺序
+                    indices.push_back(i0);
+                    indices.push_back(i1);
+                    indices.push_back(i2);
+                    
+                    indices.push_back(i1);
+                    indices.push_back(i3);
+                    indices.push_back(i2);
+                } else {
+                    // 反转顺序（仍然是顺时针，但三角形划分不同）
+                    indices.push_back(i0);
+                    indices.push_back(i2);
+                    indices.push_back(i1);
+                    
+                    indices.push_back(i1);
+                    indices.push_back(i2);
+                    indices.push_back(i3);
+                }
+
+            }
+        }
 
         std::shared_ptr<VertexBuffer> Pos, UV, Normal, Color;
-        Pos.reset(VertexBuffer::Create(vertices, sizeof(vertices)));
-        Color.reset(VertexBuffer::Create(colors, sizeof(colors)));
-        UV.reset(VertexBuffer::Create(uvs, sizeof(uvs)));
-        Normal.reset(VertexBuffer::Create(normals, sizeof(normals)));
+        Pos.reset(VertexBuffer::Create(vertices.data(), vertices.size() * sizeof(float)));
+        Color.reset(VertexBuffer::Create(colors.data(), colors.size() * sizeof(float)));
+        UV.reset(VertexBuffer::Create(uvs.data(), uvs.size() * sizeof(float)));
+        Normal.reset(VertexBuffer::Create(normals.data(), normals.size() * sizeof(float)));
         
         std::shared_ptr<IndexBuffer> index;
-        index.reset(IndexBuffer::Create(indices, 36));
+        index.reset(IndexBuffer::Create(indices.data(), indices.size()));
 
         Pos->SetLayout({{ShaderDataType::Float3, VertexType::Position, "pos"}});
         Color->SetLayout({{ShaderDataType::Float4, VertexType::Color, "color"}});
@@ -288,7 +136,7 @@ namespace FISH
         return shape;
     }
 
-    Shape *Shape::CreateSphere(float radius) {
+    Shape *Shape::CreateSphere(float radius, int subdivisions) {
         	Shape* shape = new Shape();
             shape->mType = ShapeType::Sphere;
             std::vector<float> positions{};
@@ -296,8 +144,8 @@ namespace FISH
             std::vector<unsigned int> indeices{};
             std::vector<float> normals{};
             std::vector<float> colors;
-            int numLatLines = 160;
-            int numLongLines = 160;
+            int numLatLines = subdivisions;
+            int numLongLines = subdivisions;
 
             for (int i = 0; i <= numLatLines; i++) {
                 for (int j = 0; j <= numLongLines; j++) {

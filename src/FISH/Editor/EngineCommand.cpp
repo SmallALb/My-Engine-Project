@@ -12,8 +12,8 @@ namespace FISH {
         if (!ptr->execute()) return;
         front = Count == MaxSize ? (front + 1) % MaxSize : front + 1;
         Count = Count == MaxSize ? Count : Count + 1;
-        CommandStack[back] = ptr;
         back = (back + 1) % MaxSize;
+        CommandStack[back] = ptr;
     }
 
     void CommandPool::setMaxSize(int siz) {

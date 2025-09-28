@@ -111,7 +111,7 @@ namespace FISH {
         Destory();
     }
     void GLFrameBuffer::bind() const {
-        glGetIntegerv(GL_VIEWPORT, mPrevViewport);
+        if (!resizeTag) glGetIntegerv(GL_VIEWPORT, mPrevViewport);
         glBindFramebuffer(GL_FRAMEBUFFER, mRendererID);
         glViewport(0, 0, mWidth, mHeight);
     }
@@ -121,7 +121,20 @@ namespace FISH {
     }
 
     void GLFrameBuffer::resize(uint32_t width, uint32_t height) {
-
+        if (width == mWidth && height == mHeight) return;
+        mWidth = width;
+        mHeight = height;
+        resizeTag = 1;
+        if (mColorAttachment) {
+            glDeleteTextures(1, &mColorAttachment);
+        }
+        if (mDepthAttachment) {
+            glDeleteRenderbuffers(1, &mDepthAttachment);
+        }
+        CreateAttachments();
+        unbind();
+        resizeTag = 0;
+        
     }
     bool GLFrameBuffer::isCompllete() const {
         return false;

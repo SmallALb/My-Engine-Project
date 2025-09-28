@@ -24,10 +24,10 @@ namespace FISH {
         Shape(std::shared_ptr<VertexBuffer> vertx, std::shared_ptr<IndexBuffer> index);
 
         //创建盒体
-        static Shape* CreateBox(float size);
+        static Shape* CreateBox(float size, int subdivisions = 2);
 
         //创建球体
-        static Shape* CreateSphere(float radius);
+        static Shape* CreateSphere(float radius, int subdivisions = 32);
         
         //创建平面
         static Shape* CreatePlan(float width, float height);

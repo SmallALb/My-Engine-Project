@@ -31,7 +31,7 @@ namespace FISH {
     private:
         std::vector<CommandPtr> CommandStack; 
         int front{0};
-        int back{0};
+        int back{-1};
         int Count;
         int MaxSize {100};
     };

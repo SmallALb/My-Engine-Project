@@ -150,6 +150,11 @@ namespace FISH {
         GL_ERRORCALL(glUniform2fv(location, 1, glm::value_ptr(vector)));
     }
 
+    void GLShader::setVector4(const std::string &name, const glm::vec4 &vector) {
+        unsigned int location = (glGetUniformLocation(mProgram, name.c_str()));
+        GL_ERRORCALL(glUniform4fv(location, 1, glm::value_ptr(vector)));
+    }
+
     void GLShader::setInt(const std::string& name, int value) {
         unsigned int location = (glGetUniformLocation(mProgram, name.c_str()));
         GL_ERRORCALL(glUniform1i(location, value));

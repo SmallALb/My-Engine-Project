@@ -41,7 +41,7 @@ namespace FISH {
         float tMax = 1000.0f;
 
          for (int i = 0; i < 3; i++) { // 检测 X/Y/Z 轴
-            if (fabs(RayDir[i]) < 0.0001f) { // 平行于轴
+            if (fabs(RayDir[i]) < 0.00f) { // 平行于轴
                 if (RayPos[i] < aabbMin[i] || RayPos[i] > aabbMax[i]) 
                     return false;
             } else {

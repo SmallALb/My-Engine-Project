@@ -88,6 +88,8 @@ namespace  FISH {
         uint32_t mWidth{0};
         uint32_t mHeight{0};
 
+        bool resizeTag{0};
+
         mutable int mPrevViewport[4]{0};
     };
 

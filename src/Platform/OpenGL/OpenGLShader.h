@@ -19,10 +19,12 @@ namespace FISH {
         void setVector3(const std::string& name, const float* values) override;
         void setVector3(const std::string& name, const glm::vec3& vector) override;
         void setVector2(const std::string& name, const glm::vec2& vector) override;
+        void setVector4(const std::string& name, const glm::vec4& vector) override;
         void setInt(const std::string& name, int value) override;
         void setBool(const std::string& name, bool value) override;
         void setMat4(const std::string& name, glm::mat4 mat) override;
         void setTextureHandle(const std::string& name, uint64_t handle) override;
+
         private:
             //GL的着色器错误检查器
             void checkShaderErrors(unsigned int target, std::string type);
