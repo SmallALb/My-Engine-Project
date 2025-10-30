@@ -9,23 +9,23 @@ namespace FISH {
 
 
     struct VertexHash {
-        std::size_t operator()(const vertexData& p) const {
-            Vec3Hash _hash;
-            return _hash(p.first);
+        unsigned long long operator()(const vertexData& p) const {
+            std::hash<int> H;
+            return H(p.second);
         };
     };
 
     struct VertexEqual {
         bool operator() (const vertexData& a, const vertexData& b) const {
-            Vec3Equal _equal;
-            return _equal(a.first, b.first);
+            return a.second == b.second;
         }
     };
     //编辑顶点命令
     class EditVertexCommand : public Command {
         using vec = std::variant<glm::vec3, glm::vec2, glm::vec4>;
     public:
-        EditVertexCommand(ShapePtr shape, VertexType typ, uint32_t idx, vec Data, vec oldData_);
+        EditVertexCommand(ShapePtr shape, VertexType typ, uint32_t idx, vec Data, vec oldData_, 
+            const std::shared_ptr<OcTree<vertexData, VertexHash, VertexEqual>>& tree);
         
         bool execute() override;
 
@@ -37,6 +37,7 @@ namespace FISH {
         vec        olddata;
         uint32_t   index;
         ShapePtr EditShape{nullptr};
+        std::shared_ptr<OcTree<vertexData, VertexHash, VertexEqual>>         ChoiceTree;
     };
 
 
@@ -54,6 +55,8 @@ namespace FISH {
         void OnAttach() override;
 
         void OnUpdate(float dt) override;
+
+        void setCurrentEditShape(const ShapePtr& ptr) {currentEdiShape = ptr;}
     
         static GeomtryEditor* get();
     //渲染imgui的逻辑窗口等
@@ -82,7 +85,7 @@ namespace FISH {
         glm::vec3                       mRayDirection;
         glm::vec2                       mLstMousePos;
         bool                            mIsMouseOverViewport{false};
-        float                           PickAccuracy{0.1};
+        float                           PickAccuracy{0.05};
         //八叉树
         std::shared_ptr<OcTree<vertexData, VertexHash, VertexEqual>>         ChoiceTree{nullptr};
         

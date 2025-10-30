@@ -4,11 +4,15 @@
 #include <unordered_set>
 #include <glm/glm.hpp>
 #include "FISH/Log.h"
+//八叉树
+/*
+    用于优化空间查询
+    如点，物体这种
+*/
 //空间大小
 struct BlankSpace {
     glm::vec3 Min, Max;
 };
-
 
 template<class Ty, class Hash, class Equal>
 class OcTree {
@@ -88,9 +92,34 @@ public:
 
             return callbackTag;
         };
-
         return dfs(dfs, *Root);
+    }
 
+    //回调表查询
+    template<class CALL, class... INER>
+    bool queryWithSet(const Ty& obj_, bool once ,CALL&& func, INER&&... args) {
+        if (divefunc == nullptr) return false;
+        auto dfs = [&, this](auto&& self, OcNode& node)->bool {
+            bool diveTag = divefunc(node.mSpace, obj_);
+            bool callbackTag = 0;
+            
+            if (!diveTag) return false;
+
+            if (!node.ChildNodes.empty()) { 
+                for (auto& child : node.ChildNodes) {
+                    callbackTag |= self(self, child);
+                    if (once && callbackTag) return true;
+
+                }
+            }
+            else {
+                callbackTag |= func(node.ObjsInNode, std::forward<INER>(args)...);
+                if (callbackTag && once) return true;
+            }
+
+            return callbackTag;
+        };
+        return dfs(dfs, *Root);
     }
 
     bool remove(const Ty& obj) {
@@ -98,16 +127,36 @@ public:
             return false;
         }
 
-        auto dfs = [&, this] (auto&& self, OcNode& node) {
-            if (!divefunc(node.mSpace, obj)) return;
+        auto dfs = [&, this] (auto&& self, OcNode& node)-> bool {
+            if (!divefunc(node.mSpace, obj)) return false;
+
+             bool removed = false;
             if (!node.isLeaf()) {
-                node.ObjsInNode.erase(obj);
-                for (auto& child : node.ChildNodes) self(self, child);
-                if (node.ObjsInNode.size() <= MaxCount) node.merge();
+                //node.ObjsInNode.erase(obj);
+                for (auto& child : node.ChildNodes) removed |= self(self, child);
+
+                bool allLeaves = true;
+                std::unordered_set<Ty, Hash, Equal> AllObjs;
+                //查看是否所有的child都是叶子
+                for (auto& child : node.ChildNodes) {
+                    if (!child.isLeaf()) {
+                        allLeaves = false;
+                        break;
+                    }
+                    AllObjs.insert(child.ObjsInNode.begin(), child.ObjsInNode.end());
+                }
+
+                if (allLeaves && AllObjs.size() <= MaxCount) {
+                    node.ObjsInNode = std::move(AllObjs);
+                    node.ChildNodes.clear();
+                }
             }
             else node.ObjsInNode.erase(obj);
+
+            return node.ObjsInNode.size();
         };
         dfs(dfs, *Root);
+        return true;
     }
 
     void add(const Ty& obj) {
@@ -118,7 +167,6 @@ public:
         auto dfs = [&, this] (auto&& self, OcNode& node) {
             if (!divefunc(node.mSpace, obj)) return;
             if (!node.isLeaf()) {
-                node.ObjsInNode.insert(obj);
                 for (auto& child : node.ChildNodes) 
                     self(self, child);
             }          
@@ -126,7 +174,11 @@ public:
                 node.ObjsInNode.insert(obj);
                 if (node.ObjsInNode.size() > MaxCount) {
                     node.dive();
-                    for (auto& child : node.ChildNodes) self(self, child);
+                    for (auto& obj_ : node.ObjsInNode) {
+                        for (auto& child : node.ChildNodes) 
+                            if (divefunc(child.mSpace, obj_)) child.ObjsInNode.insert(obj_);
+                    }
+                    node.ObjsInNode.clear();
                 }
             }
         };
@@ -146,5 +198,4 @@ private:
     OcNode* Root{nullptr};
     DivedeFunc divefunc;    
     int MaxCount{1000};
-    
 };

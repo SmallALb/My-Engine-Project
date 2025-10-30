@@ -15,6 +15,7 @@ namespace FISH {
         None,
         Camera,
         Light,
+        Arrow,
         Mesh,
         Scene,
         SkyBox,

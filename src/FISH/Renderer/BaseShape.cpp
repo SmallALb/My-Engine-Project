@@ -22,6 +22,152 @@ namespace FISH
         mVao->SetIndexBuffer(index);
     }
 
+    Shape * Shape::CreateCone(float height, float radius, int subdivisions) {
+        Shape* shape = new Shape();
+        shape->mType = ShapeType::Cone;
+
+        std::vector<float> positions;
+        std::vector<float> colors;
+        std::vector<float> uvs;
+        std::vector<float> normals;
+        std::vector<unsigned int> indices;
+
+        float halfHeight = height / 2.0f;
+        subdivisions = (std::max)(3, subdivisions);
+
+        // 生成底面顶点
+        // 底面中心顶点
+        positions.push_back(0.0f);
+        positions.push_back(-halfHeight);
+        positions.push_back(0.0f);
+        
+        colors.push_back(0.7f);
+        colors.push_back(0.7f);
+        colors.push_back(0.7f);
+        colors.push_back(1.0f);
+        
+        uvs.push_back(0.5f);
+        uvs.push_back(0.5f);
+        
+        normals.push_back(0.0f);
+        normals.push_back(-1.0f);
+        normals.push_back(0.0f);
+
+            // 底面圆周顶点
+        for (int i = 0; i <= subdivisions; i++) {
+            float theta = 2.0f * glm::pi<float>() * float(i) / float(subdivisions);
+            float x = radius * cos(theta);
+            float z = radius * sin(theta);
+            
+            positions.push_back(x);
+            positions.push_back(-halfHeight);
+            positions.push_back(z);
+            
+            colors.push_back(0.7f);
+            colors.push_back(0.7f);
+            colors.push_back(0.7f);
+            colors.push_back(1.0f);
+            
+            uvs.push_back(0.5f + 0.5f * cos(theta));
+            uvs.push_back(0.5f + 0.5f * sin(theta));
+            
+            normals.push_back(0.0f);
+            normals.push_back(-1.0f);
+            normals.push_back(0.0f);
+
+        }
+
+            // 生成顶点索引
+        int bottomCenterIndex = 0;
+        int bottomRingStartIndex = 1;
+        int tipIndex = bottomRingStartIndex + (subdivisions + 1); // 顶点索引
+        
+        // 添加锥尖顶点
+        positions.push_back(0.0f);
+        positions.push_back(halfHeight);
+        positions.push_back(0.0f);
+        
+        colors.push_back(1.0f);
+        colors.push_back(1.0f);
+        colors.push_back(1.0f);
+        colors.push_back(1.0f);
+        
+        uvs.push_back(0.5f);
+        uvs.push_back(0.5f);
+        
+        // 锥尖法线需要特殊计算，这里先设为向上
+        normals.push_back(0.0f);
+        normals.push_back(1.0f);
+        normals.push_back(0.0f);
+
+        // 添加侧面圆周顶点（与底面圆周顶点位置相同，但法线不同）
+        int sideRingStartIndex = tipIndex + 1;
+        for (int i = 0; i <= subdivisions; i++) {
+            float theta = 2.0f * glm::pi<float>() * float(i) / float(subdivisions);
+            float x = radius * cos(theta);
+            float z = radius * sin(theta);
+            
+            positions.push_back(x);
+            positions.push_back(-halfHeight);
+            positions.push_back(z);
+            
+            colors.push_back(0.8f);
+            colors.push_back(0.8f);
+            colors.push_back(0.8f);
+            colors.push_back(1.0f);
+            
+            uvs.push_back((float)i / subdivisions);
+            uvs.push_back(0.0f);
+            
+            // 计算侧面法线（垂直于锥面）
+            glm::vec3 sideNormal = glm::normalize(glm::vec3(x, 0.0f, z));
+                normals.push_back(sideNormal.x);
+                normals.push_back(sideNormal.y);
+                normals.push_back(sideNormal.z);
+        }
+
+        // 生成底面三角形（顺时针从底面看）
+        for (int i = 0; i < subdivisions; i++) {
+            indices.push_back(bottomCenterIndex);
+            indices.push_back(bottomRingStartIndex + i + 1);
+            indices.push_back(bottomRingStartIndex + i);
+        }
+
+        // 生成侧面三角形
+        for (int i = 0; i < subdivisions; i++) {
+            indices.push_back(tipIndex);
+            indices.push_back(sideRingStartIndex + i);
+            indices.push_back(sideRingStartIndex + i + 1);
+        }
+
+        // 创建顶点缓冲区和索引缓冲区
+        std::shared_ptr<VertexBuffer> Pos, UV, Normal, Color;
+        Pos.reset(VertexBuffer::Create(positions.data(), positions.size() * sizeof(float)));
+        Color.reset(VertexBuffer::Create(colors.data(), colors.size() * sizeof(float)));
+        UV.reset(VertexBuffer::Create(uvs.data(), uvs.size() * sizeof(float)));
+        Normal.reset(VertexBuffer::Create(normals.data(), normals.size() * sizeof(float)));
+        
+        std::shared_ptr<IndexBuffer> index;
+        index.reset(IndexBuffer::Create(indices.data(), indices.size()));
+
+        // 设置顶点布局
+        Pos->SetLayout({{ShaderDataType::Float3, VertexType::Position, "pos"}});
+        Color->SetLayout({{ShaderDataType::Float4, VertexType::Color, "color"}});
+        UV->SetLayout({{ShaderDataType::Float2, VertexType::UV, "uv"}});
+        Normal->SetLayout({{ShaderDataType::Float3, VertexType::Normal, "normal"}});
+
+        // 创建顶点数组并添加缓冲区
+        shape->mVao.reset(VertexArray::Create());
+        shape->mVao->AddVertexBuffer(Pos);
+        shape->mVao->AddVertexBuffer(Color);
+        shape->mVao->AddVertexBuffer(UV);
+        shape->mVao->AddVertexBuffer(Normal);                     
+        shape->mVao->SetIndexBuffer(index);
+        
+        return shape;
+
+    }
+
     uint32_t Shape::GetIndexCounts() const {return mVao->GetIndexCounts(); }
 
     std::unique_ptr<VertexArray> &Shape::getVertexArrary() {
@@ -672,6 +818,188 @@ Shape* Shape::CreateLine2D(float x1, float y1, float x2, float y2, float thickne
     shape->mVao->AddVertexBuffer(Color);
     shape->mVao->AddVertexBuffer(UV);                     
     shape->mVao->SetIndexBuffer(index);
+    return shape;
+}
+
+Shape *Shape::CreateCylinder(float Height, float Radius, int subdivisions) {
+    Shape* shape = new Shape();
+    shape->mType = ShapeType::Cylinder;
+    
+    std::vector<float> positions;
+    std::vector<float> colors;
+    std::vector<float> uvs;
+    std::vector<float> normals;
+    std::vector<unsigned int> indices;
+
+    float halfH = 0.5f * Height;
+    subdivisions = (std::max)(3, subdivisions);
+    //生成侧面
+    for (int i=0; i<= subdivisions; i++) {
+        float theta = 2.0f * glm::pi<float>() * float(i) / float(subdivisions);
+
+        float x = Radius * cos(theta);
+        float z = Radius * sin(theta);
+
+        float nx = cos(theta);
+        float nz = cos(theta);
+
+        positions.push_back(x);
+        positions.push_back(-halfH);
+        positions.push_back(z);
+
+        uvs.push_back((float)i / subdivisions);
+        uvs.push_back(0.0f);
+
+        normals.push_back(nx);
+        normals.push_back(0.0f);
+        normals.push_back(nz);
+        
+  
+        positions.push_back(x);
+        positions.push_back(halfH);
+        positions.push_back(z);
+        
+        colors.push_back(0.8f);
+        colors.push_back(0.8f);
+        colors.push_back(0.8f);
+        colors.push_back(1.0f);
+        
+        uvs.push_back((float)i / subdivisions);
+        uvs.push_back(1.0f);
+        
+        normals.push_back(nx);
+        normals.push_back(0.0f);
+        normals.push_back(nz);
+
+    }
+
+    //生成侧面索引
+    for (int i = 0; i < subdivisions; i++) {
+        int base = i * 2;
+        indices.push_back(base);
+        indices.push_back(base + 2);
+        indices.push_back(base + 1);
+    
+        indices.push_back(base + 2);
+        indices.push_back(base + 3);
+        indices.push_back(base + 1);
+    }
+
+    // 生成顶面和底面中心顶点
+    // 顶面中心
+    positions.push_back(0.0f);
+    positions.push_back(halfH);
+    positions.push_back(0.0f);
+    colors.push_back(1.0f);
+    colors.push_back(1.0f);
+    colors.push_back(1.0f);
+    colors.push_back(1.0f);
+    uvs.push_back(0.5f);
+    uvs.push_back(0.5f);
+    normals.push_back(0.0f);
+    normals.push_back(1.0f);
+    normals.push_back(0.0f);
+
+    // 顶面圆周顶点
+    for (int i = 0; i <= subdivisions; i++) {
+        float theta = 2.0f * glm::pi<float>() * float(i) / float(subdivisions);
+        float x = Radius * cos(theta);
+        float z = Radius * sin(theta);
+        
+        positions.push_back(x);
+        positions.push_back(halfH);
+        positions.push_back(z);
+        colors.push_back(1.0f);
+        colors.push_back(1.0f);
+        colors.push_back(1.0f);
+        colors.push_back(1.0f);
+        uvs.push_back(0.5f + 0.5f * cos(theta));
+        uvs.push_back(0.5f + 0.5f * sin(theta));
+        normals.push_back(0.0f);
+        normals.push_back(1.0f);
+        normals.push_back(0.0f);
+    }
+
+    // 生成底面顶点 (从中心开始)
+    // 底面中心
+    positions.push_back(0.0f);
+    positions.push_back(-halfH);
+    positions.push_back(0.0f);
+    colors.push_back(0.6f);
+    colors.push_back(0.6f);
+    colors.push_back(0.6f);
+    colors.push_back(1.0f);
+    uvs.push_back(0.5f);
+    uvs.push_back(0.5f);
+    normals.push_back(0.0f);
+    normals.push_back(-1.0f);
+    normals.push_back(0.0f);
+
+    // 底面圆周顶点
+    for (int i = 0; i <= subdivisions; i++) {
+        float theta = 2.0f * glm::pi<float>() * float(i) / float(subdivisions);
+        float x = Radius * cos(theta);
+        float z = Radius * sin(theta);
+        
+        positions.push_back(x);
+        positions.push_back(-halfH);
+        positions.push_back(z);
+        colors.push_back(0.6f);
+        colors.push_back(0.6f);
+        colors.push_back(0.6f);
+        colors.push_back(1.0f);
+        uvs.push_back(0.5f + 0.5f * cos(theta));
+        uvs.push_back(0.5f + 0.5f * sin(theta));
+        normals.push_back(0.0f);
+        normals.push_back(-1.0f);
+        normals.push_back(0.0f);
+    }
+
+    int sideVertexCount = (subdivisions + 1) * 2;
+    int topBottomStartIndex = sideVertexCount;
+    int topCenterIndex = topBottomStartIndex;
+    int topRingStartIndex = topBottomStartIndex + 1;
+    int bottomCenterIndex = topRingStartIndex + (subdivisions + 1);
+    int bottomRingStartIndex = bottomCenterIndex + 1;
+
+    // 生成顶面索引 (顺时针顺序)
+    for (int i = 0; i < subdivisions; i++) {
+        indices.push_back(topCenterIndex);
+        indices.push_back(topRingStartIndex + i);
+        indices.push_back(topRingStartIndex + i + 1);
+    }
+
+    // 生成底面索引 (顺时针顺序，从底面看)
+    for (int i = 0; i < subdivisions; i++) {
+        indices.push_back(bottomCenterIndex);
+        indices.push_back(bottomRingStartIndex + i + 1);
+        indices.push_back(bottomRingStartIndex + i);
+    }
+
+    // 创建顶点缓冲区和索引缓冲区
+    std::shared_ptr<VertexBuffer> Pos, UV, Normal, Color;
+    Pos.reset(VertexBuffer::Create(positions.data(), positions.size() * sizeof(float)));
+    Color.reset(VertexBuffer::Create(colors.data(), colors.size() * sizeof(float)));
+    UV.reset(VertexBuffer::Create(uvs.data(), uvs.size() * sizeof(float)));
+    Normal.reset(VertexBuffer::Create(normals.data(), normals.size() * sizeof(float)));
+    
+    std::shared_ptr<IndexBuffer> index;
+    index.reset(IndexBuffer::Create(indices.data(), indices.size()));
+
+    // 设置顶点布局
+    Pos->SetLayout({{ShaderDataType::Float3, VertexType::Position, "pos"}});
+    Color->SetLayout({{ShaderDataType::Float4, VertexType::Color, "color"}});
+    UV->SetLayout({{ShaderDataType::Float2, VertexType::UV, "uv"}});
+    Normal->SetLayout({{ShaderDataType::Float3, VertexType::Normal, "normal"}});
+
+    // 创建顶点数组并添加缓冲区
+    shape->mVao.reset(VertexArray::Create());
+    shape->mVao->AddVertexBuffer(Pos);
+    shape->mVao->AddVertexBuffer(Color);
+    shape->mVao->AddVertexBuffer(UV);
+    shape->mVao->AddVertexBuffer(Normal);                     
+    shape->mVao->SetIndexBuffer(index);
+    
     return shape;
 }
 }

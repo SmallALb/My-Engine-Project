@@ -87,5 +87,6 @@ namespace FISH {
         static Renderstatus* CreateRenderstatus();
     };
 
+    using RernderStatusPtr = std::shared_ptr<Renderstatus>;
     
 }

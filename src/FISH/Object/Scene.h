@@ -9,7 +9,8 @@ namespace FISH {
         Scene();
         
         ~Scene();
-
+        
+        OBJ_CLASS_TYPE(Scene);
     };
 
 }

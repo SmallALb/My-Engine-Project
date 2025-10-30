@@ -7,7 +7,7 @@
 #include "FISH/Object/Camera.h"
 #include "FISH/Base/HashTable.h"
 
-
+#include "FISH/Physics/Ray/Ray.h"
 #include "FISH/Renderer/Shader.h"
 #include "FISH/input.h"
 #include "VertexEditor.h"
@@ -46,8 +46,6 @@ namespace FISH {
     }
 
     void GeomtryEditor::OnAttach() {
-        //*测试用形状
-        currentEdiShape.reset(FISH::Shape::CreateBox(1.0));
         //新建帧
         mFramebuffer.reset(FrameBuffer::Create(2250, 1750));
         //新建渲染状态
@@ -94,8 +92,10 @@ namespace FISH {
         mRenderShared->setMat4("model", glm::mat4(1.0));
         mRenderShared->setVector3("moveUV", {0.0, 0.0, 0.0});
         mRenderShared->setVector4("Incolor", {0.0 ,0.0, 1.0, 1.0});
-        currentEdiShape->render(LINES);
-        currentEdiShape->render(POINTS);
+        if (currentEdiShape){
+            currentEdiShape->render(LINES);
+            currentEdiShape->render(POINTS);
+        }
         mRenderShared->End();
 
         mStatus->enablestatus(StatusType::DepthTest);
@@ -114,11 +114,12 @@ namespace FISH {
 
     void GeomtryEditor::renderVertexEdit() {
         mfocusedTag = ImGui::IsWindowFocused();
-
         if (ImGui::IsWindowFocused() && ImGui::IsKeyDown(ImGuiKey_ModCtrl) && ImGui::IsKeyPressed(ImGuiKey_Z)) 
             {FS_INFO("Cancel one command!"); Editor::mEditorCommands.cancel();}
+        
 
-        if (ImGui::CollapsingHeader("Vertex Editor", ImGuiTreeNodeFlags_DefaultOpen)) {
+
+        if (currentEdiShape && ImGui::CollapsingHeader("Vertex Editor", ImGuiTreeNodeFlags_DefaultOpen)) {
             auto& vertexArray = currentEdiShape->getVertexArrary();
             uint32_t vertexCount = vertexArray->GetVertexBuffers()[0]->GetVertexCount();
             
@@ -149,7 +150,8 @@ namespace FISH {
                             VertexType::Position, 
                             selectedVertex, 
                             position,
-                            originalPosition // 使用开始编辑时保存的原始数据
+                            originalPosition,
+                            ChoiceTree
                         );
                         FS_INFO("Add position Vertex Fix Command!");
                         Editor::mEditorCommands.PushCommand(command);
@@ -174,7 +176,8 @@ namespace FISH {
                             VertexType::Color, 
                             selectedVertex, 
                             color,
-                            originalColor // 使用开始编辑时保存的原始数据
+                            originalColor,
+                            ChoiceTree
                         );
                         FS_INFO("Add color Vertex Fix Command!");
                         Editor::mEditorCommands.PushCommand(command);
@@ -199,7 +202,8 @@ namespace FISH {
                             VertexType::Normal, 
                             selectedVertex, 
                             normal,
-                            originalNormal 
+                            originalNormal,
+                            ChoiceTree
                         );
                         FS_INFO("Add normal Vertex Fix Command!");
                         Editor::mEditorCommands.PushCommand(command);
@@ -224,7 +228,8 @@ namespace FISH {
                             VertexType::UV, 
                             selectedVertex, 
                             uv,
-                            originalUV 
+                            originalUV,
+                            ChoiceTree
                         );
                         FS_INFO("Add uv Vertex Fix Command!");
                         Editor::mEditorCommands.PushCommand(command);
@@ -238,17 +243,18 @@ namespace FISH {
     void GeomtryEditor::renderShapeViewer() {
         ImGui::SetNextWindowSize(ImVec2(800, 600), ImGuiCond_FirstUseEver);
         ImGui::Begin("Viewer");
-
-        ImVec2 viewportSize = ImGui::GetContentRegionAvail();
-
-        mFramebuffer->resize(viewportSize.x, viewportSize.y);
-        ImGui::Image(
-            mFramebuffer->GetColorAttachmentID(), 
-            viewportSize,
-            ImVec2(0, 1),
-            ImVec2(1, 0)
-        );
         ImGuiIO& io = ImGui::GetIO();
+        ImVec2 viewportSize = ImGui::GetContentRegionAvail();
+        //防止过小 & 隐藏导致的报错
+        if (viewportSize.x > 0.0 && viewportSize.y > 0.0){
+            mFramebuffer->resize(viewportSize.x, viewportSize.y);
+            ImGui::Image(
+                mFramebuffer->GetColorAttachmentID(), 
+                viewportSize,
+                ImVec2(0, 1),
+                ImVec2(1, 0)
+            );
+        }
 
         //绕着目标物体旋转
         if (ImGui::IsWindowFocused() && ImGui::IsMouseDown(ImGuiMouseButton_Right)) {
@@ -261,8 +267,12 @@ namespace FISH {
             glm::vec4 tmpPos = yawRot * pitchRot * glm::vec4(mCamera->getPosition(), 1.0);
             mCamera->setPosition(glm::vec3(tmpPos));
             mCamera->setLookAt(glm::vec3{0.0});
-            // FS_INFO("Camera Pos: {}", glm::to_string(mCamera->getPosition()));
-            // FS_INFO("Camera Look at Pos: {}", glm::to_string(mCamera->getLookAtPoint()));
+
+            if (fabs(io.MouseWheel) > 0.0f){
+                auto currentPos = mCamera->getPosition();
+                currentPos +=  mCamera->getFront() * io.MouseWheel * 0.005f;
+                mCamera->setPosition(currentPos);
+            }
         }
 
 
@@ -296,6 +306,7 @@ namespace FISH {
 
             auto invM = glm::inverse(mCamera->getProjectMatrix() * mCamera->getViewMatrix());
             glm::vec4 rayWorld = invM * rayClip;
+            //透视修正
             rayWorld /= rayWorld.w;
 
             auto RayO = mCamera->getPosition();  
@@ -312,51 +323,28 @@ namespace FISH {
         float pDis = 0.0;
         //查询回调函数
         auto queryCallback = [&, this](
-            const vertexData& point, 
+            const std::unordered_set<vertexData, VertexHash, VertexEqual>& points, 
             int& close, 
             float& distance) {
-                float dis = distanceToNearPoint(point.first, rayO, rayD);
-                //FS_INFO("Test Index: {}, distance: {}", point.second, dis);
-                if (dis <= PickAccuracy) {
-                    distance = dis;
-                    close = point.second;
-                    //FS_INFO("Done Index! {}", close);
-                    return true;
-                }
+                std::vector<vertexData> Points{points.begin(), points.end()};
+                // std::sort(Points.begin(), Points.end(), [&, this](auto& a, auto& b) {
+                //     auto& pa = a.first;
+                //     auto& pb = b.first;
+                //     return glm::length(pa - rayO) < glm::length(pb - rayO); 
+                // });
+                for (auto& point : Points) 
+                    if (RayCollisionAtPoint({rayO, rayD}, point.first, PickAccuracy))  {
+                        close = point.second;
+                        return true;
+                    }
             return false;
         };
         //重置划分函数为按照光线划分 此处中Vertex仅仅作为占位
         ChoiceTree->setDividefunc([&](const BlankSpace& space, const vertexData& vertex) {
-            float tMin = 0.0f;
-            float tMax = (std::numeric_limits<float>::max)();
-            //FS_INFO("Try Dive! {}", glm::to_string(rayD));
-            //FS_INFO("Current Test Space_Min:{}, Max:{}", glm::to_string(space.Min), glm::to_string(space.Max));
-            for (int i = 0; i < 3; i++) {
-                if (std::abs(rayD[i]) < 0.0f) {
-                    // 射线平行于轴，若起点不在区间内则不相交
-                    if (rayO[i] < space.Min[i] || rayO[i] > space.Max[i]) {
-                        //FS_INFO("Unenable!");
-                        return false;
-                    }
-                } else {
-                    float invD = 1.0f / rayD[i];
-                    float t1 = (space.Min[i] - rayO[i]) * invD;
-                    float t2 = (space.Max[i] - rayO[i]) * invD;
-                    if (t1 > t2) std::swap(t1, t2);
-                    tMin = (std::max)(tMin, t1);
-                    tMax = (std::min)(tMax, t2);
-                    if (tMin > tMax) {
-                        //FS_INFO("Unenable!");
-                        return false;
-                    }
-
-                }
-            }
-            //FS_INFO("Enable!");
-            return true;
+            return RayCollisionAtBox({rayO, rayD}, space.Min, space.Max);
         });
 
-        ChoiceTree->query({glm::vec3(1.0), -1}, 1, queryCallback,
+        ChoiceTree->queryWithSet({glm::vec3(1.0), -1}, 1, queryCallback,
             closeVertex,
             pDis
         );
@@ -393,8 +381,8 @@ namespace FISH {
 
     //编辑器命令
     //编辑顶点      
-    EditVertexCommand::EditVertexCommand(ShapePtr shape, VertexType typ, uint32_t idx, vec Data, vec oldData_): 
-        EditShape(shape), index(idx), fixType(typ), data(Data), olddata(oldData_)
+    EditVertexCommand::EditVertexCommand(ShapePtr shape, VertexType typ, uint32_t idx, vec Data, vec oldData_, const std::shared_ptr<OcTree<vertexData, VertexHash, VertexEqual>>& tree): 
+        EditShape(shape), index(idx), fixType(typ), data(Data), olddata(oldData_), ChoiceTree(tree)
     {}
 
     bool EditVertexCommand::execute() {
@@ -402,8 +390,10 @@ namespace FISH {
         switch(fixType) {
             case VertexType::Position: {
                 if (auto* p = std::get_if<glm::vec3>(&data)) {
-                    //FS_INFO("Old position: ({}, {}, {})", olddata.x, olddata.y, olddata.z);
                     EditShape->getVertexArrary()->UpdateVertexPosition(index, *p);
+                    ChoiceTree->setDividefunc(divefunc);
+                    ChoiceTree->remove({glm::vec3{0.0}, index});
+                    ChoiceTree->add({*p ,index});
                     return true;
                 }
                 else return false;
@@ -439,6 +429,9 @@ namespace FISH {
                 auto pos = std::get<glm::vec3>(olddata);
                 FS_INFO("Old position: ({}, {}, {})", pos.x, pos.y, pos.z);
                 EditShape->getVertexArrary()->UpdateVertexPosition(index, pos);
+                ChoiceTree->setDividefunc(divefunc);
+                ChoiceTree->remove({glm::vec3{0.0}, index});
+                ChoiceTree->add({pos ,index});
                 return true;
             }
             case VertexType::Color: {                

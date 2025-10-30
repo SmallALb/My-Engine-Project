@@ -8,6 +8,8 @@ namespace FISH {
         Box,
         Plan,
         Sphere,
+        Cylinder,
+        Cone,
         Circle2D,
         Line2D,
         Triangle2D
@@ -42,7 +44,10 @@ namespace FISH {
         static Shape* CreateCircle2D(float radius, int segments = 32);
         //2d线
         static Shape* CreateLine2D(float x1, float y1, float x2, float y2, float thickness = 1.0f);
-
+        //圆柱体
+        static Shape* CreateCylinder(float Height, float Radius, int subdivisions = 16);
+        //创建锥体
+        static Shape* CreateCone(float height, float radius, int subdivisions = 32);
         //获取坐标计数
         uint32_t GetIndexCounts() const;
 

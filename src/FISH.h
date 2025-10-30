@@ -4,9 +4,9 @@
 #include <freetype/freetype.h>
 #include <imgui.h>
 //基本
+#include <memory>
 #include "FISH/Base/HashTable.h"
 #include "FISH/Time.h"
-#include "FISH/FISHMemory.h"
 #include "FISH/Keycodes.h"
 #include "FISH/MouseButtonCodes.h"
 #include "FISH/Application.h"
@@ -47,18 +47,13 @@
 #include "FISH/Object/PointLight.h"
 #include "FISH/Object/SpotLight.h"
 #include "FISH/Object/Camera.h"
+#include "FISH/Object/Scene.h"
 #include "FISH/Object/perspectiveCamera.h"
 #include "FISH/Object/orthographicCamera.h"
 //物理和游戏基本
-#include "FISH/physics/ObjectCast.h"
+#include "FISH/physics/Colliders/ColliderTest.h"
 #include "FISH/physics/Movement.h"
-#include "FISH/Game/GameObject.h"
 //渲染
-#include "FISH/Renderer/Renderer.h"
-//物理检测
-#include "FISH/physics/RayTest.h"
-#include "FISH/physics/CastTest.h"
-
 
 
 //声音
