@@ -22,16 +22,33 @@ namespace FISH {
         return nullptr;
     }
 
-    TexturePtr Texture::CreateTextureFromPath(const string& path, ChannelType channel, uint32_t unit) {
-            switch (GetAPI()) {
-                case RendererAPI::OpenGL: {
-                    if (!TextureMap.contains(path)) TextureMap[path].reset(new GLTexture(path, channel, unit));
-                    TextureMap[path]->mPath = path;
-                    return TextureMap[path];
-                }
+    TexturePtr Texture::CreateCubeTexture(const string& name, const std::array<std::vector<unsigned char>, 6> &paths, uint32_t widthIn, uint32_t heightIn, ChannelType channel, uint32_t unit) {
+        switch (GetAPI()) {
+            case RendererAPI::OpenGL:
+            {
+                if (!TextureMap.contains(name))
+                    TextureMap[name].reset(new GLTexture(paths, widthIn, heightIn, channel, unit));
+                TextureMap[name]->mPath = name;
+                return TextureMap[name];
             }
-            FS_CORE_ERROR("找不到对应的API");
-            return nullptr;
+        }
+        FS_CORE_ERROR("找不到对应的API");
+        return nullptr;
+    }
+
+    TexturePtr Texture::CreateTextureFromPath(const string &path, ChannelType channel, uint32_t unit)
+    {
+        switch (GetAPI()) {
+            case RendererAPI::OpenGL:
+            {
+                if (!TextureMap.contains(path))
+                    TextureMap[path].reset(new GLTexture(path, channel, unit));
+                TextureMap[path]->mPath = path;
+                return TextureMap[path];
+            }
+        }
+        FS_CORE_ERROR("找不到对应的API");
+        return nullptr;
     }
 
     TexturePtr Texture::CreateNullTexture(const string &path, uint32_t WidthIn, uint32_t HeightIn, ChannelType channel, uint32_t unit) {

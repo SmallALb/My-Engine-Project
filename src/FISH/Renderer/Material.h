@@ -12,7 +12,6 @@ namespace FISH {
         Alpha,          //透明通道贴图
         Specular,       //高光
         Height,         //高度
-        Cubemap,        //立方体
         Metallic       //金属度
     };
 
@@ -31,9 +30,13 @@ namespace FISH {
 
         inline void setBlendColorTag(bool tag) {enableBlendColor = tag;}
 
+        inline void setFaceCullTag(bool tag) {enableFaceCull = tag;}
+
         inline bool isDepthWriteEnable() const {return enableDepthWrite;}
 
         inline bool isBlendColorEnable() const {return enableBlendColor;}
+
+        inline bool isFaceCullEnable() const {return enableFaceCull;}
 
         inline FuncType getSrcAlpthaBlendMode() const {return SrcAlpthaBlendMode;}
 
@@ -41,13 +44,19 @@ namespace FISH {
 
         inline FuncType getDepthTestMode() const {return DepthTestMode;}
 
+        inline FuncType getCullFace() const {return FaceNeedCull;}
+
+        inline FuncType getFrontFaceDir() const {return FrontFace;}
+
         inline void setSrcAlpthaBlendMode(FuncType mode) {SrcAlpthaBlendMode = mode;}
 
         inline void setDstAlpthBlendMode(FuncType mode) {DstAlpthBlendMode = mode;}
 
         inline void setDepthTestMode(FuncType mode) {DepthTestMode = mode;}
 
+        inline void setCullFace(FuncType mode) {FaceNeedCull = mode;}
 
+        inline void setFontFaceDir(FuncType mode) {FrontFace = mode;}
     private:
         std::unordered_map<TextureType, TextureHandlePtr> textures;
 
@@ -55,12 +64,18 @@ namespace FISH {
         bool                          enableDepthWrite{0};
         //颜色混合
         bool                          enableBlendColor{0};
+        //面剔除
+        bool                          enableFaceCull{0};
         //深度写入的模式
         FuncType                      DepthTestMode{FuncType::Less};
         //透明通道混合模式（作为源）
         FuncType                      SrcAlpthaBlendMode{FuncType::SrcAlpha};
         //透明通道混合模式（对于目标）
         FuncType                      DstAlpthBlendMode{FuncType::MinusSrcAlpha};
+        //需要剔除的面
+        FuncType                      FaceNeedCull{FuncType::Back};
+        //正面方向
+        FuncType                      FrontFace{FuncType::FaceCW};
     };
 
 

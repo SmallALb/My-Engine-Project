@@ -7,6 +7,8 @@ namespace FISH {
     public:
         GLTexture(const string& path, ChannelType channel, uint32_t unit);
 
+        GLTexture(const std::array<std::vector<unsigned char>, 6> &paths, uint32_t widthIn, uint32_t heightIn, ChannelType channel, uint32_t unit);
+
         GLTexture(uint32_t unit, ChannelType channel, unsigned char* dataIn, uint32_t widthIn, uint32_t heightIn);
 
         GLTexture(const string& path, uint32_t widthIn, int32_t heightIn, ChannelType channel, uint32_t unit);

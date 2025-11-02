@@ -42,6 +42,48 @@ namespace FISH {
 
     }
 
+    GLTexture::GLTexture(const std::array<std::vector<unsigned char>, 6> &paths, uint32_t widthIn, uint32_t heightIn, ChannelType channel, uint32_t unit) {
+        FS_CORE_INFO("Creating GLTexture: {}x{}, channel: {}", widthIn, heightIn, static_cast<int>(channel));
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+        mUnit = unit;
+        mWidth = widthIn;
+        mHeight = heightIn;
+        mEnumChannel = channel;
+        mTextureChannel = ChoiceChannel(channel);
+        texturetype = TextureType::TextureCube;
+        GLint internalFormat = ChoiceInternal(channel);
+
+        // 创建纹理
+        GL_ERRORCALL(glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &mTexture));
+
+        if (mTexture == 0) {
+            FS_CORE_ERROR("Failed to create OpenGL texture object");
+            return;
+        }
+
+        GL_ERRORCALL(glTextureStorage2D(mTexture, 1, internalFormat, mWidth, mHeight));
+
+        for (int i=0; i<6; i++) {
+            if (!paths[i].empty()) {
+                // 分配存储空间
+                GL_ERRORCALL(glTextureSubImage3D(mTexture, 0, 0, 0, i, mWidth, mHeight, 1, mTextureChannel, GL_UNSIGNED_BYTE, paths[i].data()));
+            }
+            else {
+                FS_ERROR("Null data!");
+                return;
+            }
+        }
+
+        glTextureParameteri(mTexture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTextureParameteri(mTexture, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTextureParameteri(mTexture, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTextureParameteri(mTexture, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTextureParameteri(mTexture, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+        CreateBindLessHandle();
+    }
+
     GLTexture::GLTexture(uint32_t unit, ChannelType channel, unsigned char *dataIn, uint32_t widthIn, uint32_t heightIn) {
         FS_CORE_INFO("Creating GLTexture: {}x{}, channel: {}", widthIn, heightIn, static_cast<int>(channel));
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);

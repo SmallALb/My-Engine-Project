@@ -42,6 +42,7 @@ namespace FISH {
 
             FISH::TextureManager::get().loadTextureAsync(
                 texturePath,
+                Texture::TextureType::Texture2D,
                 ChannelType::RGBA, 
                 [this, i, size](TexturePtr ptr) {
                     FS_PROFILE_SCOPE("TextureLoadCallback");

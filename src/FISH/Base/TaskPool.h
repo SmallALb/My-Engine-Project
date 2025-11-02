@@ -78,7 +78,8 @@ public:
         {
             std::lock_guard<std::mutex> lock(Que_mutex);
             if (stopTag) {
-
+                FS_ERROR("The TaskPool had been stoped!");
+                return res;
             }
             else TaskQue.push(std::move(task));
         }

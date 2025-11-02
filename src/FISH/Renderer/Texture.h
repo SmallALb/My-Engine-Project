@@ -6,10 +6,19 @@ namespace FISH {
     class Texture;
     using TexturePtr = std::shared_ptr<Texture>;
 
+    
+
+
     //纹理接口
     class Texture : public TextureHandle {
         friend class TextureManager;
     public:
+        enum class TextureType {
+            Texture2D,
+            TextureCube
+        };
+
+
         virtual ~Texture() = default;
 
 
@@ -31,6 +40,8 @@ namespace FISH {
 
         virtual TextureHandleType getType() const {return TextureHandleType::Static;}
 
+        TextureType getTextureType() const {return texturetype;}
+
         //从内存中读取
         static TexturePtr CreateTextureFromMemory(
             const string& path,
@@ -40,6 +51,11 @@ namespace FISH {
              uint32_t unit = 0
             );
         
+
+        //传入6张图的路径创建立方体贴图
+        static TexturePtr CreateCubeTexture(const string& name, const std::array<std::vector<unsigned char>, 6> &paths, uint32_t widthIn, uint32_t heightIn, ChannelType channel = ChannelType::RGBA, uint32_t unit = 0);
+        
+
         //从路径中读取
         static TexturePtr CreateTextureFromPath(const string& path, ChannelType channel = ChannelType::RGBA, uint32_t unit = 0);
         //创建空纹理
@@ -58,6 +74,8 @@ namespace FISH {
     protected:
         //枚举纹理通道
         ChannelType             mEnumChannel;
+
+        TextureType             texturetype{TextureType::Texture2D};
     };
 
 }

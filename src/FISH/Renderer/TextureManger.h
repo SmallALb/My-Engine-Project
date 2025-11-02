@@ -13,10 +13,13 @@ namespace FISH {
         ~TextureManager();
 
         //异步加载
-          void loadTextureAsync(
-            const string& name, 
+        //(立方体贴图请遵循右-左-上-底-后-前的顺序来传入)
+        void loadTextureAsync(
+            const std::variant<string, std::array<string, 6>>& name, 
+            Texture::TextureType typ = Texture::TextureType::Texture2D,
             ChannelType channel = ChannelType::RGBA, 
             const std::function<void(TexturePtr)>& callback = nullptr);
+
 
         //异步上载纹理
           void processAsyncUploads();
@@ -35,10 +38,11 @@ namespace FISH {
 
     private:
             struct Task {
-                string filePath;
+                std::variant<string, std::array<string, 6>> filePath;
+                Texture::TextureType CreateType;
                 ChannelType channel;
                 std::function<void(TexturePtr)> callback;
-                std::vector<uint8_t> fileData;
+                std::variant<std::vector<uint8_t>, std::array<std::vector<uint8_t>, 6>> fileData;
                 int width{0};
                 int height{0};
                 int channels{0};
@@ -47,6 +51,10 @@ namespace FISH {
             void asyncLoadToMemory();
             //加载图片数据
             bool LoadImageData(Task& task);
+            //加载2d纹理
+            bool load2D(Task& task);
+            //加载立方体纹理
+            bool loadCube(Task& task);
 
     protected:
         mutable std::mutex mLoadQueMutex;

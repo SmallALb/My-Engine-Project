@@ -36,8 +36,9 @@ class MainLayer : public FISH::Layer {
         auto mesh1 = std::make_shared<FISH::Mesh>();
         auto shape1 = std::shared_ptr<FISH::Shape>(FISH::Shape::CreateBox(0.3));
         auto material = std::make_shared<FISH::Material>();
-        material->setBlendColorTag(1);
-        material->setDepthWriteTag(0);
+        //material->setBlendColorTag(1);
+        material->setDepthWriteTag(1);
+        material->setFaceCullTag(1);
         //尝试上纹理
         // FISH::TextureManager::get().loadTextureAsync("picture/window2.png", ChannelType::RGBA,
         // [material](FISH::TexturePtr texture) {
@@ -45,10 +46,10 @@ class MainLayer : public FISH::Layer {
         // });
 
         //尝试上动画
-        auto mAni = std::make_shared<FISH::SpriteAnimation>("picture/sprite", "cat ({}).png", 21, 1, 56);
-        mAni->play(FISH::AnimationMode::Loop);
+        // auto mAni = std::make_shared<FISH::SpriteAnimation>("picture/sprite", "cat ({}).png", 21, 1, 56);
+        // mAni->play(FISH::AnimationMode::Loop);
 
-        material->setTexture(FISH::TextureType::None, mAni);
+        //material->setTexture(FISH::TextureType::None, mAni);
         mesh1->getMaterial() = material;
         mesh1->getShape() = shape1;
         scene->addChild(mesh1);

@@ -70,12 +70,15 @@ namespace FISH {
             switch (obj->GetObjType()) {
                 //当obj为模型时
                 case ObjType::Mesh: {
-                    mstatuss->enablestatus(StatusType::CullFace);
-                    mstatuss->setstatusFunc(SetType::CullFaceFunc, FuncType::Back);
-                    mstatuss->setstatusFunc(SetType::FrontFaceDIR, FuncType::FaceCW);
                     auto ptr = Static_PtrCastTo<Mesh>(obj);
                     auto shape = ptr->getShape();
                     auto material = ptr->getMaterial();
+                    
+                    if (material->isFaceCullEnable()) {
+                        mstatuss->enablestatus(StatusType::CullFace);
+                        mstatuss->setstatusFunc(SetType::CullFaceFunc, material->getCullFace());
+                        mstatuss->setstatusFunc(SetType::FrontFaceDIR, material->getFrontFaceDir());
+                    }
                     if (!material->isDepthWriteEnable())  {
                         mstatuss->setstatusFunc(SetType::DepthFunc, material->getDepthTestMode());
                         mstatuss->setstatusFunc(SetType::DepthMask, FuncType::FALSETyp);

@@ -55,13 +55,24 @@ namespace FISH {
     }
 
     bool TextureManager::LoadImageData(Task &task) {
+        switch(task.CreateType) {
+            case Texture::TextureType::Texture2D:
+                return load2D(task);
+            case Texture::TextureType::TextureCube:
+                return loadCube(task);
+        }
+        return false;
+    }
+
+    bool TextureManager::load2D(Task &task) {
         stbi_set_flip_vertically_on_load(true);
 
         int w, h, c;
-        unsigned char* data = stbi_load(task.filePath.c_str(), &w, &h, &c, 0);
+        auto filename = std::get<0>(task.filePath);
+        unsigned char* data = stbi_load(filename.c_str(), &w, &h, &c, 0);
 
         if (!data) {
-            FS_CORE_ERROR("Failed to load image: {0}", task.filePath);
+            FS_CORE_ERROR("Failed to load image: {0}", filename);
             return false;
         }
 
@@ -70,14 +81,33 @@ namespace FISH {
         task.channels = c;
 
         size_t dataSize = w * h * c;
-        task.fileData.assign(data, data + dataSize);
+        auto* filedata = std::get_if<0>(&task.fileData);
+        filedata->assign(data, data + dataSize);
         stbi_image_free(data);
         FS_INFO("Builded ImageData from Texture!");
         return true;
     }
 
-    void TextureManager::loadTextureAsync(const string &name, ChannelType channel, const std::function<void(TexturePtr)> &callback) {
-        Task task {name, channel, callback};
+    bool TextureManager::loadCube(Task &task) {
+        auto filenames = std::get<1>(task.filePath);
+        int w, h, c;
+        for (int i=0; i<6; i++) {
+            unsigned char* data = stbi_load(filenames[i].c_str(), &w, &h, &c, 0);
+            if (!data) {
+                FS_CORE_ERROR("Failed to load image: {0}", filenames[i]);
+                return false;
+            }
+            size_t dataSize = w * h * c;
+            auto* filedatas = std::get_if<1>(&task.fileData);
+            (*filedatas)[i].assign(data, data + dataSize);
+            stbi_image_free(data);
+        }
+        task.width = w, task.height = h, task.channels = c;
+        return true;
+    }
+
+    void TextureManager::loadTextureAsync(const std::variant<string, std::array<string, 6>>& name, Texture::TextureType typ, ChannelType channel, const std::function<void(TexturePtr)> &callback) {
+        Task task {name, typ, channel, callback};
         {
             std::lock_guard<std::mutex> lock(mLoadQueMutex);
             mLoadQue.push(task);
@@ -96,14 +126,29 @@ namespace FISH {
             FS_INFO("Build Texture from task!");
             Task task = taskToProcess.front();
             taskToProcess.pop();
-
-            auto tex = Texture::CreateTextureFromMemory(
-                task.filePath,
-                task.fileData.data(),
-                task.width,
-                task.height,
-                task.channel
-            );
+            TexturePtr tex = nullptr;
+            switch(task.CreateType) {
+                case Texture::TextureType::Texture2D: {
+                    tex = Texture::CreateTextureFromMemory(
+                        std::get<0>(task.filePath),
+                        std::get<0>(task.fileData).data(),
+                        task.width,
+                        task.height,
+                        task.channel
+                    );
+                    break;
+                }
+                case Texture::TextureType::TextureCube: {
+                    tex = Texture::CreateCubeTexture(
+                        std::get<1>(task.filePath)[0],
+                        std::get<1>(task.fileData),
+                        task.width,
+                        task.height,
+                        task.channel
+                    );
+                    break;
+                }
+            }
             if (tex && tex->isValid()) {
                 FS_INFO("Loading Texture Create Callback!");
                 if (task.callback) task.callback(tex);
