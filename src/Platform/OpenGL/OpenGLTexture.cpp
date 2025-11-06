@@ -1,5 +1,6 @@
 #include "fspcs.h"
 #include "FISH/Log.h"
+#include "OpenGLBuffer.h"
 #include "Platform/OpenGL/glad/glad.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "FISH/Renderer/stb_image.h"
@@ -173,7 +174,18 @@ namespace FISH {
 
     }
 
-    GLTexture::~GLTexture() {
+    GLTexture::GLTexture(const FrameBufferPtr &frame) {
+        
+        mTexture = frame->GetColorAttachmentID();
+        mWidth = frame->GetWidth();
+        mHeight = frame->GetHeight();
+        mEnumChannel = ChannelType::RGBA;
+        mTextureChannel = ChoiceChannel(mEnumChannel);
+
+        CreateBindLessHandle();
+    }
+    GLTexture::~GLTexture()
+    {
         destory();
     }
 

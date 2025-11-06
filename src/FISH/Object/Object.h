@@ -84,7 +84,7 @@ namespace FISH {
         // virtual ObjType getType() const {return mType;}
         
         //获取类型
-        virtual ObjType GetObjType() const = 0;
+        virtual ObjType GetObjType() const {return ObjType::None;}
 
     protected:
         glm::vec3 mPosition {0.0f};

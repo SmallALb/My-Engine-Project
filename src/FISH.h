@@ -26,6 +26,7 @@
 #include "FISH/Renderer/Renderstatus.h"
 #include "FISH/REnderer/TextureHandle.h"
 #include "FISH/Renderer/RenderElement.h"
+#include "FISH/Renderer/Buffer.h"
 #include "FISH/Renderer/VertexArray.h"
 #include "FISH/Renderer/Material.h"
 #include "FISH/Renderer/Shader.h"

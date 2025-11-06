@@ -1,5 +1,6 @@
 #include "fspcs.h"
 #include "FISH/Log.h"
+#include "FISH/Renderer/Buffer.h"
 #include "TextureManger.h"
 #include "Texture.h"
 #include "FISH/Renderer/stb_image.h"

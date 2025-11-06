@@ -46,12 +46,13 @@ function init_engine()
             os.cp("picture", "build/windows/x64/debug")
             os.cp("Fonts", "build/windows/x64/debug")
             os.cp("Sounds", "build/windows/x64/debug")
+            os.cp("debugdll/**", "build/windows/x64/debug")
         else
             os.cp("sharders", "build/windows/x64/release")
             os.cp("picture", "build/windows/x64/release")
             os.cp("Fonts", "build/windows/x64/release")
             os.cp("Sounds", "build/windows/x64/release")
-
+            os.cp("releasedll/**", "build/windows/x64/release")
         end
 
         print("Done to copy Attachment...")
@@ -68,6 +69,7 @@ end
 
 --引擎依赖库接入
 function add_engineAtt() 
+    add_includedirs("src/FbxSdk")
     add_packages("spdlog")
     add_packages("freetype")
     add_packages("openal-soft")
@@ -75,7 +77,11 @@ function add_engineAtt()
     add_packages("nlohmann_json")
     if is_mode("debug") then
         add_packages("tracy")
+        add_linkdirs("debuglib")
+    else 
+        add_linkdirs("releaselib")
     end
+    add_links("libfbxsdk")
 end
 --------------------------------------
 -----------模式匹配设置-------------------

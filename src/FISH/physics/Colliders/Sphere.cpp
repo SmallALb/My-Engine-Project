@@ -1,4 +1,5 @@
 #include "fspcs.h"
+#include "FISH/Renderer/Buffer.h"
 #include "Collider.h"
 #include "Sphere.h"
 

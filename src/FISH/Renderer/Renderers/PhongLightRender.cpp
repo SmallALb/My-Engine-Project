@@ -49,17 +49,14 @@ namespace FISH {
                 shader->setFloat("pointLights[" + std::to_string(i) + "].specularIntensity", light->getSpecularIntensity());
                 shader->setInt("pointLights[" + std::to_string(i) + "].flag", light->getIsLightOn());
             }
-            if (!useAmbiLight) {
-                return;
-            }
+            if (!useAmbiLight) return;
             
+            if (!useAmbiLight->getIsLightOn()) return;
             shader->setInt("dirLightOn", useAmbiLight->getIsLightOn());
-            shader->setVector3("ambientcolor", useAmbiLight->getColor());
             shader->setVector3("dirLight.direction", useAmbiLight->getLightDir());
             shader->setVector3("dirLight.color", useAmbiLight->getColor());
             shader->setFloat("dirLight.intensity", useAmbiLight->getIntensity());
             shader->setFloat("dirLight.specularIntensity", useAmbiLight->getSpecularIntensity());
-
         }
 
         void RenderObj_Phong(const std::shared_ptr<Object3D> &obj, const std::vector<std::shared_ptr<SpotLight>> &spotlights, const std::vector<std::shared_ptr<PointLight>> &pointlights, const CameraPtr &camera) {
@@ -101,11 +98,13 @@ namespace FISH {
                     shader->setMat4("projection", camera->getProjectMatrix());
                     shader->setMat4("view", camera->getViewMatrix());
                     ImportLightInfo(spotlights, pointlights, camera);
+                    shader->setVector3("ambientcolor", material->getAmbientColor());
+                    shader->setFloat("shiness", material->getShininess());
+
 
                     shader->setTextureHandle("sampler", material->getTextureHandle(TextureType::None));
                     shader->setMat4("model", obj->getModelMatrix());
                     shader->setMat4("normat", obj->getNormalMatrix());
-                    shader->setFloat("shininess", 32.0f);
                     shape->render(TRIANGLES); 
                     shader->End();
 
@@ -130,11 +129,10 @@ namespace FISH {
             //获取灯光
             auto getlights = [&](Object3DPtr obj, auto&& self)->void {
                 if (obj->GetObjType() == FISH::ObjType::Light) {
-                    if (Static_PtrCastTo<Light>(obj)->getLightType() == LightType::Point) {
-                        pointlights.push_back(Static_PtrCastTo<PointLight>(obj));
-                    }
-                    else if (Static_PtrCastTo<Light>(obj)->getLightType() == LightType::Spot) {
-                        spotlights.push_back(Static_PtrCastTo<SpotLight>(obj));
+                    auto light = Static_PtrCastTo<Light>(obj);
+                    switch(light->getLightType()) {
+                        case LightType::Point: pointlights.push_back(Static_PtrCastTo<PointLight>(obj)); break;
+                        case LightType::Spot: spotlights.push_back(Static_PtrCastTo<SpotLight>(obj)); break;
                     }
                 }       
 
@@ -145,12 +143,12 @@ namespace FISH {
                 if (obj->GetObjType() == ObjType::Mesh) {    
                     auto ptr = Static_PtrCastTo<Mesh>(obj);
                     auto material = ptr->getMaterial();
-                    if (material->isBlendColorEnable()) {
-                        Blends.push_back(ptr);
-                    }
-                    else {
-                        NoBlends.push_back(ptr);
-                    }
+                    material->isBlendColorEnable() 
+                        ?
+                            Blends.push_back(ptr)
+                        :
+                            NoBlends.push_back(ptr);
+                    
                 }
                 for (auto& child : obj->getChilds()) self(child, self);
             };

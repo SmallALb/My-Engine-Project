@@ -1,6 +1,7 @@
 #include "fspcs.h"
 #include "Platform/OpenGL/glad/glad.h"
 #include "OpenGLErrorCheck.h"
+#include "OpenGLBuffer.h"
 #include "OpenGLVertexArray.h"
 #include "FISH/Log.h"
 

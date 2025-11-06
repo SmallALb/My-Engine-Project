@@ -57,6 +57,20 @@ namespace FISH {
         inline void setCullFace(FuncType mode) {FaceNeedCull = mode;}
 
         inline void setFontFaceDir(FuncType mode) {FrontFace = mode;}
+
+        void setDiffuseColor(const glm::vec3& color) { diffuseColor = color; }
+        void setSpecularColor(const glm::vec3& color) { specularColor = color; }
+        void setAmbientColor(const glm::vec3& color) { ambientColor = color; }
+        void setEmissiveColor(const glm::vec3& color) { emissiveColor = color; }
+        void setShininess(float value) { shininess = value; }
+        void setOpacity(float value) { opacity = value; }
+
+        glm::vec3 getDiffuseColor() const { return diffuseColor; }
+        glm::vec3 getSpecularColor() const { return specularColor; }
+        glm::vec3 getAmbientColor() const { return ambientColor; }
+        glm::vec3 getEmissiveColor() const { return emissiveColor; }
+        float getShininess() const { return shininess; }
+        float getOpacity() const { return opacity; }
     private:
         std::unordered_map<TextureType, TextureHandlePtr> textures;
 
@@ -76,6 +90,12 @@ namespace FISH {
         FuncType                      FaceNeedCull{FuncType::Back};
         //正面方向
         FuncType                      FrontFace{FuncType::FaceCW};
+         glm::vec3 diffuseColor{1.0f, 1.0f, 1.0f};
+        glm::vec3 specularColor{0.0f, 0.0f, 0.0f};
+        glm::vec3 ambientColor{0.0f, 0.0f, 0.0f};
+        glm::vec3 emissiveColor{0.0f, 0.0f, 0.0f};
+        float shininess{64.0f};    // 高光强度
+        float opacity{1.0f};      // 不透明度
     };
 
 

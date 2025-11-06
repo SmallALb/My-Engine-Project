@@ -3,11 +3,11 @@
 #include "FISH/Core.h"
 
 namespace FISH {
+    class FrameBuffer;
+    using FrameBufferPtr = std::shared_ptr<FrameBuffer>;
+
     class Texture;
     using TexturePtr = std::shared_ptr<Texture>;
-
-    
-
 
     //纹理接口
     class Texture : public TextureHandle {
@@ -63,6 +63,8 @@ namespace FISH {
             const string& path, uint32_t WidthIn, uint32_t HeightIn,
              ChannelType channel = ChannelType::RGBA, 
              uint32_t unit = 0);
+
+        static TexturePtr CreateFromFrame(const FrameBufferPtr& frame);
              
         static void initDefaultTexture();
     private:

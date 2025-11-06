@@ -270,7 +270,7 @@ namespace FISH {
 
             if (fabs(io.MouseWheel) > 0.0f){
                 auto currentPos = mCamera->getPosition();
-                currentPos +=  mCamera->getFront() * io.MouseWheel * 0.005f;
+                currentPos +=  mCamera->getFront() * io.MouseWheel * 0.5f;
                 mCamera->setPosition(currentPos);
             }
         }

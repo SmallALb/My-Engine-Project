@@ -1,5 +1,6 @@
 #include "fspcs.h"
 #include "FISH/Base/HashTable.h"
+#include "FISH/Renderer/Buffer.h"
 #include "ColliderTest.h"
 
 namespace FISH {

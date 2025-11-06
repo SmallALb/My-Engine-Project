@@ -1,6 +1,7 @@
 #include "fspcs.h"
 #include "../Renderstatus.h"
 #include "FISH/Object/Camera.h"
+#include "FISH/Renderer/Buffer.h"
 #include "FISH/physics/Colliders/Collider.h"
 #include "ColliderRender.h"
 

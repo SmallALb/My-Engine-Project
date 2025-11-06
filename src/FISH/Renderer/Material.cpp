@@ -1,6 +1,7 @@
 #include "fspcs.h"
 #include "Material.h"
 #include "FISH/Log.h"
+#include "FISH/Renderer/Buffer.h"
 #include "Texture.h"
 namespace FISH {
     Material::Material() {

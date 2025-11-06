@@ -33,14 +33,14 @@ namespace FISH {
 
 #ifdef DEBUG
     //CORE
-    #define FS_CORE_ERROR(...)  ::FISH::Log::GetCoreLogger()->error(__VA_ARGS__)
+    #define FS_CORE_ERROR(...)  ::FISH::Log::GetCoreLogger()->error(__VA_ARGS__), nullptr
     #define FS_CORE_WARN(...)   ::FISH::Log::GetCoreLogger()->warn(__VA_ARGS__)
     #define FS_CORE_INFO(...)   ::FISH::Log::GetCoreLogger()->info(__VA_ARGS__)
     #define FS_CORE_TRACE(...)  ::FISH::Log::GetCoreLogger()->trace(__VA_ARGS__)
     #define FS_CORE_FATAL(...)  ::FISH::Log::GetCoreLogger()->fatal(__VA_ARGS__)
 
     //USER
-    #define FS_ERROR(...)  ::FISH::Log::GetClientLogger()->error(__VA_ARGS__)
+    #define FS_ERROR(...)  ::FISH::Log::GetClientLogger()->error(__VA_ARGS__), nullptr
     #define FS_WARN(...)   ::FISH::Log::GetClientLogger()->warn(__VA_ARGS__)
     #define FS_INFO(...)   ::FISH::Log::GetClientLogger()->info(__VA_ARGS__)
     #define FS_TRACE(...)  ::FISH::Log::GetClientLogger()->trace(__VA_ARGS__)
@@ -49,13 +49,13 @@ namespace FISH {
     #define FS_CORE_ASSERT(x, ...) if (!x) {FS_CORE_ERROR("Get Fail!: {0}", __VA_ARGS__); ; }
     #define FS_CONDITION_INFO(x, ...) if ((x)) FISH::Log::GetCoreLogger()->info(__VA_ARGS__)
 #else
-    #define FS_CORE_ERROR(...)
+    #define FS_CORE_ERROR(...) nullptr
     #define FS_CORE_WARN(...)
     #define FS_CORE_INFO(...)
     #define FS_CORE_TRACE(...)
     #define FS_CORE_FATAL(...)
 
-    #define FS_ERROR(...)
+    #define FS_ERROR(...) nullptr
     #define FS_WARN(...)
     #define FS_INFO(...)
     #define FS_TRACE(...)

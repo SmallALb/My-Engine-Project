@@ -13,6 +13,8 @@ namespace FISH {
 
         GLTexture(const string& path, uint32_t widthIn, int32_t heightIn, ChannelType channel, uint32_t unit);
 
+        GLTexture(const FrameBufferPtr& frame);
+
         ~GLTexture() override;
         
         inline virtual uint32_t getWidth() const override {return mWidth;}

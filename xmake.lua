@@ -12,6 +12,7 @@ target("FISH")
     add_includedirs("src/Platform/OpenGL/glad")
     --宏定义
     add_defines("GLFW_INCLUDE_NONE")
+    add_defines("FBXSDK_SHARED") -- shared版本的fbxsdk
     add_defines("FT2_BUILD_LIBRARY")  -- 确保 FreeType 使用内部实现
     add_defines("FT_CONFIG_OPTION_SYSTEM_ZLIB=0")  -- 禁用系统 ZLIB
     add_defines("FISH_DLL") --编译为动态库的宏标志

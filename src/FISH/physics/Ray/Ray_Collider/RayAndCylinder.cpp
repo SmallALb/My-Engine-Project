@@ -1,4 +1,5 @@
 #include "fspcs.h"
+#include "FISH/Renderer/Buffer.h"
 #include "FISH/physics/Colliders/Collider.h"
 #include "FISH/physics/Colliders/Cylinder.h"
 #include "RayAndCylinder.h"

@@ -4,6 +4,7 @@
 #include "FISH/physics/Ray/Ray_Collider/RayAndCylinder.h"
 #include "FISH/Renderer/Renderers/PhongLightRender.h"
 #include "FISH/Object/Arrow.h"
+#include "FISH/Renderer/ModelImporter/FbxReader.h"
 class MainLayer : public FISH::Layer {
         //初始化
     void OnAttach() override {
@@ -17,6 +18,8 @@ class MainLayer : public FISH::Layer {
         arrow3.reset(new FISH::Arrow({0.0f, 0.0f, 1.0f}));
         arrow3->setDirection({0.0f, 1.0f, 0.0f});
 
+        mFrame.reset(FISH::FrameBuffer::Create(APP.GetWindow().GetWidth(), APP.GetWindow().GetHeight()));
+
         //相机
         camera.reset(new FISH::perspectiveCamera("MainCamera"));
         Static_PtrCastTo<FISH::perspectiveCamera>(camera)->init(
@@ -28,13 +31,15 @@ class MainLayer : public FISH::Layer {
 
         //单向光
         auto dirlight =  std::make_shared<FISH::DirectionLight>();
-        dirlight->setPosition({-1.0, 1.0, -1.0});
+        dirlight->setLightOn(1);
+        dirlight->setColor({1.0f, 1.0f, 1.0f});
+        dirlight->setPosition({1.0, 0.0, 0.0});
         dirlight->setLookAtPoint(glm::vec3{0.0});
         FISH::Renderer::setAmbiLight(dirlight);
 
         //模型1
         auto mesh1 = std::make_shared<FISH::Mesh>();
-        auto shape1 = std::shared_ptr<FISH::Shape>(FISH::Shape::CreateBox(0.3));
+        auto shape1 = std::shared_ptr<FISH::Shape>(FISH::Shape::CreateSphere(0.3));
         auto material = std::make_shared<FISH::Material>();
         //material->setBlendColorTag(1);
         material->setDepthWriteTag(1);
@@ -54,6 +59,13 @@ class MainLayer : public FISH::Layer {
         mesh1->getShape() = shape1;
         scene->addChild(mesh1);
 
+        //测试模型渲染
+        std::shared_ptr<FISH::FbxReader> fbxreader(new FISH::FbxReader());
+        auto obj = fbxreader->readModel("Mesh/dog.fbx");
+        obj->setScale({0.05f, 0.05f, 0.05f});
+        
+        obj->setPosition({0.0, 0.0, -3.0f});
+        scene->addChild(obj);
         //设置清理
         mStatus.reset(FISH::Renderstatus::CreateRenderstatus());
         mStatus->enablestatus(FISH::StatusType::CleanDepth);
@@ -65,8 +77,14 @@ class MainLayer : public FISH::Layer {
 
         APP.GetWindow().SetCleanColor(0.3, 0.25, 0.25, 1.0);
         camera->setAllowedControl(1);
-
-        FISH::GeomtryEditor::get()->setCurrentEditShape(shape1);
+        FISH::MeshPtr mesh_shape(nullptr);
+        for (auto& child : obj->getChilds()) if (child->GetObjType() == FISH::ObjType::Mesh) {
+            mesh_shape = Static_PtrCastTo<FISH::Mesh>(child);
+            break;
+        }
+        //mesh_shape->getMaterial()->setFaceCullTag(1);
+        if (mesh_shape != nullptr) FISH::GeomtryEditor::get()->setCurrentEditShape(mesh_shape->getShape());
+        else FISH::GeomtryEditor::get()->setCurrentEditShape(shape1);
 
         //测试
         arrow->setCamera(camera);
@@ -93,12 +111,23 @@ class MainLayer : public FISH::Layer {
             !APP.getLockedState() ? APP.LockCursor() : APP.UnLockCursor();
         //camera->setLookAt({0.0, 0.0, 0.0});
         FISH::TextureManager::get().processAsyncUploads();
+        mFrame->bind();
+        mFrame->updateCleanStatus(mStatus->getCleanstatuss());
         FISH::Renderer::RenderInPhongMode(scene, camera);
         arrow->render();
         arrow2->render();
         arrow3->render();
+        mFrame->unbind();
+    
+        auto FrameTex = FISH::Texture::CreateFromFrame(mFrame);
+        auto FramePlan = std::shared_ptr<FISH::Shape>(FISH::Shape::CreateRectangle2D(2.0f, 2.0f));
         
-        
+        auto shader = FISH::Renderer::DefaultShader::getShaderFromName(FISH::Renderer::DefaultShaderName::Texture2D);
+        shader->Begin();
+        shader->setTextureHandle("uTexture", FrameTex->getHandle());
+        FramePlan->render(TRIANGLES);
+        shader->End();
+
     }
 
     std::shared_ptr<FISH::Scene>        scene;
@@ -106,6 +135,7 @@ class MainLayer : public FISH::Layer {
     std::shared_ptr<FISH::Renderstatus> mStatus;
     std::unique_ptr<TaskPool>           pool;
     std::shared_ptr<FISH::Arrow>        arrow, arrow2, arrow3;
+    FISH::FrameBufferPtr                mFrame;
     long long                           sum {0};
 
 

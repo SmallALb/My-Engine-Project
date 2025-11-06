@@ -3,6 +3,7 @@
 #include "API.h"
 #include "RenderElement.h"
 #include "Platform/OpenGL/OpenGLTexture.h"
+#include "Buffer.h"
 #include "Texture.h"
 
 namespace FISH {
@@ -55,6 +56,22 @@ namespace FISH {
         switch (GetAPI()) {
             case RendererAPI::OpenGL: {
                 if (!TextureMap.contains(path)) TextureMap[path].reset(new GLTexture(path, WidthIn, HeightIn, channel, unit));
+                TextureMap[path]->mPath = path;
+                return TextureMap[path];
+            }
+        }
+        FS_CORE_ERROR("找不到对应的API");
+        return nullptr;
+    }
+
+    TexturePtr Texture::CreateFromFrame(const FrameBufferPtr &frame) {
+        switch (GetAPI()) {
+            case RendererAPI::OpenGL: {
+                string path = "Frame" + std::to_string(frame->GetColorAttachmentID());
+                if (!TextureMap.contains(path)) {
+                    TextureMap[path].reset(new GLTexture(frame));
+                    FS_INFO("Make a New Frame Texture: {}", path);
+                }
                 TextureMap[path]->mPath = path;
                 return TextureMap[path];
             }

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <memory>
-#include "Buffer.h"
 #include "FISH/Core.h"
 
 namespace FISH {

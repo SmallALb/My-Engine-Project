@@ -185,6 +185,9 @@ namespace FISH {
 
     };
 
-     
+    using VertexBufferPtr = std::shared_ptr<VertexBuffer>;
+    using IndexBufferPtr = std::shared_ptr<IndexBuffer>;
+    using FrameBufferPtr = std::shared_ptr<FrameBuffer>;
+
 
 }

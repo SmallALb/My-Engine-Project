@@ -10,6 +10,7 @@
 #include "ImGui/ImGuiLayer.h"
 #include "Events/Application.h"
 #include "Log.h"
+#include "FISH/Renderer/Buffer.h"
 #include "Renderer/RenderElement.h"
 #include "Renderer/Texture.h"
 #include "Application.h"

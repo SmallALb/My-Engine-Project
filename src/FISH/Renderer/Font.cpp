@@ -3,10 +3,10 @@
 #include <codecvt>
 #include "Renderstatus.h"
 #include "RenderElement.h"
+#include "Buffer.h"
 #include "Texture.h"
 #include "Shader.h"
 #include "VertexArray.h"
-#include "Buffer.h"
 #include "FISH/Log.h"
 #include <ft2build.h>
 #include <freetype/freetype.h>
