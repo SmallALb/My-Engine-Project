@@ -14,7 +14,7 @@ namespace FISH {
         friend class TextureManager;
     public:
         enum class TextureType {
-            Texture2D,
+            Texture2D = 0,
             TextureCube
         };
 

@@ -3,7 +3,7 @@
 #include "FISH/Renderer/Buffer.h"
 #include "FISH/Renderer/VertexArray.h"
 #include "FISH/Renderer/BaseShape.h"
-#include "FISH/Renderer/Texture.h"
+#include "FISH/Renderer/TextureManger.h"
 #include "FISH/Renderer/Material.h"
 #include "FISH/Object/Object.h"  
 #include "FISH/Object/Mesh.h"
@@ -19,6 +19,244 @@ namespace FISH {
 
         ~Impl() {
             destory();
+        }
+
+        std::shared_ptr<MeshData> processToMeshData(FbxNode* node) {
+            FbxMesh* mesh = node->GetMesh();
+            if (!mesh) return nullptr;
+
+            std::shared_ptr<MeshData> data(new MeshData());
+
+            FS_INFO("Processing mesh: {}", node->GetName());
+            fillMeshData(mesh, *data);
+            if (data->positions.empty() || data->indices.empty()) 
+                return FS_ERROR("Failed to Get MeshData from FBX mesh {}", node->GetName());
+
+            data->name = node->GetName();
+            fillMaterialData(node, *data);
+            FbxAMatrix lTransform = node->EvaluateGlobalTransform();
+            FbxVector4 lTranslation = lTransform.GetT();
+            FbxVector4 lRotation = lTransform.GetR();
+            FbxVector4 lScaling = lTransform.GetS();
+        
+            data->rotation.x = (static_cast<float>(lRotation[0]));
+            data->rotation.y = (static_cast<float>(lRotation[1]));
+            data->rotation.z = (static_cast<float>(lRotation[2]));
+            data->scale = (glm::vec3(
+                static_cast<float>(lScaling[0]),
+                static_cast<float>(lScaling[1]),
+                static_cast<float>(lScaling[2])
+            ));
+            
+            FS_INFO("Successfully created meshdata: {} with {} vertices", 
+                    data->name, data->indices.size());
+            return data;
+        }
+
+        ModelData processToModelData(FbxNode* node) {
+            ModelData data;
+            data.head = processToMeshData(node);
+            return data;
+        }
+
+        void processNodeData(FbxNode* node, std::shared_ptr<MeshData> fa) {
+            if (!node) return;
+            FbxNodeAttribute* lNodeAttribute = node->GetNodeAttribute();
+            std::shared_ptr<MeshData> nxt;
+            if (lNodeAttribute) {
+                FbxNodeAttribute::EType attributeType = lNodeAttribute->GetAttributeType();
+                switch(attributeType) {
+                    case FbxNodeAttribute::eMesh: {
+                        nxt = processToMeshData(node);
+                        nxt->valid = 1;
+                        if (nxt && fa) fa->childs.push_back(nxt);
+
+                        break;
+                    }
+                    case FbxNodeAttribute::eNull: {
+                        nxt.reset(new MeshData());
+                        nxt->name = node->GetName();
+                        nxt->valid = 0;
+                        if(fa) fa->childs.push_back(nxt);
+                        break;
+                    }
+                    default:
+                        FS_INFO("Skipping node Type: {}", (int)attributeType);
+                }
+            }
+            for (int i=0; i< node->GetChildCount(); i++) processNodeData(node->GetChild(i), nxt);
+        }
+
+
+        void fillMeshData(FbxMesh* mesh, MeshData& meshData) {
+            std::vector<float>&          positions = meshData.positions;
+            std::vector<unsigned int>&    indexs = meshData.indices;
+            std::vector<float>&          uvs = meshData.uvs;
+            std::vector<float>&          normals = meshData.normals;
+            std::vector<float>&         colors = meshData.colors;
+
+            int polygonCount = mesh->GetPolygonCount();
+            int controlPointsCount = mesh->GetControlPointsCount();
+            FbxVector4* controlPoints = mesh->GetControlPoints();
+            
+            //获取法线
+            FbxGeometryElementNormal* normalElement = mesh->GetElementNormal();
+            
+            //获取UV
+            FbxGeometryElementUV* uvElement = mesh->GetElementUV();
+
+            //多边形三角化
+            for (int polygonIndex = 0; polygonIndex < polygonCount; polygonIndex++) {
+                int polygonSize = mesh->GetPolygonSize(polygonIndex);
+
+                if (polygonSize >= 3) for (int triangleIndex = 0; triangleIndex < polygonSize - 2; triangleIndex++) {
+                    int Vindexs[3] = {
+                        mesh->GetPolygonVertex(polygonIndex, 0),
+                        mesh->GetPolygonVertex(polygonIndex, triangleIndex + 1),
+                        mesh->GetPolygonVertex(polygonIndex, triangleIndex + 2)
+                    };
+
+                    for (int i= 0; i<3; i++) {
+                        int& vindex = Vindexs[i];
+                        FbxVector4 position = controlPoints[vindex];
+                        //位置
+                        positions.push_back(position[0]);
+                        positions.push_back(position[1]);
+                        positions.push_back(position[2]);
+                        //法线
+                        FbxVector4 normal(0, 1, 0, 0);
+                        if (normalElement) {
+                            int normalIndex = 0;
+                            switch(normalElement->GetMappingMode()) {
+                                //直接就是顶点则直接取顶点下标
+                                case FbxGeometryElement::eByControlPoint:
+                                    normalIndex = vindex;
+                                    break;
+                                //多边形法线需要取顶点下标
+                                case FbxGeometryElement::eByPolygonVertex:
+                                    normalIndex = mesh->GetPolygonVertexIndex(polygonIndex) + i + triangleIndex * 3;
+                                    break;
+                                case FbxGeometryElement::eByPolygon:
+                                    normalIndex = polygonIndex; // 每个多边形一个法线
+                                    break;
+                            }       
+                            if (normalElement->GetReferenceMode() == FbxGeometryElement::eDirect) {
+                                if (normalIndex < normalElement->GetDirectArray().GetCount()) {
+                                    normal = normalElement->GetDirectArray().GetAt(normalIndex);
+                                }
+                            } else if (normalElement->GetReferenceMode() == FbxGeometryElement::eIndexToDirect) {
+                                if (normalIndex < normalElement->GetIndexArray().GetCount()) {
+                                    int id = normalElement->GetIndexArray().GetAt(normalIndex);
+                                    normal = normalElement->GetDirectArray().GetAt(id);
+                                }
+                            }
+                        }
+                        normals.push_back(normal[0]);
+                        normals.push_back(normal[1]);
+                        normals.push_back(normal[2]);
+
+                        //uv
+                        FbxVector2 uv(0, 0); 
+                        if (uvElement) {
+                            int uvIndex = 0;
+                            switch(uvElement->GetMappingMode()) {
+                                //直接就是顶点则直接取顶点下标
+                                case FbxGeometryElement::eByControlPoint:
+                                    uvIndex = vindex;
+                                    break;
+                                //多边形法线需要取顶点下标
+                                case FbxGeometryElement::eByPolygonVertex:
+                                    uvIndex = mesh->GetPolygonVertexIndex(polygonIndex) + i;
+                                    break;
+                                case FbxGeometryElement::eByPolygon:
+                                    uvIndex = polygonIndex; // 每个多边形一个UV
+                                    break;
+                            }       
+                            if (uvElement->GetReferenceMode() == FbxGeometryElement::eDirect) {
+                                if (uvIndex < uvElement->GetDirectArray().GetCount()) {
+                                    uv = uvElement->GetDirectArray().GetAt(uvIndex);
+                                }
+                            } else if (uvElement->GetReferenceMode() == FbxGeometryElement::eIndexToDirect) {
+                                if (uvIndex < uvElement->GetIndexArray().GetCount()) {
+                                    int id = uvElement->GetIndexArray().GetAt(uvIndex);
+                                    uv = uvElement->GetDirectArray().GetAt(id);
+                                }
+                            }
+                        }
+                        uvs.push_back(uv[0]);
+                        uvs.push_back(uv[1]);
+
+                        colors.push_back(0.8f);
+                        colors.push_back(0.8f);
+                        colors.push_back(0.8f);
+                        colors.push_back(1.0f);
+
+                        indexs.push_back(indexs.size());
+
+                    }
+                }
+            }
+
+            if (positions.empty() || indexs.empty()) {
+                FS_WARN("No valid geometry data found in Fbx mesh");
+                return;
+            }
+        }
+
+        void fillMaterialData(FbxNode* node, MeshData& meshData) {
+            FbxSurfaceMaterial* fbxMaterial = nullptr;
+            fbxMaterial = node->GetMaterialCount() > 0 
+                ? 
+                    node->GetMaterial(0)
+                :   
+                    fbxMaterial;
+            if (!fbxMaterial) return;
+
+            if (fbxMaterial->GetClassId().Is(FbxSurfaceLambert::ClassId)) {
+                auto lambert = (FbxSurfaceLambert* )fbxMaterial;
+
+                FbxDouble3 diffuse = lambert->Diffuse.Get();
+                meshData.diffuseColor = glm::vec3(
+                    static_cast<float>(diffuse[0]),
+                    static_cast<float>(diffuse[1]), 
+                    static_cast<float>(diffuse[2])
+                );
+
+                FbxDouble3 emissive = lambert->Emissive.Get();
+                meshData.emissiveColor= {glm::vec3(
+                    static_cast<float>(emissive[0]),
+                    static_cast<float>(emissive[1]), 
+                    static_cast<float>(emissive[2])
+                )};
+
+                float opacity = static_cast<float>(lambert->TransparencyFactor.Get());
+                meshData.opacity = 1.0f - opacity;
+                
+            }
+            
+            if (fbxMaterial->GetClassId().Is(FbxSurfacePhong::ClassId)) {
+                FbxSurfacePhong* phong = (FbxSurfacePhong*)fbxMaterial;
+                
+                // 高光颜色
+                FbxDouble3 specular = phong->Specular.Get();
+                meshData.specularColor = {glm::vec3(
+                    static_cast<float>(specular[0]),
+                    static_cast<float>(specular[1]),
+                    static_cast<float>(specular[2])
+                )};
+                
+                // 高光强度
+                meshData.shininess = static_cast<float>(phong->Shininess.Get());
+            }
+            FbxProperty property = fbxMaterial->FindProperty(FbxSurfaceMaterial::sDiffuse);
+            FS_INFO("Load Fbx Texture Path: {}", FbxSurfaceMaterial::sDiffuse);
+            if (!property.IsValid()) return;
+            int textureCount = property.GetSrcObjectCount<FbxFileTexture>();
+            if (textureCount > 0) {    
+                FbxFileTexture* texture = property.GetSrcObject<FbxFileTexture>();
+                meshData.diffuseTexturePath = texture->GetFileName();
+                FS_INFO("{} diffuseTexturePath is {}", meshData.name, meshData.diffuseTexturePath);
+            }
         }
 
         bool initSDK() {
@@ -298,6 +536,8 @@ namespace FISH {
                 
                 // 高光强度
                 material->setShininess(static_cast<float>(phong->Shininess.Get()));
+                //启用面剔除
+                //material->setFaceCullTag(1);
             }
             loadTexture(fbxMaterial, FbxSurfaceMaterial::sDiffuse, TextureType::None, material);
             return material;
@@ -330,12 +570,22 @@ namespace FISH {
 
         void loadTexture(FbxSurfaceMaterial* material, const char* propertyName, TextureType textureType, MaterialPtr& outMaterial) {
             FbxProperty property = material->FindProperty(propertyName);
+            FS_INFO("Load Fbx Texture: {}", propertyName);
             if (!property.IsValid()) return;
             int textureCount = property.GetSrcObjectCount<FbxFileTexture>();
             if (textureCount > 0) {
                 FbxFileTexture* texture = property.GetSrcObject<FbxFileTexture>();
-                auto FishTexture = FISH::Texture::CreateTextureFromPath(texture->GetFileName());
-                if (FishTexture) outMaterial->setTexture(textureType, FishTexture);
+                FS_INFO("Load Path: {}", texture->GetFileName());
+
+                TextureManager::get().loadTextureAsync(
+                    std::string(texture->GetFileName()),
+                    FISH::Texture::TextureType::Texture2D,
+                    ChannelType::RGB,
+                    [outMaterial, textureType] (TexturePtr ptr) {
+                        if (ptr) outMaterial->setTexture(textureType, ptr);
+                        FS_INFO("Done! success load Fbx Texture!");
+                    }
+                );
             }
         }
     public:
@@ -355,7 +605,7 @@ namespace FISH {
 
 
 
-    Object3DPtr FbxReader::readModel(string path) {
+    Object3DPtr FbxReader::readModel(const string& path) {
         FS_INFO("Loading FBX model: {}", path);
 
         if (!impl->initSDK()) return FS_ERROR("Failed to Create FBXsdk");
@@ -379,6 +629,36 @@ namespace FISH {
         
         return rootObject;
 
+    }
+
+    ModelData FbxReader::readModelData(const string & path) {
+        FS_INFO("Loading FBX model data: {}", path);
+
+        ModelData modelData;
+        modelData.path = path;
+
+        if (!impl->initSDK()) {
+            FS_ERROR("Failed to Create FBXsdk for data import");
+            return modelData;
+        }
+
+        if (!impl->loadPath(path)) {
+            impl->destory();
+            FS_ERROR("Failed to load FBX scence for data import: {}", path);
+            return modelData;
+        }
+
+        FbxNode* lRootNode = impl->mScenc->GetRootNode();
+        modelData.head.reset(new MeshData());
+        modelData.head->valid = 0;
+        if (lRootNode) for (int i = 0; i < lRootNode->GetChildCount(); i++) {
+            impl->processNodeData(lRootNode->GetChild(i), modelData.head);
+        }
+
+
+        FS_INFO("FBX model loaded successfully: {} with {} children", 
+                path, modelData.head->childs.size());
+        return modelData;
     }
 
 }

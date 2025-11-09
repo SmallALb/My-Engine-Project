@@ -17,7 +17,10 @@ namespace FISH {
 
         ~FbxReader();
         
-        Object3DPtr readModel(string path) override;
+        Object3DPtr readModel(const string& path) override;
+
+        ModelData readModelData(const string& path) override;
+
         
     private:
         class Impl;

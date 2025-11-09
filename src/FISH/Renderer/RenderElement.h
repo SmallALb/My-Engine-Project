@@ -28,3 +28,4 @@ enum class ChannelType {
 
 int choiceStbChannel(ChannelType typ);
 
+ChannelType StbChannelToEnumChannel(int typ);

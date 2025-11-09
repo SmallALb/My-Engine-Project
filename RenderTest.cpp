@@ -4,7 +4,7 @@
 #include "FISH/physics/Ray/Ray_Collider/RayAndCylinder.h"
 #include "FISH/Renderer/Renderers/PhongLightRender.h"
 #include "FISH/Object/Arrow.h"
-#include "FISH/Renderer/ModelImporter/FbxReader.h"
+#include "FISH/Renderer/ModelImporter/ModelManager.h"
 class MainLayer : public FISH::Layer {
         //初始化
     void OnAttach() override {
@@ -26,14 +26,14 @@ class MainLayer : public FISH::Layer {
           75.0f, APP.GetWindow().GetWidth()/APP.GetWindow().GetHeight(),
           0.1, 200.0f  
         );
-        camera->setPosition({1.0, 1.0, -1.0});
+        camera->setPosition({2.0, 2.0, 2.0});
         camera->setLookAt({0.0, 0.0, 0.0});
 
         //单向光
         auto dirlight =  std::make_shared<FISH::DirectionLight>();
         dirlight->setLightOn(1);
         dirlight->setColor({1.0f, 1.0f, 1.0f});
-        dirlight->setPosition({1.0, 0.0, 0.0});
+        dirlight->setPosition({-1.0, 1.0, 1.0});
         dirlight->setLookAtPoint(glm::vec3{0.0});
         FISH::Renderer::setAmbiLight(dirlight);
 
@@ -45,10 +45,10 @@ class MainLayer : public FISH::Layer {
         material->setDepthWriteTag(1);
         material->setFaceCullTag(1);
         //尝试上纹理
-        // FISH::TextureManager::get().loadTextureAsync("picture/window2.png", ChannelType::RGBA,
-        // [material](FISH::TexturePtr texture) {
-        //     material->setTexture(FISH::TextureType::None, texture);
-        // });
+        FISH::TextureManager::get().loadTextureAsync("picture/Sky.png", FISH::Texture::TextureType::Texture2D, ChannelType::RGBA,
+        [material](FISH::TexturePtr texture) {
+            material->setTexture(FISH::TextureType::None, texture);
+        });
 
         //尝试上动画
         // auto mAni = std::make_shared<FISH::SpriteAnimation>("picture/sprite", "cat ({}).png", 21, 1, 56);
@@ -60,12 +60,20 @@ class MainLayer : public FISH::Layer {
         scene->addChild(mesh1);
 
         //测试模型渲染
-        std::shared_ptr<FISH::FbxReader> fbxreader(new FISH::FbxReader());
-        auto obj = fbxreader->readModel("Mesh/dog.fbx");
-        obj->setScale({0.05f, 0.05f, 0.05f});
-        
-        obj->setPosition({0.0, 0.0, -3.0f});
-        scene->addChild(obj);
+
+        FISH::ModelManager::get().loadModelAsync("Mesh/dog.fbx", FISH::ModelType::FBX, [this](FISH::Object3DPtr obj) {
+            obj->setScale({0.05f, 0.05f, 0.05f});
+            obj->setPosition({0.0, 0.0, -1.7f});
+            scene->addChild(obj);
+
+        });
+
+        FISH::ModelManager::get().loadModelAsync("Mesh/ikun.fbx", FISH::ModelType::FBX, [this](FISH::Object3DPtr obj) {
+            obj->setScale({0.05f, 0.05f, 0.05f});
+            obj->setPosition({-4.0, 0.0, -0.0f});
+            scene->addChild(obj);
+
+        });
         //设置清理
         mStatus.reset(FISH::Renderstatus::CreateRenderstatus());
         mStatus->enablestatus(FISH::StatusType::CleanDepth);
@@ -78,13 +86,9 @@ class MainLayer : public FISH::Layer {
         APP.GetWindow().SetCleanColor(0.3, 0.25, 0.25, 1.0);
         camera->setAllowedControl(1);
         FISH::MeshPtr mesh_shape(nullptr);
-        for (auto& child : obj->getChilds()) if (child->GetObjType() == FISH::ObjType::Mesh) {
-            mesh_shape = Static_PtrCastTo<FISH::Mesh>(child);
-            break;
-        }
+
         //mesh_shape->getMaterial()->setFaceCullTag(1);
-        if (mesh_shape != nullptr) FISH::GeomtryEditor::get()->setCurrentEditShape(mesh_shape->getShape());
-        else FISH::GeomtryEditor::get()->setCurrentEditShape(shape1);
+        FISH::GeomtryEditor::get()->setCurrentEditShape(shape1);
 
         //测试
         arrow->setCamera(camera);
@@ -111,6 +115,7 @@ class MainLayer : public FISH::Layer {
             !APP.getLockedState() ? APP.LockCursor() : APP.UnLockCursor();
         //camera->setLookAt({0.0, 0.0, 0.0});
         FISH::TextureManager::get().processAsyncUploads();
+        FISH::ModelManager::get().processAsyncUploads();
         mFrame->bind();
         mFrame->updateCleanStatus(mStatus->getCleanstatuss());
         FISH::Renderer::RenderInPhongMode(scene, camera);

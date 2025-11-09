@@ -10,7 +10,7 @@ namespace FISH {
     TextureManager::TextureManager() {
         mAsyncLoadThread = std::thread(&TextureManager::asyncLoadToMemory, this);
         mAsyncThreadRunning = true;
-        FS_INFO("TecxtureManger Build!");
+        FS_INFO("TecxtureManger Builded!");
     }
 
     TextureManager::~TextureManager() {
@@ -40,7 +40,7 @@ namespace FISH {
                 if (!mAsyncThreadRunning) break;
                 if (mLoadQue.empty()) continue;
 
-                task = mLoadQue.front();
+                task = std::move(mLoadQue.front());
                 mLoadQue.pop();
             }
 
@@ -72,6 +72,7 @@ namespace FISH {
         auto filename = std::get<0>(task.filePath);
         unsigned char* data = stbi_load(filename.c_str(), &w, &h, &c, 0);
 
+        task.channel = StbChannelToEnumChannel(c);
         if (!data) {
             FS_CORE_ERROR("Failed to load image: {0}", filename);
             return false;
@@ -95,7 +96,7 @@ namespace FISH {
         for (int i=0; i<6; i++) {
             unsigned char* data = stbi_load(filenames[i].c_str(), &w, &h, &c, 0);
             if (!data) {
-                FS_CORE_ERROR("Failed to load image: {0}", filenames[i]);
+                FS_CORE_ERROR("Failed to Texture load image: {0}", filenames[i]);
                 return false;
             }
             size_t dataSize = w * h * c;
@@ -108,11 +109,20 @@ namespace FISH {
     }
 
     void TextureManager::loadTextureAsync(const std::variant<string, std::array<string, 6>>& name, Texture::TextureType typ, ChannelType channel, const std::function<void(TexturePtr)> &callback) {
-        Task task {name, typ, channel, callback};
         {
+            switch(typ) {
+                case Texture::TextureType::Texture2D: {
+                    FS_INFO("Load Texture2D Task: {}", std::get<0>(name));
+                    break;
+                }
+                case Texture::TextureType::TextureCube: {
+                    FS_INFO("Load TextureCube Task: {}", std::get<1>(name)[0]);
+                    break;
+                }
+            }
             std::lock_guard<std::mutex> lock(mLoadQueMutex);
-            mLoadQue.push(task);
-            FS_INFO("Load Texture Build Task!");
+            mLoadQue.emplace(name, typ, channel, callback);
+            FS_INFO("Load Texture Build Task");
         }
         mAsyncCondition.notify_one();
     }
@@ -125,7 +135,7 @@ namespace FISH {
         }
         while(!taskToProcess.empty()) {
             FS_INFO("Build Texture from task!");
-            Task task = taskToProcess.front();
+            Task task = std::move(taskToProcess.front());
             taskToProcess.pop();
             TexturePtr tex = nullptr;
             switch(task.CreateType) {

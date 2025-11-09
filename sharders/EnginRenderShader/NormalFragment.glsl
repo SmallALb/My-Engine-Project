@@ -9,6 +9,15 @@ in vec2 uv;
 in vec3 worldPosition;
 
 #define MAXSIZE 32
+
+//材质
+struct Material {
+    vec3 diffusecolor;
+    vec3 ambientcolor;
+    vec3 emissivecolor;
+    vec3 specularcolor;
+    float shiness;
+};
 //单向光
 struct DirectionLight {
     vec3 direction;
@@ -50,25 +59,25 @@ uniform int numPointLights;
 uniform SpotLight spotLights[MAXSIZE];
 uniform int numSpotLights;
 
-uniform vec3 ambientcolor;
 uniform sampler2D sampler;
 uniform vec3 cameraPosition;
-uniform float shiness;
+
+uniform Material material;
 
 // 计算漫反射
 vec3 calculateDiffuse(vec3 normal, vec3 lightDir, vec3 lightColor, vec3 objectColor) {
     float diffuse = clamp(dot(-lightDir, normal), 0.0, 1.0);
-    return diffuse * lightColor * objectColor;
+    return diffuse * lightColor * objectColor * material.diffusecolor;
 }
 
 // 计算高光
 vec3 calculateSpecular(vec3 normal, vec3 lightDir, vec3 viewDir, vec3 lightColor, float specularIntensity) {
     vec3 reflectlight = normalize(reflect(-lightDir, normal));
     float specular = max(dot(reflectlight, viewDir), 0.0);
-    specular = pow(specular, shiness);
+    specular = pow(specular, material.shiness);
     float doresult = dot(lightDir, normal);
     float flag = step(0.0, doresult);
-    return lightColor * specular * flag * specularIntensity;
+    return lightColor * specular * flag * specularIntensity * material.specularcolor;
 }
 
 // 计算聚光灯
@@ -136,7 +145,7 @@ void main() {
     for (int i = 0; i < numPointLights; i++) {
         result += calculatePointLight(normalN, pointLights[i], viewDir);
     }
-    result += objectColor.xyz * ambientcolor * 0.5; // 环境光系数
+    result += objectColor.xyz * material.ambientcolor * 0.5; // 环境光系数
     
     FragColor = vec4(result, objectColor.w);
 }

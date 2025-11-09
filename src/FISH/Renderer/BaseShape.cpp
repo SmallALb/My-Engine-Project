@@ -10,6 +10,7 @@
 namespace FISH
 {
     Shape::Shape() {
+        mVao.reset(VertexArray::Create());
     }
 
     Shape::~Shape() {

@@ -57,6 +57,7 @@ namespace FISH {
             shader->setVector3("dirLight.color", useAmbiLight->getColor());
             shader->setFloat("dirLight.intensity", useAmbiLight->getIntensity());
             shader->setFloat("dirLight.specularIntensity", useAmbiLight->getSpecularIntensity());
+            
         }
 
         void RenderObj_Phong(const std::shared_ptr<Object3D> &obj, const std::vector<std::shared_ptr<SpotLight>> &spotlights, const std::vector<std::shared_ptr<PointLight>> &pointlights, const CameraPtr &camera) {
@@ -98,8 +99,11 @@ namespace FISH {
                     shader->setMat4("projection", camera->getProjectMatrix());
                     shader->setMat4("view", camera->getViewMatrix());
                     ImportLightInfo(spotlights, pointlights, camera);
-                    shader->setVector3("ambientcolor", material->getAmbientColor());
-                    shader->setFloat("shiness", material->getShininess());
+                    shader->setVector3("material.diffusecolor", material->getDiffuseColor());
+                    shader->setVector3("material.ambientcolor", material->getAmbientColor());
+                    shader->setFloat("material.shiness", material->getShininess());
+                    shader->setVector3("material.emissivecolor", material->getEmissiveColor());
+                    shader->setVector3("material.specularcolor", material->getSpecularColor());
 
 
                     shader->setTextureHandle("sampler", material->getTextureHandle(TextureType::None));

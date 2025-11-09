@@ -96,6 +96,11 @@ namespace FISH {
         mTextureChannel = ChoiceChannel(channel);
         GLint internalFormat = ChoiceInternal(channel);
 
+        if (!dataIn) {
+            FS_CORE_ERROR("Texture data is null!");
+            return;
+        }
+
         // 直接使用传入的原始数据，不要用stbi_load_from_memory
         unsigned char* data = dataIn;
 
@@ -117,7 +122,9 @@ namespace FISH {
             glDeleteTextures(1, &mTexture);
             mTexture = 0;
             return;
-        }
+        }   
+
+        //std::vector<unsigned char> localData(dataIn, dataIn + (widthIn * heightIn * getBytesPerPixel()));
 
         // 上传纹理数据
         GL_ERRORCALL(glTextureSubImage2D(mTexture, 0, 0, 0, mWidth, mHeight, 
