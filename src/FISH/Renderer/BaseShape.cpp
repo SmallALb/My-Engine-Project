@@ -14,7 +14,7 @@ namespace FISH
     }
 
     Shape::~Shape() {
-
+        
     }
 
     Shape::Shape(std::shared_ptr<VertexBuffer> vertx, std::shared_ptr<IndexBuffer> index) {

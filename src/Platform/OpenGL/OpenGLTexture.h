@@ -33,6 +33,9 @@ namespace FISH {
 
         virtual bool isValid() const override { return mTexture; }
 
+        virtual void bind();
+
+
         virtual void destory() override;
     private:
         //选择创建GL纹理的通道

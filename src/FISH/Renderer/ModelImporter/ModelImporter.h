@@ -17,6 +17,7 @@ namespace FISH {
         std::vector<unsigned int> indices;
         glm::vec3 rotation{0.0f};
         glm::vec3 scale{1.0f};
+        glm::vec3 position{0.0f};
 
         glm::vec3 diffuseColor{1.0f};
         glm::vec3 specularColor{0.0f};

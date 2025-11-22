@@ -5,5 +5,7 @@ in vec2 uv;
 uniform sampler2D uTexture; 
 
 void main() {
+
     FragColor = texture(uTexture, uv);
+    
 }

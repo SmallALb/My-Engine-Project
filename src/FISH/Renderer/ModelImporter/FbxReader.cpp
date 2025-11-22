@@ -38,7 +38,11 @@ namespace FISH {
             FbxVector4 lTranslation = lTransform.GetT();
             FbxVector4 lRotation = lTransform.GetR();
             FbxVector4 lScaling = lTransform.GetS();
-        
+            
+            data->position.x = (static_cast<float>(lTranslation[0]));
+            data->position.y = (static_cast<float>(lTranslation[1]));
+            data->position.z = (static_cast<float>(lTranslation[2]));
+
             data->rotation.x = (static_cast<float>(lRotation[0]));
             data->rotation.y = (static_cast<float>(lRotation[1]));
             data->rotation.z = (static_cast<float>(lRotation[2]));

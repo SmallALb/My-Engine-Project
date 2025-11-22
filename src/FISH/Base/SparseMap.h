@@ -1,0 +1,200 @@
+#pragma once
+
+#include <vector>
+#include <memory>
+#include <cassert>
+
+//稀疏集合
+template<class EntityType = uint32_t, class T = size_t, size_t PAGE_SHIFT = 4>
+class sparse_map {
+  static_assert(std::is_unsigned_v<EntityType>, "EntityType must be an unsigned integer!");
+//声明类型
+public:
+  using EntityType_ = EntityType;
+  using DataType_ = T;
+  using SizeType_ = size_t;
+
+  struct Entry {
+    EntityType_ entity;
+    DataType_ data;
+  };
+private:
+  //基本数据声明
+  static constexpr int32_t INVALID_INDEX = -1;
+  static constexpr SizeType_ PAGE_SIZE = (1<<PAGE_SHIFT);
+  static constexpr SizeType_ PAGE_MASK = PAGE_SIZE-1;
+
+public:
+  sparse_map() = default;
+
+  ~sparse_map() {
+    clear_memory();
+  }
+  
+  bool empty() const {return mSize == 0;}
+
+  SizeType_ size() const {return mSize;}
+
+  SizeType_ capacity() const {return mDense.capacity();}
+
+  bool contains(EntityType_ entity) {
+    //第i页
+    const SizeType_ pageIndex = entity >> PAGE_SHIFT;
+    //页内偏移
+    const SizeType_ pageOffset = entity & PAGE_MASK;
+
+    if (pageIndex >= mSparse.size() || !mSparse[pageIndex]) return false;
+    //取出在密集数组中的数据
+    const int32_t dense_index = mSparse[pageIndex][pageOffset];
+    return dense_index != INVALID_INDEX &&  
+          dense_index < mSize && 
+          mDense[dense_index].entity == entity;
+  }
+
+  void reverse(SizeType_ capacity) {
+    mDense.reserve(capacity);
+    //预留两倍
+    SizeType_ maxEntity = capacity << 1;
+    //计算至少需要页
+    SizeType_ required_pages = (maxEntity + PAGE_MASK) / PAGE_SIZE;
+    if (mSparse.size() < required_pages) mSparse.resize(required_pages); 
+  }
+  
+  DataType_& insert(EntityType_ entity, DataType_ data = DataType_{}) {
+    if (contains(entity)) return mDense[mSparse[entity >> PAGE_SHIFT][entity & PAGE_MASK]].data;
+    //让此实体合法
+    make_valid_sparePage(entity);
+    if (mSize < mDense.size()) mDense[mSize] = Entry{entity, data};
+    else mDense.push_back(Entry{entity, data});
+
+    mSparse[entity >> PAGE_SHIFT][entity & PAGE_MASK] = mSize;
+    mSize++;
+
+    return mDense[mSize-1].data;
+  }
+  
+  DataType_& get(EntityType_ entity) {
+    //在引用调用中必须保证存在该实体
+    make_valid_sparePage(entity);
+    int32_t dense_index = mSparse[entity >> PAGE_SHIFT][entity & PAGE_MASK];
+    //不存在则
+    if (dense_index == INVALID_INDEX) {
+      if (mSize < mDense.size()) {
+        mDense[mSize] = Entry{entity, DataType_{}};
+        dense_index = mSparse[entity >> PAGE_SHIFT][entity & PAGE_MASK] = mSize;
+      }
+      else {
+        mDense.emplace_back(entity, DataType_{});
+        dense_index = mSparse[entity >> PAGE_SHIFT][entity & PAGE_MASK] = mDense.size() - 1;
+        mSize++;
+      }
+    }
+
+    return mDense[dense_index].data;
+  }
+
+  const DataType_& get(EntityType_ entity) const {
+    assert(!contains(entity));
+    return mDense[mSparse[entity >> PAGE_SHIFT][entity & PAGE_MASK]].data;
+  }
+
+  void erase(EntityType_ entity) {
+    if (!contains(entity)) return;
+    const SizeType_ page_index = entity >> PAGE_SHIFT;
+    const SizeType_ page_offset = entity & PAGE_MASK;
+    //取出要删除的密集数组下标
+    const int32_t dense_index = mSparse[page_index][page_offset];
+    if (dense_index != mSize - 1) {
+      const EntityType_ lstEntity = mDense[mSize - 1].entity;
+      //设置要被删除的实体的密集数组位置变为back的位置
+      mDense[dense_index] = std::move(mDense[mSize - 1]);
+      mSparse[lstEntity >> PAGE_SHIFT][lstEntity & PAGE_MASK] = dense_index;
+    }
+    //稀疏数组置为-1
+    mSparse[page_index][page_offset] = INVALID_INDEX;
+    mSize--;
+  }
+
+  void clear() {
+    for (SizeType_ i = 0; i< mSize; i++) {
+      const EntityType_ entity = mDense[i].entity;
+      mSparse[entity >> PAGE_SHIFT][entity & PAGE_MASK] = INVALID_INDEX;
+    }
+    mSize = 0;
+    //不直接清理内存
+  }
+
+  DataType_& operator[] (EntityType_ entity) {
+    return get(entity);
+  }
+
+  const DataType_& operator[] (EntityType_ entity) const {
+    return get(entity);
+  }
+
+  //迭代器
+  auto begin() {return mDense.begin();}
+  auto begin() const {return mDense.begin();}
+
+  auto end() {return mDense.begin() + mSize;}
+  auto end() const {return mDense.begin() + mSize;}
+
+  auto find(EntityType_ entity) {
+    return std::find_if(mDense.begin(), mDense.end(), [entity](const auto& value) {return value.entity == entity;});
+  }
+
+  auto find(EntityType_ entity) const{
+    return std::find_if(mDense.begin(), mDense.end(), [entity](const auto& value) {return value.entity == entity;});
+  }
+
+  EntityType get_entity(SizeType_ index) const {
+    assert(index >= mSize);
+    return mDense[index].entity;
+  }
+
+  DataType_& get_data(SizeType_ index) {
+    assert(index >= mSize);
+    return mDense[index].data;
+  }
+
+  DataType_& get_data(SizeType_ index) const {
+    assert(index >= mSize);
+    return mDense[index].data;
+  }
+
+  SizeType_ get_page_count() const {
+    return mSparse.size();
+  }
+
+  SizeType_ get_allocated_sparse_size() const {
+    SizeType_ t = 0;
+    for (const auto& page : mSparse) if (page) t += PAGE_SIZE;
+    return t;
+  }
+
+private:
+  void make_valid_sparePage(EntityType_ entity) {
+    const SizeType_ page_index = entity >> PAGE_SHIFT;
+    //无此页则添加
+    if (page_index >= mSparse.size()) mSparse.resize(page_index+1, nullptr);
+    //页面为空则新建页面并填充不合法下标
+    if (!mSparse[page_index]) {
+      mSparse[page_index] = new int32_t[PAGE_SIZE];
+      std::fill_n(mSparse[page_index], PAGE_SIZE, INVALID_INDEX);
+    }
+  }
+
+  void clear_memory() {
+    for (auto page : mSparse) if (page != nullptr) 
+      delete[] page;
+    mSparse.clear();
+  }
+  
+//属性数据
+private:
+  //稀疏页表
+  std::vector<int32_t*> mSparse;
+  //密集数组
+  std::vector<Entry> mDense;
+  SizeType_ mSize{0};
+};

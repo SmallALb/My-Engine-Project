@@ -23,7 +23,7 @@ namespace FISH {
 
         //异步上载纹理
           void processAsyncUploads();
-
+            
           TexturePtr getTexture(const string& name);
 
           bool contains(const string& name) const;

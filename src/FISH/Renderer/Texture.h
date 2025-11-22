@@ -27,6 +27,8 @@ namespace FISH {
         //销毁
         virtual void destory() = 0;
 
+        virtual void bind() = 0;
+
         //获得宽度
         virtual uint32_t getWidth() const = 0;
 

@@ -16,6 +16,8 @@
 #include "FISH/Log.h"
 #include "FISH/ImGui/ImGuiLayer.h"
 #include "FISH/Events/Events.h"
+#include "FISH/Base/Ecs/Registry.h"
+
 
 //按键码
 #include "FISH/keycodes.h"
@@ -64,10 +66,11 @@
 #include "FISH/FileManger.h"
 //性能分析库
 #ifdef DEBUG
-    #include <tracy/Tracy.hpp>
+    #include "FISH/Debugger.h"
 #endif
 
 //入口
+
 #include "FISH/Events/Application.h"
 #include "FISH/EntryPoint.h"
 

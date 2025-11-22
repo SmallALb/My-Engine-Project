@@ -27,6 +27,7 @@ namespace FISH{
         
         FS_CORE_ASSERT(!Instance, "Application alread exists!");
         Instance = this;
+        //创建窗口
         mWindow.reset(Window::Create());
         mWindow->SetEventCallback(BIND_EVENT_FN(Application::OnEvent));
         FS_INFO("Start Application!");

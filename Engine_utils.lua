@@ -57,7 +57,6 @@ function init_engine()
 
         print("Done to copy Attachment...")
     end)
-
 end  
 -------------------------------------
 -------opengl接入函数-----------------
@@ -96,3 +95,7 @@ function mode_choice()
     end
 end
 ------------------------------------------
+-----------启用Tracy--------------------
+function enable_tracy()
+    add_defines("FISH_ENABLE_PROFILING")
+end

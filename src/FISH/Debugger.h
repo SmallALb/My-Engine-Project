@@ -4,11 +4,10 @@
 #ifdef FISH_ENABLE_PROFILING
     #define TRACY_ENABLE
     #include <tracy/Tracy.hpp>
-    #include <tracy/TracyOpenGL.hpp>
 
     // 基础区域标记
-    #define FS_PROFILE_SCOPE(name) TracyZoneScopedN(name)
-    #define FS_PROFILE_FUNCTION() TracyZoneScoped
+    #define FS_PROFILE_SCOPE(name) ZoneScopedN(name)
+    #define FS_PROFILE_FUNCTION() ZoneScoped
     #define FS_PROFILE_THREAD(name) tracy::SetThreadName(name)
 
     // 帧标记
@@ -25,11 +24,6 @@
     #define FS_PROFILE_PLOT(name, value) TracyPlot(name, value)
     #define FS_PROFILE_COUNTER(name, value) TracyPlot(name, value)
 
-    // GPU 相关 (OpenGL)
-    #define FS_PROFILE_GPU_CONTEXT(name) TracyGpuContext(name)
-    #define FS_PROFILE_GPU_SCOPE(name) TracyGpuZone(name)
-    #define FS_PROFILE_GPU_COLLECT() TracyGpuCollect
-
     // 内存分配跟踪
     #define FS_PROFILE_ALLOC(ptr, size) TracyAlloc(ptr, size)
     #define FS_PROFILE_FREE(ptr) TracyFree(ptr)
@@ -39,6 +33,8 @@
     #define FS_PROFILE_LOCK_BASE(type, name) TracyLockableN(type, name)
     #define FS_PROFILE_LOCK(mutex) LockMark(mutex)
 
+
+    #define FS_PROFILE_CONNECT() TracyAppInfo("FISH Engine", strlen("FISH Engine"))
 #else
     // 空实现 - 发布版本中不包含任何性能分析代码
     #define FS_PROFILE_SCOPE(name)
@@ -56,14 +52,12 @@
     #define FS_PROFILE_PLOT(name, value)
     #define FS_PROFILE_COUNTER(name, value)
 
-    #define FS_PROFILE_GPU_CONTEXT(name)
-    #define FS_PROFILE_GPU_SCOPE(name)
-    #define FS_PROFILE_GPU_COLLECT()
-
     #define FS_PROFILE_ALLOC(ptr, size)
     #define FS_PROFILE_FREE(ptr)
 
     #define FS_PROFILE_LOCK_MUTEX(mutex)
     #define FS_PROFILE_LOCK_BASE(type, name)
     #define FS_PROFILE_LOCK(mutex)
+
+    #define FS_PROFILE_CONNECT()
 #endif

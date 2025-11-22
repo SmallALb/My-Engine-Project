@@ -106,6 +106,7 @@ namespace FISH {
 
         // 创建纹理
         GL_ERRORCALL(glCreateTextures(GL_TEXTURE_2D, 1, &mTexture));
+        FS_CORE_INFO("? GLTexture class created texture ID: {}", mTexture);
         
         if (mTexture == 0) {
             FS_CORE_ERROR("Failed to create OpenGL texture object");
@@ -130,6 +131,8 @@ namespace FISH {
         GL_ERRORCALL(glTextureSubImage2D(mTexture, 0, 0, 0, mWidth, mHeight, 
                                         mTextureChannel, GL_UNSIGNED_BYTE, data));
 
+        FS_INFO("ID: {}", mTexture);
+
         // 检查上传是否成功
         error = glGetError();
         if (error != GL_NO_ERROR) {
@@ -147,6 +150,9 @@ namespace FISH {
 
         // 生成mipmap
         GL_ERRORCALL(glGenerateTextureMipmap(mTexture));
+        GLint isTexture;
+         glGetTextureParameteriv(mTexture, GL_TEXTURE_WIDTH, &isTexture);
+        FS_CORE_INFO("Texture {} validity check: {}", mTexture, isTexture);
 
         // 只有纹理创建成功后才创建bindless handle
         if (mTexture != 0) {
@@ -279,17 +285,24 @@ namespace FISH {
         
     }
 
-    void GLTexture::destory() {
-        if (mTextureHandle) {
-            // 使句柄非常驻
-            glMakeTextureHandleNonResidentARB(mTextureHandle);
-            mTextureHandle = 0;
-        }
-        
-        if (mTexture != 0) {
-            glDeleteTextures(1, &mTexture);
-            mTexture = 0;
-        }
+    void GLTexture::bind() {
+        glActiveTexture(GL_TEXTURE0 + mUnit);
+        glBindTexture(GL_TEXTURE_2D, mTexture);
+    }
+
+    void GLTexture::destory()
+    {
+      if (mTextureHandle)
+      {
+        // 使句柄非常驻
+        mTextureHandle = 0;
+      }
+
+      if (mTexture != 0)
+      {
+        glDeleteTextures(1, &mTexture);
+        mTexture = 0;
+      }
     };
 
     int GLTexture::ChoiceChannel(ChannelType channel) {
@@ -309,25 +322,11 @@ namespace FISH {
         }
 
         return GL_RGBA8;
-
-
     }
 
     void GLTexture::CreateBindLessHandle() {
-            if (!GLAD_GL_ARB_bindless_texture) {
-                FS_CORE_ERROR("Bindless texture extension not supported!");
-                return;
-            }
 
-            mTextureHandle = GL_ERRORCALL(glGetTextureHandleARB(mTexture));
-            if (!mTextureHandle) {
-                FS_CORE_ERROR("Failed to create bindless texture handle");
-                return;
-            }
-            
-            glMakeTextureHandleResidentARB(mTextureHandle);
 
-            FS_CORE_INFO("[Texture Debug] Handle: {}, GL Status: {}", mTextureHandle, glIsTextureHandleResidentARB(mTextureHandle) ? "Resident" : "Not Resident");
     }
     size_t GLTexture::accumulateDataSize(int width, int height) const {
         switch (mTextureChannel) {

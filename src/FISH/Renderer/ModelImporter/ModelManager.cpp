@@ -160,6 +160,7 @@ namespace FISH {
                         }
                     
                     }
+                    nxtobj->setPosition(child->position);
                     nxtobj->setAngleX(child->rotation.x);
                     nxtobj->setAngleY(child->rotation.y);
                     nxtobj->setAngleZ(child->rotation.z);

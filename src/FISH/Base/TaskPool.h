@@ -14,10 +14,15 @@ enum class TaskLevel {
     Normal,
     Low
 }; 
-
-//线程池
+//---
+//## Task Pool
+//  - Primarily used to handle various asynchronous operations
+//  - Support passing all functions as tasks
+//  - If the function has a result, it will return the std::future<Res>
+//  - It's recommended to write callback mode when using it
+//---
 class TaskPool {
-    //任务接口
+    //Task Interface
     class TASKI {
     public:
         virtual ~TASKI() = default;
@@ -26,13 +31,13 @@ class TaskPool {
         virtual TaskLevel getLevel() const {return TaskLevel::Normal;}
     };
 
-    //任务模板类，（编译后生成多态）
+    //Task template class，Generate polymorphism after compilation
     template<class Func, class ResultType = std::invoke_result_t<Func>>
     class TASK final : public TASKI {
         static_assert(std::is_invocable_v<Func>, "Func must be callable without arguments");
     public:
         TASK(const Func& func_, TaskLevel lev): func(func_), level(lev) {}
-        //执行
+        //execute
         void execute() override {
             if constexpr (std::is_void_v<ResultType>) {
                 func();
@@ -43,9 +48,9 @@ class TaskPool {
                 result.set_value(std::move(res));
             }
         }
-        //返回等级
+        //return Task Level
         TaskLevel getLevel() const override {return level;}
-        //返回结果
+        //return Task Result
         std::future<ResultType> getResult() {return result.get_future();} 
     private:
         Func func;
@@ -53,7 +58,6 @@ class TaskPool {
         TaskLevel level;
     };
 
-    //任务指针类型
     using TaskPtr = std::unique_ptr<TASKI>;
 public:
     TaskPool(size_t siz) {
@@ -67,7 +71,7 @@ public:
         stop();
         
     }
-    //任务添加并且返回结果
+    //submit a task(function and level) return results(if any)
     template<class Func>
     auto submit(Func&& func, TaskLevel level = TaskLevel::Normal)->std::future<std::invoke_result_t<Func>> {
         using ResTy = std::invoke_result_t<Func>;
@@ -86,7 +90,7 @@ public:
         condition.notify_one();
         return res;
     }
-    //停止
+
     void stop() {
         {
             std::lock_guard<std::mutex> lock(Que_mutex);
@@ -108,11 +112,11 @@ public:
         return activeThreads;
     }
 private:
-    //线程运行函数
+    //function used by thread
     void work() {
         while(1) {
             TaskPtr task{nullptr};
-            //上锁取任务
+            //lock
             {
                 std::unique_lock<std::mutex> lock(Que_mutex);
                 condition.wait(lock, [this](){return stopTag || !TaskQue.empty();});

@@ -47,7 +47,6 @@ namespace FISH {
                 Texture::TextureType::Texture2D,
                 ChannelType::RGBA, 
                 [this, i, size](TexturePtr ptr) {
-                    FS_PROFILE_SCOPE("TextureLoadCallback");
                     if (ptr && ptr->isValid()) {
                         mFrames[i].setTexture(ptr);
                         mLoadedCount++;
@@ -174,7 +173,6 @@ namespace FISH {
     }
 
     void SpriteAnimation::increseToNextFrame() {
-        FS_PROFILE_SCOPE("FrameBeginCallback");
         if (!mAllTexturesLoaded) return;
         bool isFirstFrame = (mCurrentFrame == 0);
         if (isFirstFrame && mFrameBeginFunc) mFrameBeginFunc();

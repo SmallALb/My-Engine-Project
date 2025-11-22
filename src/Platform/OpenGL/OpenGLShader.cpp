@@ -7,7 +7,7 @@
 #include "OpenGLShader.h"
 
 
-extern PFNGLUNIFORMHANDLEUI64ARBPROC glUniformHandleui64ARB;
+
 
 namespace FISH {
     GLShader::~GLShader() {
@@ -171,13 +171,7 @@ namespace FISH {
     }
 
     void GLShader::setTextureHandle(const std::string &name, uint64_t handle) {
-        if (!GLAD_GL_ARB_bindless_texture) {
-            FS_CORE_ERROR("GL_ARB_bindless_texture not supported!");
-            return;
-        }
-        unsigned int location = glGetUniformLocation(mProgram, name.c_str());
-        GL_ERRORCALL(glUniformHandleui64ARB(location, handle));
-        
+        setInt(name, handle);
     }
     unsigned int GLShader::getUniformLocation(const std::string &name) {
         return 0;
