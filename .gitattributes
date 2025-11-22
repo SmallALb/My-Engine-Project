@@ -2,3 +2,7 @@ releaselib/libfbxsdk-mt.lib filter=lfs diff=lfs merge=lfs -text
 debuglib/libfbxsdk-md.lib filter=lfs diff=lfs merge=lfs -text
 debugdll/libfbxsdk.dll filter=lfs diff=lfs merge=lfs -text
 *.dll filter=lfs diff=lfs merge=lfs -text
+debugdll filter=lfs diff=lfs merge=lfs -text
+debuglib filter=lfs diff=lfs merge=lfs -text
+releasedll filter=lfs diff=lfs merge=lfs -text
+releaselib filter=lfs diff=lfs merge=lfs -text
