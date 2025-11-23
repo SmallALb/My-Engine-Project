@@ -71,7 +71,7 @@ public:
   }
   //添加
   template<class T, class ...Args>
-  T& add(uint32_t entity, Args&&... args) {
+  T& add(uint32_t entity, size_t id, Args&&... args) {
     uint8_t typeId = Registry::getComponentTypeId<T>();
     if (typeId >= mComponentPools.size()) 
       mComponentPools.resize(typeId + 1);
@@ -79,15 +79,15 @@ public:
       mComponentPools[typeId] = std::move(std::make_unique<ComponentPool<T>>());
     mComponentMasks[entity] |= (1ull << typeId);
     auto& pool = static_cast<ComponentPool<T>&>(*mComponentPools[typeId]);
-    return pool.add(entity, std::forward<Args>(args)...);
+    return pool.add(entity, id, std::forward<Args>(args)...);
   }
 
   //获取
   template<class T>
-  T& get(uint32_t entity, size_t index) {
+  T& get(uint32_t entity, size_t id) {
     uint8_t typId = Registry:: getComponentTypeId<T>();
     auto& pool = static_cast<ComponentPool<T>&>(*mComponentPools[typId]);
-    return  static_cast<T&>(*(T*)pool.get(entity, index));
+    return  static_cast<T&>(*(T*)pool.get(entity, id));
   }
 
 

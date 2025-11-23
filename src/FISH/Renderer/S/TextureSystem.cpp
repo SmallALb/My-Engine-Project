@@ -5,6 +5,7 @@
 #include "FISH/Renderer/GPU/TextureCreator.h"
 #include "FISH/Renderer/stb_image.h"
 #include "FISH/ImGui/ImGuiLayer.h"
+#include "FISH/Debugger.h"
 
 namespace FISH {  
   TextureSystem* TextureSystem::ptr{nullptr};
@@ -14,8 +15,8 @@ namespace FISH {
     OnDetach();
   }
 
-  void FISH::TextureSystem::OnAttach()
-  {
+  void FISH::TextureSystem::OnAttach() {
+    FS_PROFILE_THREAD("Texture Build");
   }
   void TextureSystem::OnImGuiRender() {
     
@@ -32,9 +33,13 @@ namespace FISH {
     }
   }
 
-  void TextureSystem::OnUpdate(float dt)
-  {
-    //此处灌入Gpu数据
+  void TextureSystem::OnUpdate(float dt) {
+    FS_PROFILE_FUNCTION();
+
+    {//此处灌入Gpu数据
+
+    FS_PROFILE_SCOPE("Onupdate");
+
     std::queue<std::pair<uint32_t, size_t>> Q;
     {
       std::lock_guard<std::mutex> lock(mUpLoadQueMutex);
@@ -51,7 +56,7 @@ namespace FISH {
         std::lock_guard<std::mutex> lock(mRegistryMutex);
         auto& [w, h, c, t, fp, fn] = mRegistry.get<TextureBaseData>(entity, i);
         auto& [d, call] = mRegistry.get<TextureLoadState>(entity, i);
-        mRegistry.add<TextureGpuHandle>(entity, std::move(TextureCreator::CreateHandle(d,w,h,c,t)));
+        mRegistry.add<TextureGpuHandle>(entity, i, std::move(TextureCreator::CreateHandle(d,w,h,c,t)));
         func = call;
       }
       if (func) func(entity);
@@ -73,16 +78,34 @@ namespace FISH {
         
         mRegistry.erase<TextureLoadState>(entity, i);
       }
-    }
+    }}
   }
 
   void TextureSystem::create(const std::vector<TexturePath> &paths, TextureLoadType typ, const std::function<void(uint32_t)> &func) {
-    auto entity = mRegistry.create();
-    for (size_t i=0; i< paths.size(); i++) {
+    FS_PROFILE_FUNCTION();
+
+    uint32_t entity;
+    {
+      std::lock_guard<std::mutex> lock(mRegistryMutex); 
+      entity = mRegistry.create();
+    }
+    {
+      FS_PROFILE_SCOPE("get for every");
+      for (size_t i=0; i< paths.size(); i++) {
+
+      size_t currentCompontsId = 0;
+      if (!mfreeList.empty()) {
+        FS_PROFILE_SCOPE("getID");
+        currentCompontsId = mfreeList.back(); 
+        mfreeList.pop_back();
+      }
+      else currentCompontsId = TextureSystemCompontsID++;
       auto& path = paths[i];
       //获取名字
       string filename;
-      switch(typ) {
+      {
+        FS_PROFILE_SCOPE("Get Name");
+        switch(typ) {
         case TextureLoadType::TEXTURE2D: {
           auto p = std::get<0>(path);
           filename = p.substr(p.find_last_of("/\\")+1);
@@ -95,33 +118,37 @@ namespace FISH {
           mEntityMap[entity] = filename;
           break;
         }
-      }
-      mNameToEntity[filename] = entity;
+      }}
+      FS_INFO("Current TextureSystem TextureName:{} CompontID: {}", filename, currentCompontsId);
+      {FS_PROFILE_SCOPE("filename mapping entity"); mNameToEntity[filename] = entity;}
       FS_CORE_INFO("Load Texture: {}", filename);
       //设置数据
       {
+        FS_PROFILE_SCOPE("Init Data");
         std::lock_guard<std::mutex> lock(mRegistryMutex);      
-        mRegistry.add<TextureBaseData>(entity);
+        mRegistry.add<TextureBaseData>(entity, currentCompontsId);
         //设置属性组件
-        auto& attribution = mRegistry.get<TextureBaseData>(entity, i);
+        auto& attribution = mRegistry.get<TextureBaseData>(entity, currentCompontsId);
         attribution.type = typ;
         attribution.fileName = filename;
         attribution.filePath = path;
 
         //设置中间数据组件
-        mRegistry.add<TextureLoadState>(entity);
-        auto& state = mRegistry.get<TextureLoadState>(entity, i);
+        mRegistry.add<TextureLoadState>(entity, currentCompontsId);
+        auto& state = mRegistry.get<TextureLoadState>(entity, currentCompontsId);
         state.callback = func;
       }
       //上锁加入队列
       {
+        FS_PROFILE_SCOPE("push Que");
         std::lock_guard<std::mutex> lock(mLoadQueMutex);
-        mLoadQue.push({entity, i});
+        mLoadQue.push({entity, currentCompontsId});
       }
       //唤起系统全局任务池
-      submit();
       mAsyncCondition.notify_one();
-    }
+    }}
+    submit();
+
   }
   
 
@@ -196,7 +223,7 @@ namespace FISH {
 
     //上锁再次灌入数据
     {
-      FS_CORE_INFO("Input TextureData In: {}", entity);
+      FS_CORE_INFO("Input TextureData In: {}, ID: {}", entity, i);
       std::lock_guard<std::mutex> lock(mRegistryMutex);      
       auto& basedata = mRegistry.get<TextureBaseData>(entity, i);
       auto& loaddata = mRegistry.get<TextureLoadState>(entity, i);
@@ -207,7 +234,7 @@ namespace FISH {
 
     //上传上载队列
     {
-      FS_CORE_INFO("Upload Task In Que: {}", entity);
+      FS_CORE_INFO("Upload Task In Que: {}, ID: {}", entity, i);
       std::lock_guard<std::mutex> lock(mUpLoadQueMutex);
       mUploadQue.push({entity, i});
     }

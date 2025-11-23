@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <utility>
 #include <memory>
 #include <cassert>
 
@@ -14,10 +15,8 @@ public:
   using DataType_ = T;
   using SizeType_ = size_t;
 
-  struct Entry {
-    EntityType_ entity;
-    DataType_ data;
-  };
+  using Entry = std::pair<EntityType_, DataType_>;
+
 private:
   //基本数据声明
   static constexpr int32_t INVALID_INDEX = -1;
@@ -48,7 +47,7 @@ public:
     const int32_t dense_index = mSparse[pageIndex][pageOffset];
     return dense_index != INVALID_INDEX &&  
           dense_index < mSize && 
-          mDense[dense_index].entity == entity;
+          mDense[dense_index].first == entity;
   }
 
   void reverse(SizeType_ capacity) {
@@ -61,7 +60,7 @@ public:
   }
   
   DataType_& insert(EntityType_ entity, DataType_ data = DataType_{}) {
-    if (contains(entity)) return mDense[mSparse[entity >> PAGE_SHIFT][entity & PAGE_MASK]].data;
+    if (contains(entity)) return mDense[mSparse[entity >> PAGE_SHIFT][entity & PAGE_MASK]].second;
     //让此实体合法
     make_valid_sparePage(entity);
     if (mSize < mDense.size()) mDense[mSize] = Entry{entity, data};
@@ -70,7 +69,20 @@ public:
     mSparse[entity >> PAGE_SHIFT][entity & PAGE_MASK] = mSize;
     mSize++;
 
-    return mDense[mSize-1].data;
+    return mDense[mSize-1].second;
+  }
+
+  template<class  ...Args>
+  DataType_& emplace(EntityType_ entity, Args&&... args) {
+    if (contains(entity)) return mDense[mSparse[entity >> PAGE_SHIFT][entity & PAGE_MASK]].second;
+    make_valid_sparePage(entity);
+    if (mSize < mDense.size()) mDense[mSize] = Entry{entity, DataType_(std::forward<Args>(args)...)};
+    mDense.emplace_back(entity, T(std::forward<Args>(args)...));
+
+    mSparse[entity >> PAGE_SHIFT][entity & PAGE_MASK] = mSize;
+    mSize++;
+
+    return mDense[mSize-1].second;
   }
   
   DataType_& get(EntityType_ entity) {
@@ -90,12 +102,12 @@ public:
       }
     }
 
-    return mDense[dense_index].data;
+    return mDense[dense_index].second;
   }
 
   const DataType_& get(EntityType_ entity) const {
     assert(!contains(entity));
-    return mDense[mSparse[entity >> PAGE_SHIFT][entity & PAGE_MASK]].data;
+    return mDense[mSparse[entity >> PAGE_SHIFT][entity & PAGE_MASK]].second;
   }
 
   void erase(EntityType_ entity) {
@@ -105,7 +117,7 @@ public:
     //取出要删除的密集数组下标
     const int32_t dense_index = mSparse[page_index][page_offset];
     if (dense_index != mSize - 1) {
-      const EntityType_ lstEntity = mDense[mSize - 1].entity;
+      const EntityType_ lstEntity = mDense[mSize - 1].first;
       //设置要被删除的实体的密集数组位置变为back的位置
       mDense[dense_index] = std::move(mDense[mSize - 1]);
       mSparse[lstEntity >> PAGE_SHIFT][lstEntity & PAGE_MASK] = dense_index;
@@ -117,7 +129,7 @@ public:
 
   void clear() {
     for (SizeType_ i = 0; i< mSize; i++) {
-      const EntityType_ entity = mDense[i].entity;
+      const EntityType_ entity = mDense[i].first;
       mSparse[entity >> PAGE_SHIFT][entity & PAGE_MASK] = INVALID_INDEX;
     }
     mSize = 0;
@@ -140,26 +152,26 @@ public:
   auto end() const {return mDense.begin() + mSize;}
 
   auto find(EntityType_ entity) {
-    return std::find_if(mDense.begin(), mDense.end(), [entity](const auto& value) {return value.entity == entity;});
+    return std::find_if(mDense.begin(), mDense.end(), [entity](const auto& value) {return value.first == entity;});
   }
 
   auto find(EntityType_ entity) const{
-    return std::find_if(mDense.begin(), mDense.end(), [entity](const auto& value) {return value.entity == entity;});
+    return std::find_if(mDense.begin(), mDense.end(), [entity](const auto& value) {return value.first == entity;});
   }
 
   EntityType get_entity(SizeType_ index) const {
     assert(index >= mSize);
-    return mDense[index].entity;
+    return mDense[index].first;
   }
 
   DataType_& get_data(SizeType_ index) {
     assert(index >= mSize);
-    return mDense[index].data;
+    return mDense[index].second;
   }
 
   DataType_& get_data(SizeType_ index) const {
     assert(index >= mSize);
-    return mDense[index].data;
+    return mDense[index].second;
   }
 
   SizeType_ get_page_count() const {

@@ -9,6 +9,7 @@ add_rules("mode.debug", "mode.release")
 target("FISH")
     set_kind("shared")
     add_includedirs("src")
+    enable_tracy()
     add_includedirs("src/Platform/OpenGL/glad")
     --∫Í∂®“Â
     add_defines("GLFW_INCLUDE_NONE")

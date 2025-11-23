@@ -45,10 +45,12 @@ namespace FISH {
     //路径-实体映射表
     std::unordered_map<string, uint32_t> mNameToEntity;
     sparse_map<uint32_t, string> mEntityMap;
+    std::vector<size_t> mfreeList;
     std::queue<std::pair<uint32_t, size_t>> mLoadQue, mUploadQue;
     mutable std::mutex mLoadQueMutex, mUpLoadQueMutex;
     std::condition_variable mAsyncCondition;
 
+    size_t TextureSystemCompontsID{0};
 
     static TextureSystem* ptr;
 

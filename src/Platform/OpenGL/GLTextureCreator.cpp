@@ -72,7 +72,8 @@ namespace FISH {
 
   void GLTextureCreator::create2D(uint8_t* Data, uint32_t width, uint32_t height, ChannelType typ, TextureGpuHandle &Handle) {
     FS_CORE_INFO("Creating 2D texture: {}x{}", width, height);
-    if (!Data) FS_CORE_WARN("Creating a empty Texture!");
+    if (!Data) 
+      FS_CORE_WARN("Creating a empty Texture!");
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     
     int textureChannel = ChoiceChannel(typ);
@@ -110,11 +111,12 @@ namespace FISH {
     
     GL_ERRORCALL(glGenerateTextureMipmap(Handle.textureId));
     
-    FS_CORE_INFO("Pure DSA texture created: ID={}", Handle.textureId);
+    FS_CORE_INFO("Texture created: ID={}", Handle.textureId);
   }
   
   void GLTextureCreator::createCube(const std::array<uint8_t*, 6> &Data, uint32_t width, uint32_t height, ChannelType typ, TextureGpuHandle &Handle) {
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    FS_CORE_INFO("Creating Cube texture: {}x{}", width, height);
 
     //创建纹理
     GL_ERRORCALL(glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &Handle.textureId));
@@ -131,5 +133,7 @@ namespace FISH {
     glTextureParameteri(Handle.textureId, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTextureParameteri(Handle.textureId, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
     
+    FS_CORE_INFO("Texture created: ID={}", Handle.textureId);
+
   }
 }

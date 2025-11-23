@@ -15,7 +15,7 @@ class MainLayer : public FISH::Layer {
         FramePlan = std::shared_ptr<FISH::Shape>(FISH::Shape::CreateRectangle2D(2.0f, 2.0f));
 
         auto system = FISH::TextureSystem::GetInstance();
-        system->create({"picture/Name.jpg", "picture/Test.png"}, FISH::TextureLoadType::TEXTURE2D, 
+        system->create({"picture/Name.jpg", "picture/Test.png", "picture/fo.jpg", "picture/sh.jpg", "picture/Sky3.png", "picture/Sky.png"}, FISH::TextureLoadType::TEXTURE2D, 
             [this](uint32_t entity) {
                 FrameTex = entity;
             }
@@ -35,7 +35,7 @@ class MainLayer : public FISH::Layer {
         if (FrameTex == -1) return;
         
         auto shader = FISH::Renderer::DefaultShader::getShaderFromName(FISH::Renderer::DefaultShaderName::Texture2D);
-        index = (index + FISH::Input::IsKeyPressedOnce(FS_KEY_PAGE_UP)) % 2;
+        index = (index + FISH::Input::IsKeyPressedOnce(FS_KEY_PAGE_UP)) % 6;
 
         shader->Begin();
         system->bindHandle(FrameTex, index);
