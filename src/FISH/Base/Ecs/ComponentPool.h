@@ -21,10 +21,13 @@ class API_ ComponentPool : public ComponentBase {
     std::is_base_of_v<Component, T>, "T must be derived from Component"
   );
   //组件列表
+public:
   using EntityComponents = sparse_map<size_t, T>;
+  inline static EntityComponents EMPTYMAP = EntityComponents();
+
 public:
   ComponentPool() {}
-  //add with an entity ID, and an component ID which give from user  
+  //add an entity with an ID, and a component ID provided by the user  
   template<class ...Args>
   T& add(uint32_t entity, size_t id, Args&&... args) {
     if (!mEntityComponents.contains(entity)) mEntityComponents[entity] = EntityComponents();
@@ -62,14 +65,22 @@ public:
   }
 
 
-  virtual void erase(uint32_t entity, size_t index) {
-    if (!mEntityComponents.contains(entity) || index >= mEntityComponents[entity].size()) return;
+  virtual void erase(uint32_t entity, size_t id) {
+    //If the entity or ComponentId does not exist, return.
+    if (!mEntityComponents.contains(entity) || !mComponentToEntity.contains(id)) return;
     auto& comps = mEntityComponents[entity];
-    comps.erase(index);
+    comps.erase(id);
     if (comps.empty()) mEntityComponents.erase(entity);
   }
 
+  const sparse_map<size_t, uint32_t>& get_all_ComponentID_to_entityID() const {
+    return mComponentToEntity;
+  }
+  
 
+  EntityComponents& getComponents(uint32_t entity) {
+    return mEntityComponents[entity];
+  }
 
 private:
   sparse_map<uint32_t, EntityComponents> mEntityComponents;

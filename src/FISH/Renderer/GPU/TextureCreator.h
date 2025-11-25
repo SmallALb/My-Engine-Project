@@ -4,10 +4,11 @@
 #include "FISH/Renderer/D/TextureData.h"
 
 namespace FISH {
-  //纹理Gpu句柄
+  //forward declaraction of TextureGpuHandle Component
   struct TextureGpuHandle;
 
-  //纹理创建者
+  //### Texture Creator interface
+  //- The detials of texture creatment was decided by API; 
   class API_ TextureCreator {
   public:
     static TextureGpuHandle CreateHandle(const TextureData& Data, uint32_t width, uint32_t height, ChannelType typ, TextureLoadType loadType);
@@ -25,7 +26,8 @@ namespace FISH {
   };
 
 
-  //纹理句柄
+  //### Texture Gpu Handle
+  //- the texture binding method was decided by API
   struct TextureGpuHandle : public Component {
     union {
       struct {

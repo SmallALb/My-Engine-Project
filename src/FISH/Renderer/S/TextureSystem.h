@@ -1,10 +1,12 @@
 #pragma once
 #include "FISH/System.h"
+#include "FISH/Base/LockFreeQue.h"
 #include "FISH/Renderer/C/TextureComponent.h"
 
 namespace FISH {
   struct TextureGpuHandle;
-  //纹理系统
+  //## TextureSystem
+  //- One Texture entity can map multi TextureHandle;
   class TextureSystem : public FISH_System {
     TextureSystem() {};
   public:
@@ -28,6 +30,8 @@ namespace FISH {
 
     void destoryTexture(uint32_t entity, size_t index);
 
+    void destoryEntity(uint32_t entity);
+
     void bindHandle(uint32_t entity, size_t index);
     
     //单例
@@ -46,8 +50,9 @@ namespace FISH {
     std::unordered_map<string, uint32_t> mNameToEntity;
     sparse_map<uint32_t, string> mEntityMap;
     std::vector<size_t> mfreeList;
-    std::queue<std::pair<uint32_t, size_t>> mLoadQue, mUploadQue;
-    mutable std::mutex mLoadQueMutex, mUpLoadQueMutex;
+    std::queue<std::pair<uint32_t, size_t>> mUploadQue;
+    LockFreeQue<std::pair<uint32_t, size_t>> mLoadQue;
+    mutable std::mutex mUpLoadQueMutex;
     std::condition_variable mAsyncCondition;
 
     size_t TextureSystemCompontsID{0};

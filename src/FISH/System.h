@@ -7,10 +7,11 @@
 namespace FISH{
 
   //---
-  //## 系统类：                                               
-  //  - 继承于层级类，利用Layer的OnUpdate进行主线程操作
-  //  - 利用AsyncUpdate进行线程池中的异步操作
-  //  - 所有的派生系统共用一个异步线程池                       
+  //## FISH_System Interface                                               
+  //  - Inheritsfrom the Layer class, uses the <OnUpdate> to update in the main thread;
+  //  - uses the <AsyncUpdate> to update asynchronously in the other threads;
+  //  - All derivative Classes inheriting from FISH_System sharethe same static TaskPool, and have a single Registry
+  //  - When you need to <AsyncUpdate> to do any else, overridding the <AsyncUpdate> method and use the <submit> to add a task to the TaskPool    
   //---
   class FISH_System : public Layer {
   public:

@@ -23,14 +23,7 @@ namespace FISH {
   }
 
   void TextureSystem::OnDetach() {
-    std::lock_guard<std::mutex> lock(mRegistryMutex);
-    for (auto [entity, name] : mEntityMap) {
-      if (mRegistry.has<TextureGpuHandle>(entity)) 
-        for (size_t i=0; i< mRegistry.size<TextureGpuHandle>(entity); i++) {
-          auto& handle = mRegistry.get<TextureGpuHandle>(entity, i);
-          TextureCreator::DestoryHandle(handle);
-        }
-    }
+    for (auto& [entity, path] : mEntityMap) destoryEntity(entity);
   }
 
   void TextureSystem::OnUpdate(float dt) {
@@ -141,13 +134,12 @@ namespace FISH {
       //上锁加入队列
       {
         FS_PROFILE_SCOPE("push Que");
-        std::lock_guard<std::mutex> lock(mLoadQueMutex);
         mLoadQue.push({entity, currentCompontsId});
       }
       //唤起系统全局任务池
+      submit();
       mAsyncCondition.notify_one();
     }}
-    submit();
 
   }
   
@@ -165,8 +157,32 @@ namespace FISH {
 
   void TextureSystem::destoryTexture(uint32_t entity, size_t index) {
       std::lock_guard<std::mutex> lock(mRegistryMutex);
+      if (!mRegistry.has<TextureGpuHandle>(entity)) return;
+      mfreeList.push_back(index);
       auto& handle = mRegistry.get<TextureGpuHandle>(entity, index);
       TextureCreator::DestoryHandle(handle);
+      mRegistry.erase<TextureGpuHandle>(entity, index);
+      mRegistry.erase<TextureBaseData>(entity, index);
+
+      FS_CORE_INFO("Destory the component {} of entity {}", index, entity);
+      if (!mRegistry.has<TextureGpuHandle>(entity)) {
+        mNameToEntity.erase(mEntityMap[entity]);
+        mEntityMap.erase(entity);
+        mRegistry.destory(entity);
+        FS_CORE_INFO("Destory the entity {} is null now", entity);
+      }
+  }
+
+  void TextureSystem::destoryEntity(uint32_t entity) {
+    std::lock_guard<std::mutex> lock(mRegistryMutex);
+    if (!mEntityMap.contains(entity)) return;
+    for (auto [id, handle] : mRegistry.getComponents<TextureGpuHandle>(entity)) {
+      TextureCreator::DestoryHandle(handle);
+    }
+    mRegistry.destory(entity);
+    mNameToEntity.erase(mEntityMap[entity]);
+    mEntityMap.erase(entity);
+    FS_CORE_INFO("sueccesed to destory entity: {}", entity);
   }
 
   void TextureSystem::bindHandle(uint32_t entity, size_t index) {
@@ -176,11 +192,9 @@ namespace FISH {
 
   void TextureSystem::AsyncUpdate() {
     FS_CORE_INFO("TextureSystem AsyncUpdate");
-    //等待执行
-    std::unique_lock<std::mutex> lock(mLoadQueMutex);
-    mAsyncCondition.wait(lock, [this]() {return !mLoadQue.empty();});
     //取出需要处理的实体
-    auto [entity, i] = mLoadQue.front(); mLoadQue.pop();
+    std::pair<uint32_t, size_t> res; mLoadQue.pop(res);
+    auto& [entity, i] = res;
     FS_CORE_INFO("Done! get Texture Load Task!");
     //上锁取信息
     TexturePath filepath;

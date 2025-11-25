@@ -8,22 +8,26 @@ namespace FISH {
 
   class API_ BufferCreator {
   public:
-    static BufferGpuHandle CreateVertexBuffer(const std::vector<float>& vetices, BufferType bufferType);
+    static BufferGpuHandle CreateVertexBuffer(const std::vector<float>& vertices, BufferType bufferType);
 
     static void Destory(BufferGpuHandle& handle);
+
+    static void BindVertex(BufferGpuHandle& handle);
   protected:
-    virtual BufferGpuHandle create(const std::vector<float>& vetices, BufferType bufferType) = 0;
+    virtual BufferGpuHandle create(const std::vector<float>& vertices, BufferType bufferType) = 0;
 
     virtual void destory(BufferGpuHandle& handle) = 0;
+
+    virtual void bind(BufferGpuHandle& handle) = 0;
   };
   
   //缓冲区句柄
   struct BufferGpuHandle : public Component {
     union {
-      float bindId;
+      uint32_t bindId;
     };
     BufferType bufferType;
-    ~BufferGpuHandle();
+
 
     string getComponentName() const {return "BufferGpuHandle";}
   };

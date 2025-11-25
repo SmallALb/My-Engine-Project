@@ -36,7 +36,7 @@ class MainLayer : public FISH::Layer {
         
         auto shader = FISH::Renderer::DefaultShader::getShaderFromName(FISH::Renderer::DefaultShaderName::Texture2D);
         index = (index + FISH::Input::IsKeyPressedOnce(FS_KEY_PAGE_UP)) % 6;
-
+        if (FISH::Input::IsKeyPressedOnce(FS_KEY_DELETE)) system->destoryTexture(FrameTex, index);
         shader->Begin();
         system->bindHandle(FrameTex, index);
         shader->setInt("uTexture", 0);

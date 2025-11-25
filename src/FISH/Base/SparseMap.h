@@ -24,7 +24,9 @@ private:
   static constexpr SizeType_ PAGE_MASK = PAGE_SIZE-1;
 
 public:
-  sparse_map() = default;
+  sparse_map() {
+
+  }
 
   ~sparse_map() {
     clear_memory();
@@ -205,7 +207,7 @@ private:
 //属性数据
 private:
   //稀疏页表
-  std::vector<int32_t*> mSparse;
+  std::vector<int32_t*> mSparse{};
   //密集数组
   std::vector<Entry> mDense;
   SizeType_ mSize{0};

@@ -9,7 +9,7 @@ struct EntityState {
   
 };
 
-//实体注册表
+//### Registry
 class API_ Registry {
 public:
   Registry() {}
@@ -82,7 +82,7 @@ public:
     return pool.add(entity, id, std::forward<Args>(args)...);
   }
 
-  //获取
+  //Gets a component by the given id
   template<class T>
   T& get(uint32_t entity, size_t id) {
     uint8_t typId = Registry:: getComponentTypeId<T>();
@@ -100,7 +100,7 @@ public:
 
   
 
-  //删除实体的所有某类型组件
+  //Deletes all the components about one type for entity
   template<class T>
   void erase(uint32_t entity) {
     uint8_t typeId = Registry::getComponentTypeId<T>();
@@ -110,7 +110,7 @@ public:
     }
   }
 
-  //删除实体组件
+  //Deletes one component for entity by the given componentID 
   template<class T>
   void erase(uint32_t entity, size_t index) {
     uint8_t typId = Registry::getComponentTypeId<T>();
@@ -121,10 +121,24 @@ public:
   }
 
   template<class T>
-  size_t size(uint32_t entity) const{
+  size_t size(uint32_t entity) const {
     uint8_t typId = Registry::getComponentTypeId<T>();
     return has<T>(entity) ? 
       mComponentPools[typId]->getComponentCount(entity) : 0;
+  }
+
+  template<class T>
+  const sparse_map<size_t, uint32_t>& get_Component_to_entityID() const {
+    uint8_t typId = Registry::getComponentTypeId<T>();
+    return mComponentPools[typId] ? static_cast<ComponentPool<T>&>(*mComponentPools[typId]).get_all_ComponentID_to_entityID() : sparse_map<size_t, uint32_t>{}; 
+  }
+
+  template<class T>
+  ComponentPool<T>::EntityComponents& getComponents(uint32_t entity) {
+    uint8_t typId = Registry::getComponentTypeId<T>();
+    return mComponentPools[typId] ? 
+      static_cast<ComponentPool<T>&>(*mComponentPools[typId]).getComponents(entity) : 
+      ComponentPool<T>::EMPTYMAP;
   }
 
 private:
