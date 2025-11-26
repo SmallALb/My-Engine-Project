@@ -4,14 +4,14 @@
 #include "FISH/Renderer/API.h"
 
 namespace FISH {
-  BufferGpuHandle BufferCreator::CreateVertexBuffer(const std::vector<float> &vertices, BufferType bufferType) {
+  BufferGpuHandle BufferCreator::CreateBuffer(const BufferData& vertices) {
     std::unique_ptr<BufferCreator> Creator;
     switch(GetAPI()) {
       case RendererAPI::OpenGL: {
         Creator.reset(new GLBufferCreator()); break;
       }
     }
-    return Creator->create(vertices, bufferType);
+    return Creator->create(vertices);
   }
 
   void BufferCreator::Destory(BufferGpuHandle &handle) {
@@ -23,13 +23,5 @@ namespace FISH {
     }
     Creator->destory(handle);
   }
-
-  void BufferCreator::BindVertex(BufferGpuHandle &handle) {
-    std::unique_ptr<BufferCreator> Creator;
-    switch(GetAPI()) {
-      case RendererAPI::OpenGL: {
-        Creator.reset(new GLBufferCreator()); break;
-      }
-    }
-    Creator->bind(handle);
-  }
+  
+}

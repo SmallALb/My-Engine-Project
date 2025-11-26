@@ -38,7 +38,7 @@ public:
 
   SizeType_ capacity() const {return mDense.capacity();}
 
-  bool contains(EntityType_ entity) {
+  bool contains(EntityType_ entity) const {
     //第i页
     const SizeType_ pageIndex = entity >> PAGE_SHIFT;
     //页内偏移
@@ -146,20 +146,25 @@ public:
     return get(entity);
   }
 
-  //迭代器
+  //Iterator
   auto begin() {return mDense.begin();}
   auto begin() const {return mDense.begin();}
 
   auto end() {return mDense.begin() + mSize;}
   auto end() const {return mDense.begin() + mSize;}
 
+  //find
   auto find(EntityType_ entity) {
-    return std::find_if(mDense.begin(), mDense.end(), [entity](const auto& value) {return value.first == entity;});
+    if (!contains(entity)) return end();
+    return begin() + mSparse[entity >> PAGE_SHIFT][entity & PAGE_MASK];
   }
 
   auto find(EntityType_ entity) const{
-    return std::find_if(mDense.begin(), mDense.end(), [entity](const auto& value) {return value.first == entity;});
+    if (!contains(entity)) return end();
+    return begin() + mSparse[entity >> PAGE_SHIFT][entity & PAGE_MASK];
   }
+
+  
 
   EntityType get_entity(SizeType_ index) const {
     assert(index >= mSize);

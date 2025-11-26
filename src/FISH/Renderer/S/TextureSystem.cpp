@@ -85,14 +85,6 @@ namespace FISH {
     {
       FS_PROFILE_SCOPE("get for every");
       for (size_t i=0; i< paths.size(); i++) {
-
-      size_t currentCompontsId = 0;
-      if (!mfreeList.empty()) {
-        FS_PROFILE_SCOPE("getID");
-        currentCompontsId = mfreeList.back(); 
-        mfreeList.pop_back();
-      }
-      else currentCompontsId = TextureSystemCompontsID++;
       auto& path = paths[i];
       //获取名字
       string filename;
@@ -112,29 +104,29 @@ namespace FISH {
           break;
         }
       }}
-      FS_INFO("Current TextureSystem TextureName:{} CompontID: {}", filename, currentCompontsId);
+      FS_INFO("Current TextureSystem TextureName:{} CompontID: {}", filename, i);
       {FS_PROFILE_SCOPE("filename mapping entity"); mNameToEntity[filename] = entity;}
       FS_CORE_INFO("Load Texture: {}", filename);
       //设置数据
       {
         FS_PROFILE_SCOPE("Init Data");
         std::lock_guard<std::mutex> lock(mRegistryMutex);      
-        mRegistry.add<TextureBaseData>(entity, currentCompontsId);
+        mRegistry.add<TextureBaseData>(entity, i);
         //设置属性组件
-        auto& attribution = mRegistry.get<TextureBaseData>(entity, currentCompontsId);
+        auto& attribution = mRegistry.get<TextureBaseData>(entity, i);
         attribution.type = typ;
         attribution.fileName = filename;
         attribution.filePath = path;
 
         //设置中间数据组件
-        mRegistry.add<TextureLoadState>(entity, currentCompontsId);
-        auto& state = mRegistry.get<TextureLoadState>(entity, currentCompontsId);
+        mRegistry.add<TextureLoadState>(entity, i);
+        auto& state = mRegistry.get<TextureLoadState>(entity, i);
         state.callback = func;
       }
       //上锁加入队列
       {
         FS_PROFILE_SCOPE("push Que");
-        mLoadQue.push({entity, currentCompontsId});
+        mLoadQue.push({entity, i});
       }
       //唤起系统全局任务池
       submit();
@@ -157,8 +149,7 @@ namespace FISH {
 
   void TextureSystem::destoryTexture(uint32_t entity, size_t index) {
       std::lock_guard<std::mutex> lock(mRegistryMutex);
-      if (!mRegistry.has<TextureGpuHandle>(entity)) return;
-      mfreeList.push_back(index);
+      if (!mRegistry.has_ID<TextureGpuHandle>(entity, index)) return;
       auto& handle = mRegistry.get<TextureGpuHandle>(entity, index);
       TextureCreator::DestoryHandle(handle);
       mRegistry.erase<TextureGpuHandle>(entity, index);
@@ -169,14 +160,14 @@ namespace FISH {
         mNameToEntity.erase(mEntityMap[entity]);
         mEntityMap.erase(entity);
         mRegistry.destory(entity);
-        FS_CORE_INFO("Destory the entity {} is null now", entity);
+        FS_CORE_INFO("Destory the entity {},entity is null now", entity);
       }
   }
 
   void TextureSystem::destoryEntity(uint32_t entity) {
     std::lock_guard<std::mutex> lock(mRegistryMutex);
     if (!mEntityMap.contains(entity)) return;
-    for (auto [id, handle] : mRegistry.getComponents<TextureGpuHandle>(entity)) {
+    for (auto& [id, handle] : mRegistry.getComponents<TextureGpuHandle>(entity)) {
       TextureCreator::DestoryHandle(handle);
     }
     mRegistry.destory(entity);

@@ -5,17 +5,18 @@
 
 namespace FISH {
   //### BufferSystem
+  // - only create the VertexBuffer or IndexBuffer
   class BufferSystem : public FISH_System {
   public:
-    void OnAttach() override;
+    uint32_t createBuffer(const std::vector<BufferData>& vertices);
+  
+    void destoryBuffer(uint32_t entity, size_t id);
+    
+    void destoryEntity(uint32_t entity);
+  private:
+    void buildVertexBuffer(uint32_t entity, const BufferData& vertices, size_t id);
 
-    void OnUpdate(float dt) override;
-
-    void OnDetach() override;
-
-    void AsyncUpdate() override;
-
-    uint32_t createFromVertices(const std::vector<float>& vertices, BufferType type);
+    void buildIndexBuffer(uint32_t entity, const BufferData& vertices, size_t id);
 
   };
 

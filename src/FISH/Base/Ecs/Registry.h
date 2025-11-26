@@ -1,12 +1,13 @@
 #pragma once
 
+#include "../LockFreeQue.h"
 #include "ComponentPool.h"
 
 //实体状态
 struct EntityState {
   uint32_t id, version;
-  bool alive;
-  
+  uint64_t TypeMask{0};
+  bool alive;  
 };
 
 //### Registry
@@ -19,10 +20,9 @@ public:
     : 
       mComponentPools(std::move(other.mComponentPools)),
       mEntityStates(std::move(other.mEntityStates)),
-      mFreeList(std::move(other.mFreeList)),
-      mNxtId(other.mNxtId),
-      mComponentMasks(std::move(other.mComponentMasks)) {
-    other.mNxtId = 0;
+      mNxtId(other.mNxtId.load())
+  {
+      other.mNxtId = 0;
   }
 
   // 移动赋值运算符
@@ -30,9 +30,7 @@ public:
     if (this != &other) {
       mComponentPools = std::move(other.mComponentPools);
       mEntityStates = std::move(other.mEntityStates);
-      mFreeList = std::move(other.mFreeList);
-      mNxtId = other.mNxtId;
-      mComponentMasks = std::move(other.mComponentMasks);
+      mNxtId.store(other.mNxtId);
       other.mNxtId = 0;
     }
     return *this;
@@ -43,18 +41,13 @@ public:
     uint32_t id;
     //有被释放的实体
     if (!mFreeList.empty()) {
-      id = mFreeList.back();
-      mFreeList.pop_back();
+      mFreeList.pop(id);
       mEntityStates[id].alive = true;
     }
     //没有被释放的实体
     else {
       id = mNxtId++;
-      if (id >= mEntityStates.size()) {
-        mEntityStates.resize(id + 1);
-        mComponentMasks.resize(id + 1);
-      }
-      mEntityStates[id] = EntityState{id, 0, true};
+      mEntityStates[id] = EntityState{id, 0, 0, true};
     }
     return id;
   }
@@ -66,8 +59,8 @@ public:
     
     for (auto& pool : mComponentPools) if (pool) pool->erase(entity);
 
-    mComponentMasks[entity] = 0;
-    mFreeList.push_back(entity);
+    mEntityStates[entity].TypeMask = 0;
+    mFreeList.push(entity);
   }
   //添加
   template<class T, class ...Args>
@@ -77,7 +70,7 @@ public:
       mComponentPools.resize(typeId + 1);
     if (!mComponentPools[typeId])
       mComponentPools[typeId] = std::move(std::make_unique<ComponentPool<T>>());
-    mComponentMasks[entity] |= (1ull << typeId);
+    mEntityStates[entity].TypeMask |= (1ull << typeId);
     auto& pool = static_cast<ComponentPool<T>&>(*mComponentPools[typeId]);
     return pool.add(entity, id, std::forward<Args>(args)...);
   }
@@ -91,11 +84,27 @@ public:
   }
 
 
-  //查看是否拥有
+  //Checks for existence of T in the entity
   template<class T> 
   bool has(uint32_t entity) const {
       uint8_t typId = Registry::getComponentTypeId<T>();
-      return mComponentMasks[entity] & (1ull << typId);
+      auto it = mEntityStates.find(entity); 
+      return it != mEntityStates.end() ? 
+        it->second.TypeMask & (1ull << typId) :
+        false;
+  }
+
+  template<class T> 
+  bool has_ID(uint32_t entity, size_t id) {
+    if (!has<T>(entity)) return false;
+    uint8_t typId = Registry::getComponentTypeId<T>();
+    const auto& pool = static_cast<ComponentPool<T>&>(*mComponentPools[typId]).get_all_ComponentID_to_entityID();
+    auto it = pool.find(id);
+    return it != pool.end() && it->second == entity;
+  }
+
+  bool has_entity(uint32_t entity) const {
+    return mEntityStates.contains(entity);
   }
 
   
@@ -106,7 +115,7 @@ public:
     uint8_t typeId = Registry::getComponentTypeId<T>();
     if (typeId < mComponentPools.size() && mComponentPools[typeId]) {
       mComponentPools[typeId]->erase(entity);
-      mComponentMasks[entity] &= ~(1ull << typeId);
+      mEntityStates[entity].TypeMask &= ~(1ull << typeId);
     }
   }
 
@@ -117,7 +126,7 @@ public:
     if (mComponentPools.size() <= typId || !mComponentPools[typId]->getComponentCount(entity)) return;
     mComponentPools[typId]->erase(entity, index);
     if (!mComponentPools[typId]->getComponentCount(entity)) 
-      mComponentMasks[entity] &= ~(1ull << typId);
+      mEntityStates[entity].TypeMask &= ~(1ull << typId);
   }
 
   template<class T>
@@ -130,7 +139,9 @@ public:
   template<class T>
   const sparse_map<size_t, uint32_t>& get_Component_to_entityID() const {
     uint8_t typId = Registry::getComponentTypeId<T>();
-    return mComponentPools[typId] ? static_cast<ComponentPool<T>&>(*mComponentPools[typId]).get_all_ComponentID_to_entityID() : sparse_map<size_t, uint32_t>{}; 
+    return mComponentPools[typId] ? 
+      static_cast<ComponentPool<T>&>(*mComponentPools[typId]).get_all_ComponentID_to_entityID() : 
+      ComponentPool<T>::EMPTYCOMIDTOENTITY; 
   }
 
   template<class T>
@@ -151,8 +162,7 @@ private:
   static inline uint8_t mNxtTypeId = 0;
 private:
   std::vector<std::unique_ptr<ComponentBase>> mComponentPools;
-  std::vector<EntityState> mEntityStates;
-  std::vector<uint32_t> mFreeList;
-  uint32_t mNxtId = 0;
-  std::vector<uint64_t> mComponentMasks;
+  sparse_map<uint32_t, EntityState> mEntityStates;
+  LockFreeQue<uint32_t> mFreeList;
+  std::atomic<uint32_t> mNxtId = 0;
 };

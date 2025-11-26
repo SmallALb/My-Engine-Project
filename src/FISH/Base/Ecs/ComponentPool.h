@@ -23,8 +23,8 @@ class API_ ComponentPool : public ComponentBase {
   //组件列表
 public:
   using EntityComponents = sparse_map<size_t, T>;
-  inline static EntityComponents EMPTYMAP = EntityComponents();
-
+  inline static auto EMPTYMAP = EntityComponents();
+  inline static auto EMPTYCOMIDTOENTITY = sparse_map<size_t, uint32_t>(); 
 public:
   ComponentPool() {}
   //add an entity with an ID, and a component ID provided by the user  
@@ -86,6 +86,5 @@ private:
   sparse_map<uint32_t, EntityComponents> mEntityComponents;
   sparse_map<size_t, uint32_t> mComponentToEntity;
   size_t mSize{0};
-  size_t MaxSize{1<<3};
 };
 

@@ -20,4 +20,23 @@ namespace FISH {
     VERTEX,
     INDEX,
   };
+
+  
+  //### BufferData
+  //- Vertex and index;
+  struct BufferData {
+    //Data
+    using Data = std::variant<
+      std::pair<
+          std::vector<float>,
+          InputDataType
+        >,
+      std::vector<uint32_t>
+    >;
+
+    BufferType type;
+    Data data;
+  };
+
+
 }

@@ -19,7 +19,6 @@ namespace FISH {
 
     void OnDetach() override;
 
-    //给Application类在主线程中运行的代码
     void OnUpdate(float dt) override;
 
     void create(const std::vector<TexturePath>& paths, TextureLoadType typ, const std::function<void(uint32_t)>& func);
@@ -46,16 +45,14 @@ namespace FISH {
 
 
   private:
-    //路径-实体映射表
+    //Name to Entity
     std::unordered_map<string, uint32_t> mNameToEntity;
+    //Entity to TextureName
     sparse_map<uint32_t, string> mEntityMap;
-    std::vector<size_t> mfreeList;
     std::queue<std::pair<uint32_t, size_t>> mUploadQue;
     LockFreeQue<std::pair<uint32_t, size_t>> mLoadQue;
     mutable std::mutex mUpLoadQueMutex;
     std::condition_variable mAsyncCondition;
-
-    size_t TextureSystemCompontsID{0};
 
     static TextureSystem* ptr;
 
