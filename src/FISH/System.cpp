@@ -11,7 +11,7 @@ namespace FISH {
   }
 
   FISH_System::~FISH_System() {
-    Layer::~Layer();
+    FS_INFO("Destory FISH_System");
   }
 
   void FISH_System::submit() {

@@ -1,5 +1,7 @@
 #include "fspcs.h"
+#include "FISH/Renderer/D/BufferData.h"
 #include "BufferCreator.h"
+#include "FISH/Log.h"
 #include "Platform/OpenGL/GLBufferCreator.h"
 #include "FISH/Renderer/API.h"
 
@@ -10,6 +12,9 @@ namespace FISH {
       case RendererAPI::OpenGL: {
         Creator.reset(new GLBufferCreator()); break;
       }
+      default:
+        FS_INFO("No API!"); return BufferGpuHandle();
+
     }
     return Creator->create(vertices);
   }
@@ -20,6 +25,8 @@ namespace FISH {
       case RendererAPI::OpenGL: {
         Creator.reset(new GLBufferCreator()); break;
       }
+      default:
+        FS_INFO("No API!"); break;
     }
     Creator->destory(handle);
   }

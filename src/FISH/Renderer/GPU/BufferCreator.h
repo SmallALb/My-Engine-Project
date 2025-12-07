@@ -1,10 +1,14 @@
 #pragma once
 
 #include "FISH/Base/Ecs/Component.h"
-#include "../D/BufferData.h"
 
 namespace FISH {
-  struct BufferGpuHandle;
+  
+  //### Buffer Gpu Handle
+  struct BufferGpuHandle : public Component {
+    BufferHandleI* HANDLE;
+    string getComponentName() const override {return "BufferGpuHandle";}
+  };
 
   class API_ BufferCreator {
   public:
@@ -18,14 +22,5 @@ namespace FISH {
     virtual void destory(BufferGpuHandle& handle) = 0;
   };
   
-  //缓冲区句柄
-  struct BufferGpuHandle : public Component {
-    union {
-      uint32_t bindId;
-    };
-    BufferType bufferType;
-
-
-    string getComponentName() const {return "BufferGpuHandle";}
-  };
+  
 }

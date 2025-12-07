@@ -18,7 +18,7 @@ namespace FISH{
     FISH_System();
 
   protected:
-    ~FISH_System();
+    ~FISH_System() override;
 
     //异步更新操作
     virtual void AsyncUpdate() {};
@@ -27,7 +27,6 @@ namespace FISH{
   protected:
     //该系统注册表
     Registry mRegistry;
-    mutable std::mutex mRegistryMutex;
   private:
     //全局线程池
     static TaskPool mTaskPool;

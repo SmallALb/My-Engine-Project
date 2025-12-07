@@ -6,7 +6,10 @@ namespace FISH {
     }
 
     LayerStack::~LayerStack() {
-        for (auto layer: mlayers) delete layer;
+        for (auto layer: mlayers) {
+            layer->OnDetach();
+            delete layer;
+        }
     }
 
     void LayerStack::PushLayer(Layer *layer) {
@@ -21,6 +24,7 @@ namespace FISH {
     void LayerStack::PopLayer(Layer *layer) {
         auto it = std::find(mlayers.begin(), mlayers.end(), layer);
         if (it != mlayers.end()) {
+            (*it)->OnDetach();
             mlayers.erase(it);
             mlayersInsertIndex--;
         }
@@ -28,8 +32,10 @@ namespace FISH {
 
     void LayerStack::PopOverLay(Layer *overlay) {
         auto it = std::find(mlayers.begin(), mlayers.end(), overlay);
-        if (it != mlayers.end()) 
+        if (it != mlayers.end()) {
+            (*it)->OnDetach();
             mlayers.erase(it);
+        }
         
     }
 }

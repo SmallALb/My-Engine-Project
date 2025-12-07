@@ -1,23 +1,32 @@
 #pragma once 
 
 #include "FISH/System.h"
-#include "FISH/Renderer/C/BufferComponent.h"
 
 namespace FISH {
+
   //### BufferSystem
   // - only create the VertexBuffer or IndexBuffer
   class BufferSystem : public FISH_System {
+    BufferSystem() {}
   public:
-    uint32_t createBuffer(const std::vector<BufferData>& vertices);
-  
-    void destoryBuffer(uint32_t entity, size_t id);
-    
+    void OnDetach();
+
+    uint32_t createBuffer(const BufferData& vertices);
+      
     void destoryEntity(uint32_t entity);
+
+    bool hasBufferEntity(uint32_t entity);
+
+    BufferHandleI* getBufferGpuHandle(uint32_t entity);
+
+    BufferType getBufferType(uint32_t entity) const;
+
+    const std::vector<std::pair<InputDataType, bool>>& getBufferLayout(uint32_t entity) const;
+
+    static BufferSystem* GetInstance();
+
   private:
-    void buildVertexBuffer(uint32_t entity, const BufferData& vertices, size_t id);
-
-    void buildIndexBuffer(uint32_t entity, const BufferData& vertices, size_t id);
-
+    static BufferSystem* ptr;
   };
 
 

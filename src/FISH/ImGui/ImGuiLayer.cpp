@@ -15,7 +15,7 @@ namespace FISH {
     }
 
     ImGuiLayer::~ImGuiLayer() {
-        OnDetach();
+
     }
 
     void ImGuiLayer::OnAttach() {

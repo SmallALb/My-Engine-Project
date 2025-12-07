@@ -1,6 +1,5 @@
 #pragma once
 
-#include "FISH/Renderer/D/TextureData.h"
 #include "FISH/Base/Ecs/Component.h"
 
 namespace FISH{

@@ -209,11 +209,8 @@ private:
     mSparse.clear();
   }
   
-//属性数据
 private:
-  //稀疏页表
   std::vector<int32_t*> mSparse{};
-  //密集数组
   std::vector<Entry> mDense;
   SizeType_ mSize{0};
 };

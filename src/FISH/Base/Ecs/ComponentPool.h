@@ -7,84 +7,57 @@ class ComponentBase {
 public:
   virtual ~ComponentBase() = default;
   virtual void erase(uint32_t entity) = 0;
-  virtual void erase(uint32_t entity, size_t index) = 0;
-  virtual void* get(uint32_t entity, size_t index) = 0;
-  virtual size_t getComponentCount(uint32_t entity) const =0;
+  virtual void* get(uint32_t entity) = 0;
   virtual void clear() = 0;
 };
 
 
-//组件池（保证内存连续安全）
+//### ComponetPool
+//- One entity can map many components
 template<class T>
 class API_ ComponentPool : public ComponentBase {
   static_assert(
     std::is_base_of_v<Component, T>, "T must be derived from Component"
   );
-  //组件列表
 public:
-  using EntityComponents = sparse_map<size_t, T>;
-  inline static auto EMPTYMAP = EntityComponents();
-  inline static auto EMPTYCOMIDTOENTITY = sparse_map<size_t, uint32_t>(); 
+  using EntityComponent = T; 
 public:
   ComponentPool() {}
   //add an entity with an ID, and a component ID provided by the user  
   template<class ...Args>
-  T& add(uint32_t entity, size_t id, Args&&... args) {
-    if (!mEntityComponents.contains(entity)) mEntityComponents[entity] = EntityComponents();
-    auto& entityComps = mEntityComponents[entity];
-    entityComps.emplace(id, std::forward<Args>(args)...);
-    mComponentToEntity[id] = entity;
-    mSize++;
-
-    return entityComps[id];
+  T& add(uint32_t entity, Args&&... args) {
+    if (!mEntityComponents.contains(entity)) {
+      mEntityComponents.emplace(entity, std::forward<Args>(args)...);
+      mComponentToEntity[&mEntityComponents[entity]] = entity;
+    } else {
+      mEntityComponents[entity] = T(std::forward<Args>(args)...);
+      mComponentToEntity.erase(&mEntityComponents[entity]);
+      mComponentToEntity[&mEntityComponents[entity]] = entity;
+    }
+    return mEntityComponents[entity];
   }
 
-  void* get(uint32_t entity, size_t id) override {
-    return (void*)(&mEntityComponents[entity][id]);
-  }
-
-
-  size_t getComponentCount(uint32_t entity) const override {
-    auto it = mEntityComponents.find(entity);
-    return it != mEntityComponents.end() ? it->second.size() : 0;
+  void* get(uint32_t entity) override {
+    return (void*)(&mEntityComponents[entity]);
   }
 
   void clear() override {
     mEntityComponents.clear();
     mComponentToEntity.clear();
-    mSize = 0;
   }
-  //移除所有
+
   void erase(uint32_t entity) override {
     if (!mEntityComponents.contains(entity)) return;
-    for (auto [i, e] : mComponentToEntity) if (e == entity){
-      mComponentToEntity.erase(i);
-      mSize--;
-    }
+    mComponentToEntity.erase(&mEntityComponents[entity]);
     mEntityComponents.erase(entity);
   }
 
-
-  virtual void erase(uint32_t entity, size_t id) {
-    //If the entity or ComponentId does not exist, return.
-    if (!mEntityComponents.contains(entity) || !mComponentToEntity.contains(id)) return;
-    auto& comps = mEntityComponents[entity];
-    comps.erase(id);
-    if (comps.empty()) mEntityComponents.erase(entity);
-  }
-
-  const sparse_map<size_t, uint32_t>& get_all_ComponentID_to_entityID() const {
-    return mComponentToEntity;
+  size_t size() const {
+    return mComponentToEntity.size();
   }
   
-
-  EntityComponents& getComponents(uint32_t entity) {
-    return mEntityComponents[entity];
-  }
-
 private:
-  sparse_map<uint32_t, EntityComponents> mEntityComponents;
-  sparse_map<size_t, uint32_t> mComponentToEntity;
-  size_t mSize{0};
+  sparse_map<uint32_t, EntityComponent> mEntityComponents;
+  std::unordered_map<EntityComponent*, uint32_t> mComponentToEntity;
 };
 

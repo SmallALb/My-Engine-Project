@@ -4,5 +4,7 @@
 namespace FISH{
     Layer::Layer(const string &name): mDebugName(name) {}
 
-    Layer::~Layer() { OnDetach(); }
+    Layer::~Layer() { 
+        
+    }
 }

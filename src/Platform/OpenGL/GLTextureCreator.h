@@ -3,6 +3,11 @@
 #include "FISH/Renderer/Gpu/TextureCreator.h"
 
 namespace FISH {
+  struct GLTextureHandle : public TextureHandleI {
+    uint32_t binId;
+    string getGpuHandleAPI() const override {return "OpenGL Texture Handle";}
+  };
+
   class GLTextureCreator : public TextureCreator {
   public:
     GLTextureCreator() {}

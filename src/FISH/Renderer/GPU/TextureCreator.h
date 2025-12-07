@@ -1,11 +1,18 @@
 #pragma once
 
 #include "FISH/Base/Ecs/Component.h"
-#include "FISH/Renderer/D/TextureData.h"
 
-namespace FISH {
-  //forward declaraction of TextureGpuHandle Component
-  struct TextureGpuHandle;
+namespace FISH {  
+
+  //### Texture Gpu Handle
+  //- the texture binding method was decided by API
+  struct TextureGpuHandle : public Component {
+    TextureHandleI* HANDLE;
+    uint32_t binding{0};
+    std::string getComponentName() const override {
+      return "TextureGpuHandle";
+    };
+  };
 
   //### Texture Creator interface
   //- The detials of texture creatment was decided by API; 
@@ -26,19 +33,7 @@ namespace FISH {
   };
 
 
-  //### Texture Gpu Handle
-  //- the texture binding method was decided by API
-  struct TextureGpuHandle : public Component {
-    union {
-      struct {
-        uint32_t textureId;
-      };
-      
-    };
-    std::string getComponentName() const override {
-      return "TextureGpuHandle";
-    };
-  };
+
 
   
 }

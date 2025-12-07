@@ -1,4 +1,5 @@
 #include "fspcs.h"
+#include "FISH/Renderer/D/TextureData.h"
 #include "FISH/Renderer/RenderElement.h"
 #include "GLTextureCreator.h"
 #include "FISH/Log.h"
@@ -58,16 +59,21 @@ namespace FISH {
   }
 
   void FISH::GLTextureCreator::destory(TextureGpuHandle& handle) {
-    if (handle.textureId) {
-      FS_CORE_INFO("Destory the Texture: {}", handle.textureId);
-      glDeleteTextures(1, &handle.textureId);
-      handle.textureId = 0;
+    if (!handle.HANDLE) return;
+    auto& GLhandle = *((GLTextureHandle*)handle.HANDLE);
+    if (GLhandle.binId) {
+      FS_CORE_INFO("Destory the Texture: {}", GLhandle.binId);
+      glDeleteTextures(1, &GLhandle.binId);
+      GLhandle.binId = 0;
+      delete handle.HANDLE;
+      handle.HANDLE = nullptr;
     }
   }
 
   void GLTextureCreator::bind(TextureGpuHandle &handle) {
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, handle.textureId);
+    if (!handle.HANDLE) return;
+    glActiveTexture(GL_TEXTURE0 + handle.binding);
+    glBindTexture(GL_TEXTURE_2D, ((GLTextureHandle*)handle.HANDLE)->binId);
   }
 
   void GLTextureCreator::create2D(uint8_t* Data, uint32_t width, uint32_t height, ChannelType typ, TextureGpuHandle &Handle) {
@@ -78,62 +84,59 @@ namespace FISH {
     
     int textureChannel = ChoiceChannel(typ);
     GLint internalFormat = ChoiceInternal(typ);
+
+    Handle.HANDLE = new GLTextureHandle();
+    auto& GLhandle = *((GLTextureHandle*)Handle.HANDLE);
     
-    GL_ERRORCALL(glCreateTextures(GL_TEXTURE_2D, 1, &Handle.textureId));
-    GL_ERRORCALL(glTextureStorage2D(Handle.textureId, 1, internalFormat, width, height));
+    GL_ERRORCALL(glCreateTextures(GL_TEXTURE_2D, 1, &GLhandle.binId));
+    GL_ERRORCALL(glTextureStorage2D(GLhandle.binId, 1, internalFormat, width, height));
 
     // 检查是否分配成功
     GLenum error = glGetError();
     if (error != GL_NO_ERROR) {
         FS_CORE_ERROR("glTextureStorage2D failed with error: {}", error);
-        glDeleteTextures(1, &Handle.textureId);
-        Handle.textureId = 0;
+        glDeleteTextures(1, &GLhandle.binId);
+        GLhandle.binId = 0;
         return;
     }   
 
 
-    GL_ERRORCALL(glTextureSubImage2D(Handle.textureId, 0, 0, 0, width, height, 
+    GL_ERRORCALL(glTextureSubImage2D(GLhandle.binId, 0, 0, 0, width, height, 
                                     textureChannel, GL_UNSIGNED_BYTE, Data));
 
-    // 检查上传是否成功
-    error = glGetError();
-    if (error != GL_NO_ERROR) {
-        FS_CORE_ERROR("glTextureSubImage2D failed with error: {}", error);
-        glDeleteTextures(1, &Handle.textureId);
-        Handle.textureId = 0;
-        return;
-    }
+    glTextureParameteri(GLhandle.binId, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTextureParameteri(GLhandle.binId, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTextureParameteri(GLhandle.binId, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTextureParameteri(GLhandle.binId, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     
-    glTextureParameteri(Handle.textureId, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTextureParameteri(Handle.textureId, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTextureParameteri(Handle.textureId, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTextureParameteri(Handle.textureId, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    GL_ERRORCALL(glGenerateTextureMipmap(GLhandle.binId));
     
-    GL_ERRORCALL(glGenerateTextureMipmap(Handle.textureId));
-    
-    FS_CORE_INFO("Texture created: ID={}", Handle.textureId);
+    FS_CORE_INFO("Texture created: ID={}", GLhandle.binId);
   }
   
   void GLTextureCreator::createCube(const std::array<uint8_t*, 6> &Data, uint32_t width, uint32_t height, ChannelType typ, TextureGpuHandle &Handle) {
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     FS_CORE_INFO("Creating Cube texture: {}x{}", width, height);
-
+    
+    Handle.HANDLE = new GLTextureHandle();
+    auto& GLhandle = *((GLTextureHandle*)Handle.HANDLE);
+    
     //创建纹理
-    GL_ERRORCALL(glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &Handle.textureId));
+    GL_ERRORCALL(glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &GLhandle.binId));
     
     for (int i=0; i<6; i++) if (!Data[i]) {
       GL_ERRORCALL(
-        glTextureSubImage3D(Handle.textureId, 0, 0, 0, i, width, height, 1, ChoiceChannel(typ), GL_UNSIGNED_BYTE, Data[i])
+        glTextureSubImage3D(GLhandle.binId, 0, 0, 0, i, width, height, 1, ChoiceChannel(typ), GL_UNSIGNED_BYTE, Data[i])
       );
     }
     
-    glTextureParameteri(Handle.textureId, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTextureParameteri(Handle.textureId, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTextureParameteri(Handle.textureId, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTextureParameteri(Handle.textureId, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTextureParameteri(Handle.textureId, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTextureParameteri(GLhandle.binId, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTextureParameteri(GLhandle.binId, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTextureParameteri(GLhandle.binId, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTextureParameteri(GLhandle.binId, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTextureParameteri(GLhandle.binId, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
     
-    FS_CORE_INFO("Texture created: ID={}", Handle.textureId);
+    FS_CORE_INFO("Texture created: ID={}", GLhandle.binId);
 
   }
 }

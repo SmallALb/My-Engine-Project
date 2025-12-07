@@ -1,37 +1,36 @@
 #pragma once
 #include "FISH/System.h"
 #include "FISH/Base/LockFreeQue.h"
-#include "FISH/Renderer/C/TextureComponent.h"
 
 namespace FISH {
   struct TextureGpuHandle;
   //## TextureSystem
   //- One Texture entity can map multi TextureHandle;
-  class TextureSystem : public FISH_System {
+  class TextureSystem final : public FISH_System {
     TextureSystem() {};
   public:
 
-    ~TextureSystem();
+    virtual ~TextureSystem() override;
     
-    void OnAttach() override;
+    virtual void OnAttach() override;
 
-    void OnImGuiRender() override;
+    virtual void OnImGuiRender() override;
 
-    void OnDetach() override;
+    virtual void OnDetach() override;
 
-    void OnUpdate(float dt) override;
+    virtual void OnUpdate(float dt) override;
 
-    void create(const std::vector<TexturePath>& paths, TextureLoadType typ, const std::function<void(uint32_t)>& func);
+    void create(const TexturePath& paths, TextureLoadType typ, const std::function<void(uint32_t)>& func);
+
+    void setBinding(uint32_t entity, uint32_t binding);
 
     uint32_t getTextureEntity(string path);
 
-    TextureGpuHandle& getTextureHandle(uint32_t entity, size_t index);
-
-    void destoryTexture(uint32_t entity, size_t index);
+    TextureGpuHandle& getTextureHandle(uint32_t entity);
 
     void destoryEntity(uint32_t entity);
 
-    void bindHandle(uint32_t entity, size_t index);
+    void bindHandle(uint32_t entity);
     
     //单例
     static TextureSystem* GetInstance();
@@ -49,8 +48,8 @@ namespace FISH {
     std::unordered_map<string, uint32_t> mNameToEntity;
     //Entity to TextureName
     sparse_map<uint32_t, string> mEntityMap;
-    std::queue<std::pair<uint32_t, size_t>> mUploadQue;
-    LockFreeQue<std::pair<uint32_t, size_t>> mLoadQue;
+    std::queue<uint32_t> mUploadQue;
+    LockFreeQue<uint32_t> mLoadQue;
     mutable std::mutex mUpLoadQueMutex;
     std::condition_variable mAsyncCondition;
 

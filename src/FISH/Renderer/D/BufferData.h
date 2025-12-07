@@ -21,21 +21,26 @@ namespace FISH {
     INDEX,
   };
 
+
   
   //### BufferData
   //- Vertex and index;
   struct BufferData {
+    using Vlayout = std::pair<InputDataType, bool>;
+    using VData = std::pair<std::vector<float>, std::vector<Vlayout>>;
     //Data
     using Data = std::variant<
-      std::pair<
-          std::vector<float>,
-          InputDataType
-        >,
+      VData,
       std::vector<uint32_t>
     >;
-
     BufferType type;
     Data data;
+
+  };
+
+  //### BufferHandle interface
+  struct BufferHandleI {
+    virtual string getGpuHandleAPI() const = 0;
   };
 
 

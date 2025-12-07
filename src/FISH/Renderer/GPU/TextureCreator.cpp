@@ -1,6 +1,8 @@
 #include "fspcs.h"
 #include "FISH/Renderer/RenderElement.h"
+#include "../D/TextureData.h"
 #include "TextureCreator.h"
+#include "FISH/Log.h"
 #include "Platform/OpenGL/GLTextureCreator.h"
 #include "FISH/Renderer/API.h"
 
@@ -11,7 +13,10 @@ namespace FISH {
     switch (GetAPI()) {
       case RendererAPI::OpenGL:
         Creator.reset(new GLTextureCreator()); break;
+      default: 
+        FS_INFO("No API!"); return TextureGpuHandle();
     }
+
     return Creator->create(Data, width, height, typ, loadType);
   }
 
@@ -20,6 +25,9 @@ namespace FISH {
     switch (GetAPI()) {
       case RendererAPI::OpenGL:
         Creator.reset(new GLTextureCreator()); break;
+      default: 
+        FS_INFO("No API!"); break;
+
     }
     Creator->bind(handle);
   }
@@ -29,6 +37,8 @@ namespace FISH {
     switch (GetAPI()) {
       case RendererAPI::OpenGL:
         Creator.reset(new GLTextureCreator()); break;
+      default:
+        FS_INFO("No API!"); break;
     }
     Creator->destory(handle);
   }
