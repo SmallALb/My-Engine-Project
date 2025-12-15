@@ -38,7 +38,11 @@ public:
     }
     return *this;
   }
-
+  template<class T>
+  void patch(uint32_t entity, const std::function<void(T&)>& func) {
+    std::lock_guard<std::mutex> lock(mRegistryMutex);
+    func(get<T>(entity));
+  }
 
   uint32_t create(const std::function<void(uint32_t, Registry&)>& destoryFunc = nullptr) {
     uint32_t id;
@@ -49,7 +53,7 @@ public:
     }
     else {
       std::lock_guard<std::mutex> lock(mRegistryMutex);
-      id = mNxtId++;
+      id = ++mNxtId;
       mEntityStates[id] = EntityState{id, 0, 0, true, destoryFunc};
     }
     return id;

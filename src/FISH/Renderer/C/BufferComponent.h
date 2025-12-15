@@ -1,6 +1,5 @@
 #pragma once
 
-#include "FISH/Base/Ecs/Component.h"
 
 namespace FISH {
   struct BufferTypeC : public Component {

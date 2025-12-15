@@ -28,6 +28,50 @@ public:
 
   }
 
+  sparse_map(const sparse_map& other) 
+    : mDense(other.mDense), mSize(other.mSize), mSparse(other.mSparse) {
+    other.isCopy = 1;
+  }
+
+  sparse_map(sparse_map&& other) noexcept 
+    : mSparse(std::move(other.mSparse)),
+      mDense(std::move(other.mDense)),
+      mSize(other.mSize) {
+    other.mSize = 0;
+    other.mSparse.clear();
+  }
+
+  sparse_map& operator=(const sparse_map& other) {
+    if (this != &other) {
+      // 先清理当前内存
+      clear_memory();
+      
+      mDense = other.mDense;
+      mSize = other.mSize;
+      other.setCopy();
+      mSparse.resize(other.mSparse.size(), nullptr);
+      for (SizeType_ i = 0; i < other.mSparse.size(); ++i) {
+        if (other.mSparse[i]) {
+          mSparse[i] = new int32_t[PAGE_SIZE];
+          std::copy(other.mSparse[i], other.mSparse[i] + PAGE_SIZE, mSparse[i]);
+        }
+      }
+    }
+    return *this;
+  }
+
+  sparse_map& operator=(sparse_map&& other) noexcept {
+    if (this != &other) {
+      clear_memory();
+      mSparse = std::move(other.mSparse);
+      mDense = std::move(other.mDense);
+      mSize = other.mSize;
+      other.mSize = 0;
+      other.mSparse.clear();
+    }
+    return *this;
+  }
+
   ~sparse_map() {
     clear_memory();
   }
@@ -192,6 +236,8 @@ public:
   }
 
 private:
+  void setCopy() const {isCopy = 1;}
+
   void make_valid_sparePage(EntityType_ entity) {
     const SizeType_ page_index = entity >> PAGE_SHIFT;
     //无此页则添加
@@ -204,6 +250,7 @@ private:
   }
 
   void clear_memory() {
+    if (isCopy) return;
     for (auto page : mSparse) if (page != nullptr) 
       delete[] page;
     mSparse.clear();
@@ -213,4 +260,5 @@ private:
   std::vector<int32_t*> mSparse{};
   std::vector<Entry> mDense;
   SizeType_ mSize{0};
+  mutable bool isCopy{0};
 };

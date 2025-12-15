@@ -1,5 +1,5 @@
 #pragma once
-#include "FISH/System.h"
+
 #include "FISH/Base/LockFreeQue.h"
 
 namespace FISH {

@@ -2,6 +2,7 @@
 print("Adding Attachment...")
 add_requires("glfw", {configs = {git = true, shared = true}})
 add_requires("glm", {configs = {git = true}})
+add_requires("efsw")
 --docking分支版本
 add_requires("imgui", {version = "v1.91.8-docking"})
 --日志库依赖
@@ -16,6 +17,8 @@ add_requires("nlohmann_json")
 --性能分析库
 add_requires("tracy")
 
+add_requires("re2")
+
 --禁用字符集警告
 print("Done to add Attachment...")
 
@@ -27,7 +30,6 @@ print("Done to add Attachment...")
 function init_engine() 
     -- 禁用字符集警告
     add_cxflags("/wd4828")
-
     -- 模式宏定义
     if is_mode("debug") then
         add_defines("DEBUG")
@@ -74,6 +76,8 @@ function add_engineAtt()
     add_packages("openal-soft")
     add_packages("libsndfile")
     add_packages("nlohmann_json")
+    add_packages("efsw")
+    add_packages("re2")
     if is_mode("debug") then
         add_packages("tracy")
         add_linkdirs("debuglib")

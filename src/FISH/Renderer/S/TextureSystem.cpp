@@ -1,4 +1,5 @@
 #include "fspcs.h"
+#include "FISH/System.h"
 #include "FISH/Log.h"
 #include "FISH/Renderer/RenderElement.h"
 #include "../D/TextureData.h"
@@ -82,7 +83,11 @@ namespace FISH {
     FS_PROFILE_FUNCTION();
 
     uint32_t entity;    
-    entity = mRegistry.create();
+    entity = mRegistry.create([](uint32_t entity, Registry& Reger) {
+      if (!Reger.has_entity(entity))
+      TextureCreator::DestoryHandle(Reger.get<TextureGpuHandle>(entity));
+      FS_CORE_INFO("sueccesed to destory Texture entity: {}", entity);
+    });
     
     {
       FS_PROFILE_SCOPE("get for every");
@@ -93,7 +98,8 @@ namespace FISH {
         switch(typ) {
           case TextureLoadType::TEXTURE2D: {
             auto p = std::get<0>(path);
-            filename = p.substr(p.find_last_of("/\\")+1);
+            size_t pos = p.find_last_of("/\\");
+            filename = pos != std::string::npos ? p.substr(pos+1) : p;
             mEntityMap[entity] = filename;
             break;
           }
@@ -152,11 +158,9 @@ namespace FISH {
      
     if (!mEntityMap.contains(entity)) return;
     auto& handle = mRegistry.get<TextureGpuHandle>(entity);
-    TextureCreator::DestoryHandle(handle);
     mRegistry.destory(entity);
     mNameToEntity.erase(mEntityMap[entity]);
     mEntityMap.erase(entity);
-    FS_CORE_INFO("sueccesed to destory entity: {}", entity);
   }
 
   void TextureSystem::bindHandle(uint32_t entity) {

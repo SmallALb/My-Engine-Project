@@ -1,7 +1,5 @@
 #pragma once
 
-#include "FISH/Base/Ecs/Component.h"
-
 namespace FISH {
   struct VertexArrayC : public Component {
     std::vector<uint32_t> bufferEntitys;

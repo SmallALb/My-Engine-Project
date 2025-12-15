@@ -100,6 +100,7 @@ class MainLayer : public FISH::Layer {
         textureSystem.create("picture/Sky3.png", FISH::TextureLoadType::TEXTURE2D, [this](uint32_t entity) {mTextures.push_back(entity);});
         textureSystem.create("picture/Sky.png", FISH::TextureLoadType::TEXTURE2D, [this](uint32_t entity) {mTextures.push_back(entity);});
 
+        FISH::ShaderSystem::GetInstance()->create("sharders/EnginRenderShader/NormalFragment CPY.glsl", FISH::ShaderType::FRAGMENT);
     }
     
     //销毁
@@ -173,9 +174,11 @@ class Sandbox : public FISH::Application {
 public:
     Sandbox() {
         // 按顺序推送系统层
+        PushLayer(FISH::FileSystem::GetInstance());
         PushLayer(FISH::BufferSystem::GetInstance());
         PushLayer(FISH::VertexArraySystem::GetInstance());
         PushLayer(FISH::TextureSystem::GetInstance());
+        PushLayer(FISH::ShaderSystem::GetInstance());
         PushLayer(new MainLayer());
     }
 

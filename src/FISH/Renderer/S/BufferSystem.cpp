@@ -1,4 +1,5 @@
 #include "fspcs.h"
+#include "FISH/System.h"
 #include "../D/BufferData.h"
 #include "../C/BufferComponent.h"
 #include "FISH/Log.h"
@@ -18,9 +19,9 @@ namespace FISH {
 
   uint32_t BufferSystem::createBuffer(const BufferData &vertices) {
     uint32_t entity = mRegistry.create([](uint32_t entity, Registry& Reger) {
-      if (!Reger.has_entity(entity)) return;
-      auto& Gpuhandle = Reger.get<BufferGpuHandle>(entity); 
-      BufferCreator::Destory(Gpuhandle);
+      if (!Reger.has_entity(entity)) return; 
+      BufferCreator::Destory(Reger.get<BufferGpuHandle>(entity));
+      FS_CORE_INFO("sueccesed to destory Buffer entity: {}", entity);
     });
 
     mRegistry.add<BufferTypeC>(entity, vertices.type);

@@ -1,4 +1,5 @@
 #include "fspcs.h"
+#include "FISH/System.h"
 #include "../D/VertexArrayData.h"
 #include "../C/VertexArrayComponent.h"
 #include "VertexArraySystem.h"
@@ -13,8 +14,7 @@ namespace FISH {
     return ptr;
   }
 
-  void VertexArraySystem::bind(uint32_t entity)
-  {
+  void VertexArraySystem::bind(uint32_t entity) {
     auto& handle = mRegistry.get<VertexArrayGpuHandle>(entity);
     VertexArrayCreator::Bind(handle);
   }
@@ -48,6 +48,7 @@ namespace FISH {
     auto entity = mRegistry.create([](uint32_t entity, Registry& Reger) {
       if (Reger.has<VertexArrayGpuHandle>(entity))  
         VertexArrayCreator::Destory(Reger.get<VertexArrayGpuHandle>(entity));
+        FS_CORE_INFO("sueccesed to destory VertexArray entity: {}", entity);
     });
 
     mRegistry.add<VertexArrayGpuHandle>(entity, std::move(VertexArrayCreator::CreateVertexArray()));

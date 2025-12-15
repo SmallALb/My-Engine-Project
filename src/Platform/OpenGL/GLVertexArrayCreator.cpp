@@ -7,6 +7,7 @@
 
 #include "FISH/Renderer/D/BufferData.h"
 #include "FISH/Renderer/C/BufferComponent.h"
+#include "FISH/System.h"
 #include "FISH/Renderer/S/BufferSystem.h"
 #include "GLBufferCreator.h"
 namespace FISH {
