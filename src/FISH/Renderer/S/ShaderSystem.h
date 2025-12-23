@@ -11,6 +11,8 @@ namespace FISH {
     uint32_t create(const string& path, ShaderType type);
     
     bool buildShader(uint32_t entity, uint32_t FileEntity);
+
+    ShaderHandleI* getShaderGpuHandle(uint32_t entity);
   private:
     static ShaderSystem* ptr;
     uint32_t mBeginEntity{0};

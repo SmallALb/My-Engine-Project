@@ -50,9 +50,9 @@ namespace FISH {
   
     switch (loadType) {
       case TextureLoadType::TEXTURE2D:
-        create2D(std::get<0>(Data), width, height, typ, HANDLESTRUCT); break;
+        HANDLESTRUCT.alive = create2D(std::get<0>(Data), width, height, typ, HANDLESTRUCT); break;
       case TextureLoadType::TEXTURECUBE:
-        createCube(std::get<1>(Data), width, height, typ, HANDLESTRUCT); break;
+        HANDLESTRUCT.alive = createCube(std::get<1>(Data), width, height, typ, HANDLESTRUCT); break;
     }
 
     return HANDLESTRUCT;
@@ -60,6 +60,7 @@ namespace FISH {
 
   void FISH::GLTextureCreator::destory(TextureGpuHandle& handle) {
     if (!handle.HANDLE) return;
+    handle.alive = 0;
     auto& GLhandle = *((GLTextureHandle*)handle.HANDLE);
     if (GLhandle.binId) {
       FS_CORE_INFO("Destory the Texture: {}", GLhandle.binId);
@@ -76,7 +77,7 @@ namespace FISH {
     glBindTexture(GL_TEXTURE_2D, ((GLTextureHandle*)handle.HANDLE)->binId);
   }
 
-  void GLTextureCreator::create2D(uint8_t* Data, uint32_t width, uint32_t height, ChannelType typ, TextureGpuHandle &Handle) {
+  bool GLTextureCreator::create2D(uint8_t* Data, uint32_t width, uint32_t height, ChannelType typ, TextureGpuHandle &Handle) {
     FS_CORE_INFO("Creating 2D texture: {}x{}", width, height);
     if (!Data) 
       FS_CORE_WARN("Creating a empty Texture!");
@@ -87,47 +88,70 @@ namespace FISH {
 
     Handle.HANDLE = new GLTextureHandle();
     auto& GLhandle = *((GLTextureHandle*)Handle.HANDLE);
-    
-    GL_ERRORCALL(glCreateTextures(GL_TEXTURE_2D, 1, &GLhandle.binId));
-    GL_ERRORCALL(glTextureStorage2D(GLhandle.binId, 1, internalFormat, width, height));
+    bool error_tag = 0;
+    GL_ERRORCALL(glCreateTextures(GL_TEXTURE_2D, 1, &GLhandle.binId), error_tag);
+    GL_ERRORCALL(glTextureStorage2D(GLhandle.binId, 1, internalFormat, width, height), error_tag);
 
     // 检查是否分配成功
-    GLenum error = glGetError();
-    if (error != GL_NO_ERROR) {
-        FS_CORE_ERROR("glTextureStorage2D failed with error: {}", error);
+    if (error_tag) {
         glDeleteTextures(1, &GLhandle.binId);
         GLhandle.binId = 0;
-        return;
+        return 0;
     }   
 
 
     GL_ERRORCALL(glTextureSubImage2D(GLhandle.binId, 0, 0, 0, width, height, 
-                                    textureChannel, GL_UNSIGNED_BYTE, Data));
+                                    textureChannel, GL_UNSIGNED_BYTE, Data), error_tag);
+    if (error_tag) {
+        glDeleteTextures(1, &GLhandle.binId);
+        GLhandle.binId = 0;
+        return 0;
+    }
 
     glTextureParameteri(GLhandle.binId, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTextureParameteri(GLhandle.binId, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTextureParameteri(GLhandle.binId, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTextureParameteri(GLhandle.binId, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     
-    GL_ERRORCALL(glGenerateTextureMipmap(GLhandle.binId));
+    GL_ERRORCALL(glGenerateTextureMipmap(GLhandle.binId), error_tag);
     
+    if (error_tag) {
+        glDeleteTextures(1, &GLhandle.binId);
+        GLhandle.binId = 0;
+        return 0;
+    }
+
     FS_CORE_INFO("Texture created: ID={}", GLhandle.binId);
+    return 1;
   }
   
-  void GLTextureCreator::createCube(const std::array<uint8_t*, 6> &Data, uint32_t width, uint32_t height, ChannelType typ, TextureGpuHandle &Handle) {
+  bool GLTextureCreator::createCube(const std::array<uint8_t*, 6> &Data, uint32_t width, uint32_t height, ChannelType typ, TextureGpuHandle &Handle) {
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     FS_CORE_INFO("Creating Cube texture: {}x{}", width, height);
-    
+    bool error_tag = 0;
     Handle.HANDLE = new GLTextureHandle();
     auto& GLhandle = *((GLTextureHandle*)Handle.HANDLE);
     
     //创建纹理
-    GL_ERRORCALL(glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &GLhandle.binId));
+    GL_ERRORCALL(glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &GLhandle.binId), error_tag);
     
+    if (error_tag) {
+        glDeleteTextures(1, &GLhandle.binId);
+        GLhandle.binId = 0;
+        return 0;
+    }
+
     for (int i=0; i<6; i++) if (!Data[i]) {
       GL_ERRORCALL(
         glTextureSubImage3D(GLhandle.binId, 0, 0, 0, i, width, height, 1, ChoiceChannel(typ), GL_UNSIGNED_BYTE, Data[i])
+        , error_tag
       );
+
+      if (error_tag) {
+        glDeleteTextures(1, &GLhandle.binId);
+        GLhandle.binId = 0;
+        return 0;
+      }
     }
     
     glTextureParameteri(GLhandle.binId, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -138,5 +162,6 @@ namespace FISH {
     
     FS_CORE_INFO("Texture created: ID={}", GLhandle.binId);
 
+    return 1;
   }
 }

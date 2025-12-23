@@ -80,7 +80,8 @@ namespace FISH {
     VertexArrayGpuHandle HANDLESTRUCT;
     HANDLESTRUCT.HANDLE = new GLVertexArrayHandle();
     auto& GLhandle = *(GLVertexArrayHandle*)HANDLESTRUCT.HANDLE;
-    GL_ERRORCALL(glCreateVertexArrays(1, &GLhandle.bindId));
+    GL_ERRORCALL(glCreateVertexArrays(1, &GLhandle.bindId), HANDLESTRUCT.alive);
+    HANDLESTRUCT.alive = !HANDLESTRUCT.alive;
     FS_INFO("Create bindid: {}, GLHandle: {}", GLhandle.bindId, (size_t)HANDLESTRUCT.HANDLE);
     return HANDLESTRUCT;
   }
@@ -138,6 +139,7 @@ namespace FISH {
   
   void GLVertexArrayCreator::destory(VertexArrayGpuHandle &handle) {
     if (!handle.HANDLE) return;
+    handle.alive = 0;
     auto& GLhandle = *(GLVertexArrayHandle*)handle.HANDLE;
     if (GLhandle.bindId) {
       glDeleteVertexArrays(1, &GLhandle.bindId);
@@ -150,11 +152,13 @@ namespace FISH {
   
   void GLVertexArrayCreator::bind(VertexArrayGpuHandle &handle) {
     auto& GLhandle = *(GLVertexArrayHandle*)handle.HANDLE;
-    GL_ERRORCALL(glBindVertexArray(GLhandle.bindId));
+    bool error_tag = 0;
+    GL_ERRORCALL(glBindVertexArray(GLhandle.bindId), error_tag);
   }
 
   void GLVertexArrayCreator::renderIndexBuffer(uint32_t beginIndex, uint32_t count, int ElementType) {
-    GL_ERRORCALL(glDrawElements(ElementType, count, GL_UNSIGNED_INT, (const void*)beginIndex));
+    bool error_tag = 0;
+    GL_ERRORCALL(glDrawElements(ElementType, count, GL_UNSIGNED_INT, (const void*)beginIndex), error_tag);
   }
 
   void GLVertexArrayCreator::setIndex(VertexArrayGpuHandle &handle, uint32_t entity) {

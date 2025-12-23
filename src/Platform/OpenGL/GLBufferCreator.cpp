@@ -14,14 +14,15 @@ namespace FISH {
     glCreateBuffers(1, &GLhandle.bindId);
     FS_INFO("Create Buffer: {}", GLhandle.bindId);
     switch(vertices.type) {
-      case BufferType::VERTEX: createVertex(std::get<0>(vertices.data).first, GLhandle); break;
-      case BufferType::INDEX: createIndex(std::get<1>(vertices.data), GLhandle); break;
+      case BufferType::VERTEX: HANDLESTRUCT.alive = createVertex(std::get<0>(vertices.data).first, GLhandle); break;
+      case BufferType::INDEX: HANDLESTRUCT.alive = createIndex(std::get<1>(vertices.data), GLhandle); break;
     }
     return HANDLESTRUCT;
   }
    
   void GLBufferCreator::destory(BufferGpuHandle &handle) {
     if (!handle.HANDLE) return;
+    handle.alive = 0;
     GLBufferHandle& GLhandle = *(GLBufferHandle*)handle.HANDLE;
     if (GLhandle.bindId) {
       FS_INFO("Destory Buffer: {}", GLhandle.bindId);
@@ -32,11 +33,17 @@ namespace FISH {
     }
   }
 
-  void GLBufferCreator::createVertex(const std::vector<float> &vetices, GLBufferHandle &handle) {
-    GL_ERRORCALL(glNamedBufferStorage(handle.bindId, vetices.size() * sizeof(float), vetices.data(), GL_DYNAMIC_STORAGE_BIT));
+  bool GLBufferCreator::createVertex(const std::vector<float> &vetices, GLBufferHandle &handle) {
+    bool error_tag = 0;
+    GL_ERRORCALL(
+      glNamedBufferStorage(handle.bindId, vetices.size() * sizeof(float), vetices.data(), GL_DYNAMIC_STORAGE_BIT), error_tag);
+    return !error_tag;
   }
 
-  void GLBufferCreator::createIndex(const std::vector<uint32_t> &vetices, GLBufferHandle &handle) {
-    GL_ERRORCALL(glNamedBufferStorage(handle.bindId, vetices.size() * sizeof(uint32_t), vetices.data(), GL_DYNAMIC_STORAGE_BIT));
+  bool GLBufferCreator::createIndex(const std::vector<uint32_t> &vetices, GLBufferHandle &handle) {
+    bool error_tag = 0;
+    GL_ERRORCALL(
+      glNamedBufferStorage(handle.bindId, vetices.size() * sizeof(uint32_t), vetices.data(), GL_DYNAMIC_STORAGE_BIT), error_tag);
+    return !error_tag;
   }
 }

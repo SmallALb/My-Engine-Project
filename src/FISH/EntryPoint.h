@@ -13,7 +13,6 @@ int main(int argc, char** argv) {
     app->run();
 
 
-    FS_PROFILE_FRAME();
     delete app;
     FS_INFO("App had Deleted!");
 }

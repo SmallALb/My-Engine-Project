@@ -6,7 +6,8 @@ namespace FISH {
     LUA,
     JSON,
     XML,
-    GLSL
+    GLSL,
+    DLL
   };
 
 

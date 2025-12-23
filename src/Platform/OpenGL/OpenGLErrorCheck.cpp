@@ -3,7 +3,7 @@
 #include "FISH/Log.h"
 #include "OpenGLErrorCheck.h"
 
-void checkError(const string& FuncName, const string& fileName, int line) {
+bool checkError(const string& FuncName, const string& fileName, int line) {
     GLenum errorCode = glGetError();
     string error = "";
     if (errorCode != GL_NO_ERROR) {
@@ -18,6 +18,7 @@ void checkError(const string& FuncName, const string& fileName, int line) {
             break;
         }
         FS_CORE_ERROR("(line{0})GLERROR in file \"{1}\" GLfunction_{2}, {3}", line, fileName, FuncName.c_str(), error.c_str());
-
+        return true;
     }
+    return false;
 }

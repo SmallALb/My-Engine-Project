@@ -3,6 +3,8 @@
 #include "FISH/Renderer/GPU/ShaderCreator.h"
 
 namespace FISH {
+  static bool checkShaderErrors(uint32_t target, std::string type);
+
   struct GLShaderHandle : public ShaderHandleI {
     uint32_t bindId;
     virtual string getGpuHandleAPI() const { return "OpenGL Shader Handle!"; }

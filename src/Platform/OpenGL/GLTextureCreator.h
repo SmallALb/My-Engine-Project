@@ -19,9 +19,9 @@ namespace FISH {
     void bind(TextureGpuHandle& handle) override;
 
   private:
-    void create2D(uint8_t* Data, uint32_t width, uint32_t height, ChannelType typ, TextureGpuHandle& Handle);
+    bool create2D(uint8_t* Data, uint32_t width, uint32_t height, ChannelType typ, TextureGpuHandle& Handle);
 
-    void createCube(const std::array<uint8_t*, 6>& Data, uint32_t width, uint32_t height, ChannelType typ, TextureGpuHandle& Handle);
+    bool createCube(const std::array<uint8_t*, 6>& Data, uint32_t width, uint32_t height, ChannelType typ, TextureGpuHandle& Handle);
     
 
   };

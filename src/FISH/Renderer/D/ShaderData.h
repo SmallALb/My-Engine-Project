@@ -33,7 +33,6 @@ namespace FISH {
     SET
   };  
 
-
   struct ShaderStructDescribe;
   //struct Member
   struct ShaderStructMember {

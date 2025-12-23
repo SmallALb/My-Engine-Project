@@ -51,17 +51,26 @@ namespace FISH {
         FS_CORE_INFO("Upload Texture entity {}", entity);
         {
           
-          auto& [w, h, c, t, fp, fn] = mRegistry.get<TextureBaseData>(entity);
-          auto& [d, call] = mRegistry.get<TextureLoadState>(entity);
+          auto& BaseData = mRegistry.get<TextureBaseData>(entity);
+          auto& w = BaseData.width;
+          auto& h = BaseData.height;
+          auto& c = BaseData.channel;
+          auto& t = BaseData.type;
+          auto& LoadState = mRegistry.get<TextureLoadState>(entity);
+          auto& d = LoadState.Imagedata; 
           mRegistry.add<TextureGpuHandle>(entity, std::move(TextureCreator::CreateHandle(d,w,h,c,t)));
-          func = call;
+          func = LoadState.callback;
         }
         if (func) func(entity);
         //erases loadState after a successful build;
         {
           
           auto& loadState = mRegistry.get<TextureLoadState>(entity);
-          auto& [w, h, c, t, fp, fn] = mRegistry.get<TextureBaseData>(entity);
+          auto& BaseData = mRegistry.get<TextureBaseData>(entity);
+          auto& w = BaseData.width;
+          auto& h = BaseData.height;
+          auto& c = BaseData.channel;
+          auto& t = BaseData.type;
           switch(t) {
             case TextureLoadType::TEXTURE2D: {
               stbi_image_free(std::get<0>(loadState.Imagedata));

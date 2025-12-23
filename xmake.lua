@@ -1,4 +1,5 @@
 includes("Engine_utils.lua")
+set_languages("c++latest")
 
 set_project("FISHengine")
 init_engine()
@@ -20,7 +21,6 @@ target("FISH")
     --指定编译文件
     add_headerfiles("src/**.h")
     add_files("src/**.cpp")
-    add_files("src/**.c")
     --链接包（库）
     add_engineAtt()
     add_opengl()
@@ -32,7 +32,7 @@ target("FISH")
         add_syslinks("xinput", "user32", "gdi32")
     end
     if  is_mode("release") then
-        add_linkdirs("$(buildir)/windows/x64/release")
+        add_linkdirs("$(builddir)/windows/x64/release")
     end
 
 target("TESTRENDER")

@@ -5,7 +5,6 @@
 namespace FISH {
   struct ShaderGpuHandle: Component {
     ShaderHandleI* HANDLE;
-    bool alive{0};
     virtual std::string getComponentName() const {return "ShaderGpuHandle";};
   };
   

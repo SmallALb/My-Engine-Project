@@ -20,8 +20,6 @@ namespace FISH {
     VERTEX,
     INDEX,
   };
-
-
   
   //### BufferData
   //- Vertex and index;

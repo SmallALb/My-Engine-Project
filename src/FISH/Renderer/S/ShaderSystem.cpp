@@ -373,6 +373,7 @@ namespace FISH {
       if (!newHandle.alive) return false;
       mRegistry.add<ShaderGpuHandle>(entity, std::move(newHandle));
       FS_CORE_INFO("ShaderHandle had been build!");
+      BaseData.Version++;
       return true;
     }
     
@@ -381,9 +382,16 @@ namespace FISH {
       ShaderCreator::Destory(handle);
       mRegistry.add<ShaderGpuHandle>(entity, std::move(newHandle));    
       FS_CORE_INFO("ShaderHandle had been rebuild!");
+      BaseData.Version++;
       return true;
     }
+
     FS_CORE_ERROR("ShaderHandle rebuild failed!");
     return false;
+  }
+
+  ShaderHandleI *ShaderSystem::getShaderGpuHandle(uint32_t entity) {
+    if (!mRegistry.has<ShaderGpuHandle>(entity)) return nullptr;
+    return mRegistry.get<ShaderGpuHandle>(entity).HANDLE;
   }
 }

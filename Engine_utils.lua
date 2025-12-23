@@ -38,7 +38,6 @@ function init_engine()
     end
     --启用23
     set_optimize("fast") 
-    set_languages("c++26", "cxxlatest")
 
     --文件复制
     after_build(function (target)
@@ -78,8 +77,8 @@ function add_engineAtt()
     add_packages("nlohmann_json")
     add_packages("efsw")
     add_packages("re2")
+    add_packages("tracy")
     if is_mode("debug") then
-        add_packages("tracy")
         add_linkdirs("debuglib")
     else 
         add_linkdirs("releaselib")
@@ -90,7 +89,7 @@ end
 -----------模式匹配设置-------------------
 function mode_choice()
     if is_mode("release") then
-        add_linkdirs("$(buildir)/windows/x64/release")
+        add_linkdirs("$(builddir)/windows/x64/release")
         if is_plat("windows") then
             --release模式下关闭终端窗口
             add_ldflags("/SUBSYSTEM:WINDOWS", "/ENTRY:mainCRTStartup", {force = true})

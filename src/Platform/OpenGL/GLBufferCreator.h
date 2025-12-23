@@ -14,9 +14,9 @@ namespace FISH {
     void destory(BufferGpuHandle& handle) override;
 
   private:
-    void createVertex(const std::vector<float>& vertices, GLBufferHandle& handle);
+    bool createVertex(const std::vector<float>& vertices, GLBufferHandle& handle);
 
-    void createIndex(const std::vector<uint32_t>& vertices, GLBufferHandle& handle);
+    bool createIndex(const std::vector<uint32_t>& vertices, GLBufferHandle& handle);
 
   };
 

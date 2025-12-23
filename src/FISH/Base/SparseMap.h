@@ -51,10 +51,7 @@ public:
       other.setCopy();
       mSparse.resize(other.mSparse.size(), nullptr);
       for (SizeType_ i = 0; i < other.mSparse.size(); ++i) {
-        if (other.mSparse[i]) {
-          mSparse[i] = new int32_t[PAGE_SIZE];
-          std::copy(other.mSparse[i], other.mSparse[i] + PAGE_SIZE, mSparse[i]);
-        }
+        if (other.mSparse[i]) mSparse[i] = other.mSparse[i];
       }
     }
     return *this;
@@ -207,8 +204,6 @@ public:
     if (!contains(entity)) return end();
     return begin() + mSparse[entity >> PAGE_SHIFT][entity & PAGE_MASK];
   }
-
-  
 
   EntityType get_entity(SizeType_ index) const {
     assert(index >= mSize);

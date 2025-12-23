@@ -18,7 +18,7 @@ namespace FISH {
     return GL_VERTEX_SHADER;
   }
 
-    static bool checkShaderErrors(GLuint target, std::string type) {
+    bool checkShaderErrors(uint32_t target, std::string type) {
         int success = 0;
         char infoLog[1024];
     
@@ -61,6 +61,7 @@ namespace FISH {
     glShaderSource(GLhandle.bindId, 1, &ctx, NULL);
 
     glCompileShader(GLhandle.bindId);
+    
     bool isError = checkShaderErrors(GLhandle.bindId, "COMPILE");
     if (isError) {
       glDeleteShader(GLhandle.bindId);
@@ -68,13 +69,17 @@ namespace FISH {
       HANDLESTRUCT.HANDLE = nullptr;
       FS_CORE_ERROR("failed To Make a Shader! ");
     }
-    else FS_CORE_INFO("successed To Make a Shader: bindID {}", GLhandle.bindId);
-    HANDLESTRUCT.alive = 1;
+    else {
+      FS_CORE_INFO("successed To Make a Shader: bindID {}", GLhandle.bindId);
+      HANDLESTRUCT.alive = 1;
+    }
+    
     return HANDLESTRUCT;
   }
 
   void GLShaderCreator::destory(ShaderGpuHandle &handle) {
     if (!handle.HANDLE) return;
+    handle.alive = 0;
     auto& GLhandle = *static_cast<GLShaderHandle*>(handle.HANDLE);
     if (!GLhandle.bindId) return;
     glDeleteShader(GLhandle.bindId);

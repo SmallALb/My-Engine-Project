@@ -6,9 +6,6 @@
 #include "OpenGLErrorCheck.h"
 #include "OpenGLShader.h"
 
-
-
-
 namespace FISH {
     GLShader::~GLShader() {
         glDeleteProgram(mProgram);
